@@ -1,0 +1,69 @@
+# ---
+#
+# InstaWorks library Makefile
+#
+# Copyright (C) Mattias Mattsson - 2014
+#
+# ---
+
+# ---
+#
+# Compilation flags
+#
+# ---
+
+USER_CFLAGS=$(USER_DEFINES)
+
+CFLAGS=-g -O0 -Iincludes -Wall -Werror $(USER_CFLAGS)
+
+# Comment out the following line if you want to disable all memory tracking.
+#CFLAGS+= -DIW_NO_MEMORY_TRACKING
+
+
+# ---
+#
+# Directories and files
+#
+# ---
+
+VPATH=src
+BUILDDIR=objs
+
+# ---
+#
+# Instaworks files
+#
+# ---
+
+IW_LIB=bin/libinstaworks.a
+
+C_FILES   := $(wildcard $(VPATH)/*.c)
+OBJ_FILES := $(addprefix $(BUILDDIR)/,$(notdir $(C_FILES:.c=.o)))
+
+# ---
+#
+# Compilation rules
+#
+# ---
+
+$(BUILDDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# ---
+#
+# Compilation targets
+#
+# ---
+
+.PHONY: clean
+
+instaworks: $(OBJ_FILES)
+	ar -cvr $(IW_LIB) $^
+
+all: instaworks
+
+clean:
+	rm -rf $(BUILDDIR)/*.o $(VPATH)/*~ $(IW_LIB)
+
+# ---
+

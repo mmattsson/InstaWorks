@@ -1,0 +1,64 @@
+# ---
+#
+# Selftest Makefile
+#
+# Copyright (C) Mattias Mattsson - 2014
+#
+# ---
+
+# ---
+#
+# Compilation flags
+#
+# ---
+
+CFLAGS=-g -O0 -Iincludes -Wall -Werror
+LDFLAGS=-L./bin -linstaworks -lpthread
+
+# ---
+#
+# Directories and files
+#
+# ---
+
+VPATH=selftest
+BUILDDIR=objs
+
+# ---
+#
+# Selftest files
+#
+# ---
+
+SELFTEST=bin/selftest
+
+C_FILES   := $(wildcard $(VPATH)/*.c)
+OBJ_FILES := $(addprefix $(BUILDDIR)/,$(notdir $(C_FILES:.c=.o)))
+
+# ---
+#
+# Compilation targets
+#
+# ---
+
+.PHONY: clean
+
+selftest: $(OBJ_FILES)
+	$(CC) $(CFLAGS) -o $(SELFTEST) $^ $(LDFLAGS)
+
+all: selftest
+
+clean:
+	rm -rf $(BUILDDIR)/*.o $(VPATH)/*~ $(SELFTEST)
+
+# ---
+#
+# Compilation rules
+#
+# ---
+
+$(BUILDDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# ---
+
