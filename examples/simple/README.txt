@@ -1,5 +1,5 @@
 Simple
------------------------------------------------------------------------------
+=============================================================================
 This example shows a simple TCP server. The server accepts connections on
 the listening port. If data is received on any connection, this data is sent
 on all other connections. This program can be tested by connecting by telnet
@@ -52,3 +52,17 @@ Connection 2  : FD=9 Client=::ffff:192.168.2.1/39882, RX=6 bytes, TX=19 bytes
 Out of these commands, "syslog show" and "memory show" are built into the
 InstaWorks framework. The "connections" command is a custom command added
 by the simple server.
+
+
+Implementation notes
+=============================================================================
+The simple example lets the InstaWorks framework handle the parsing of the
+command line options.
+
+The first thing that is done in the main() function is to set the desired
+InstaWorks settings by assigning values to the members of iw_stg.
+
+No log levels or run-time queries can be registered before the call to
+iw_main(). These has to be registered after the callback is done so this
+is done in main_callback().
+

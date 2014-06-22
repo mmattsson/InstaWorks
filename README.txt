@@ -1,5 +1,5 @@
 Introduction
------------------------------------------------------------------------------
+=============================================================================
 InstaWorks is a support library for adding a debug framework to programs or
 daemons. A debug framework is usually not the first thing being considered
 when creating a new program. When creating a new program, the first priority
@@ -22,8 +22,8 @@ provided that helps provide debug facilities to any new program with a
 minimal amount of time needed.
 
 
-Examples of features
------------------------------------------------------------------------------
+Features
+=============================================================================
 The following is a list of features that InstaWorks provides. This is not an
 exhaustive list.
 
@@ -35,9 +35,26 @@ ability to enable and disable these log levels during run-time.
 
 Run-time query
 -------------------
+InstaWorks has a run-time query feature which allows the same program to be
+invoked in two different modes. The main mode is the server mode. This is
+used when running the program to provide whatever feature or service that
+the program provides. The other mode is a client mode. All command line
+input in client mode is sent to the currently running server instance and
+the server can respond to the client and have the output be shown on the
+terminal that the client is executed from.
+
+This allows you to provide run-time queries where the user can issue a
+command and have the server print out information, e.g. the number of
+clients connected to the server and what addresses they are connected
+from.
 
 Syslog buffer
 -------------------
+The syslog buffer can be used to retain syslogs for a longer period of
+time. The syslogs are still sent to the normal syslog() call but a copy
+of the message is stored in an internal buffer. This can be helpful to
+debug issues where the server is running over a long period of time and
+you have a limited amount of syslog storage.
 
 Dead-lock detection
 -------------------
@@ -47,17 +64,21 @@ a notification is printed.
 
 Memory tracking
 -------------------
+InstaWorks can run in a memory tracking mode. In this mode, each memory
+allocation can be tracked and the current memory usage can be queried at
+run-time. This allows for easier debugging of memory leaks in target
+environments.
 
 
 Building InstaWorks
------------------------------------------------------------------------------
+=============================================================================
 To build the InstaWorks library, documentation, self-test, and all examples,
 simply type make in the InstaWorks directory:
  $ make
  
 
 Project Organization
------------------------------------------------------------------------------
+=============================================================================
 The main library source code is contained in the 'src' folder. This folder
 contains all the C code for the library as well as internal headers that a
 user would not need to care about. All externally visible API's and 
@@ -74,7 +95,7 @@ The structure is as follows:
 
 
 Self-test
------------------------------------------------------------------------------
+=============================================================================
 In order to verify that all the code is working as expected, there is a 
 self-test directory that contains test code for various code modules. These
 self-tests are compiled into a selftest binary that can be run under valgrind.
@@ -87,7 +108,7 @@ errors or memory leaks, valgrind will note that.
 
 
 Examples
------------------------------------------------------------------------------
+=============================================================================
 
 Simple
 -------------------
@@ -108,7 +129,7 @@ See examples/philosophers/README.txt for more information.
 
 
 Documentation
------------------------------------------------------------------------------
+=============================================================================
 In order to create the InstaWorks documentation you should have doxygen
 installed on your system. Once doxygen is installed you can issue the
 following command:
@@ -119,6 +140,7 @@ accessed by opening the file html/index.html in a browser.
 
 
 License
------------------------------------------------------------------------------
-
+=============================================================================
+InstaWorks is covered by the license in LICENSE.txt in the top InstaWorks
+directory.
 

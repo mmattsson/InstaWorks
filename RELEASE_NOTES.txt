@@ -1,0 +1,10 @@
+InstaWorks debug framework
+
+0.1 2014-06-2x
+
+First release, contains features such as:
++ Debug logs
++ Client control commands
++ Memory tracking
++ Dead-lock detection
+
