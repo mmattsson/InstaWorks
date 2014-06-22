@@ -6,7 +6,9 @@
 /// the settings, just write the new value to the corresponding variable
 /// before calling iw_main().
 ///
-/// Copyright (C) Mattias Mattsson - 2014
+/// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
+/// This source is distributed under the license in LICENSE.txt in the top
+/// InstaWorks directory.
 ///
 // --------------------------------------------------------------------------
 

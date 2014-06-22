@@ -10,7 +10,9 @@
 /// Any output occurring during this operation should be printed on stdout
 /// or stderr.
 ///
-/// Copyright (C) Mattias Mattsson - 2014
+/// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
+/// This source is distributed under the license in LICENSE.txt in the top
+/// InstaWorks directory.
 ///
 // --------------------------------------------------------------------------
 
