@@ -374,6 +374,8 @@ bool main_callback(int argc, char **argv) {
 /// @param argv The arguments.
 /// @return -1 if an error occurred.
 int main(int argc, char **argv) {
+    unsigned int exit_code = -1;
+
     // No calls to the instaworks framework should be done before calling
     // iw_init() or before iw_main() calls the provided callback function.
 
@@ -389,18 +391,25 @@ int main(int argc, char **argv) {
     // program can print out help for the user.
     IW_MAIN_EXIT retval = iw_main(main_callback, true, argc, argv);
 
-    if(retval == IW_MAIN_SRV_INVALID_PARAMETER) {
+    switch(retval) {
+    case IW_MAIN_SRV_INVALID_PARAMETER :
         print_help("Invalid command-line options");
-    } else if(retval == IW_MAIN_SRV_NO_OPTS) {
+        break;
+    case IW_MAIN_SRV_NO_OPTS :
         print_help(NULL);
+        break;
+    case IW_MAIN_SRV_OK :
+    case IW_MAIN_CLNT_OK :
+        exit_code = 0;
+        break;
+    case IW_MAIN_SRV_FAILED :
+        printf("Failed to start program!\n");
+        break;
+    default :
+        break;
     }
 
-    if(!(retval == IW_MAIN_SRV_OK || retval == IW_MAIN_CLNT_OK)) {
-        printf("Failed to start server!\n");
-        exit(-1);
-    }
-
-    return 0;
+    return exit_code;
 }
 
 // --------------------------------------------------------------------------

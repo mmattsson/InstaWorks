@@ -196,6 +196,11 @@ int main(int argc, char **argv) {
     // are set before they are accessed.
     iw_stg.iw_cmd_port = 10002;
 
+    if(argc == 1) {
+        print_help(NULL);
+        exit(0);
+    }
+
     // Process command-line parameters ourselves before calling iw_main().
     while((opt = getopt(argc, argv, ":cfl:")) != -1) {
         switch(opt) {
@@ -232,12 +237,26 @@ int main(int argc, char **argv) {
     // 0 and NULL for argc and argv.
     IW_MAIN_EXIT retval = iw_main(main_callback, false, argc, argv);
 
-    if(!(retval == IW_MAIN_SRV_OK || retval == IW_MAIN_CLNT_OK)) {
-        printf("Failed to start server!\n");
-        exit(-1);
+    unsigned int exit_code = -1;
+    switch(retval) {
+    case IW_MAIN_SRV_INVALID_PARAMETER :
+        print_help("Invalid command-line options");
+        break;
+    case IW_MAIN_SRV_NO_OPTS :
+        print_help(NULL);
+        break;
+    case IW_MAIN_SRV_OK :
+    case IW_MAIN_CLNT_OK :
+        exit_code = 0;
+        break;
+    case IW_MAIN_SRV_FAILED :
+        printf("Failed to start program!\n");
+        break;
+    default :
+        break;
     }
 
-    return 0;
+    return exit_code;
 }
 
 // --------------------------------------------------------------------------

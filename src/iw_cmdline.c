@@ -92,7 +92,7 @@ static bool iw_cmdline_add_predefined_option(
     iw_opt *opt,
     IW_OPT_HELP_FN help_fn)
 {
-    char opt_string[3] = { '-', '\0', ch };
+    char opt_string[3] = { '-', ch, '\0' };
 
     if(ch == '\0') {
         // We won't add this option. Still return true since this isn't
@@ -113,7 +113,7 @@ static bool iw_cmdline_add_predefined_options() {
         IW_OPT_INDENT "Run the program in the foreground.",
         IW_OPT_FLAG, &s_foreground, NULL);
     iw_cmdline_add_predefined_option(
-        iw_stg.iw_cmd_line.foreground,
+        iw_stg.iw_cmd_line.log_level,
         NULL,
         IW_OPT_NUM, &s_loglevel, iw_cmdline_help_log);
 
