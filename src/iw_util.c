@@ -10,6 +10,7 @@
 
 #include "iw_util.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 
@@ -29,6 +30,11 @@ bool iw_strtol(const char *str, long int *number, unsigned int base) {
     }
     if(endptr == str) {
         // No digits found.
+        return false;
+    }
+    if(*endptr != '\0' && !isspace(*endptr)) {
+        // If the endptr isn't the end of the string or a space, then consider
+        // the digit invalid.
         return false;
     }
 

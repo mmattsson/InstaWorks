@@ -90,9 +90,6 @@ IW_MAIN_EXIT iw_main(
             // add the pre-defined options to the help output.
             return IW_MAIN_SRV_NO_OPTS;
         }
-
-        // Set the pre-defined option settings if applicable.
-        iw_cmdline_check_opts();
     }
 
     // Decide whether we should run as a server or not. If the

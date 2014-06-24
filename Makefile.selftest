@@ -14,7 +14,7 @@
 #
 # ---
 
-CFLAGS=-g -O0 -Iincludes -Wall -Werror
+CFLAGS=-g -O0 -Iincludes -Isrc -Wall -Werror
 LDFLAGS=-L./bin -linstaworks -lpthread
 
 # ---

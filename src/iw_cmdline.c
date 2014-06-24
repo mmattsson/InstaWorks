@@ -126,6 +126,16 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
     bool found_opts = false;
     int cnt;
 
+    // Start with clearing all option values. This may be needed if the
+    // iw_cmdline_process() function is called multiple times.
+    unsigned long hash;
+    iw_opt_info *opt_info = (iw_opt_info *)iw_htable_get_first(&s_options, &hash);
+    while(opt_info != NULL) {
+        opt_info->opt->is_set = false;
+        memset(&(opt_info->opt->val), 0, sizeof(opt_info->opt->val));
+        opt_info = (iw_opt_info *)iw_htable_get_next(&s_options, &hash);
+    }
+
     for(;*processed < argc;(*processed)++) {
         char *cur_argv = argv[*processed];
         iw_opt_info *opt_info = (iw_opt_info *)iw_htable_get(&s_options,
@@ -153,13 +163,14 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
                 // No character present.
                 return IW_CMD_OPT_INVALID;
             }
+            opt_info->opt->val.ch = argv[*processed+1][0];
             (*processed)++; // Account for the parameter.
             break;
         case IW_OPT_NUM :
             // A number, there must be at least one more argument and it
             // must be a number.
             if(*processed >= argc - 1 ||
-               !iw_strtol(argv[*processed+1], &(opt_info->opt->val.num), 16))
+               !iw_strtol(argv[*processed+1], &(opt_info->opt->val.num), 0))
             {
                 // No number present.
                 return IW_CMD_OPT_INVALID;
@@ -177,7 +188,8 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
             break;
         case IW_OPT_CALLBACK :
             // A callback. We should call the given function.
-            cnt = argc - *processed;
+            (*processed)++;
+            cnt = 0;
             if(!opt_info->proc_fn(&cnt,
                                   argc - *processed,
                                   argv + *processed,
@@ -193,7 +205,21 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
         opt_info->opt->is_set = true;
     }
 
-    return found_opts ? IW_CMD_OPT_NONE : IW_CMD_OPT_OK;
+    // Check for mandatory options. Make sure that all mandatory options
+    // actually were set.
+    opt_info = (iw_opt_info *)iw_htable_get_first(&s_options, &hash);
+    while(opt_info != NULL) {
+        if(opt_info->mandatory && !opt_info->opt->is_set) {
+            return IW_CMD_OPT_INVALID;
+        }
+        opt_info = (iw_opt_info *)iw_htable_get_next(&s_options, &hash);
+    }
+
+
+    // Set the pre-defined option settings if applicable.
+    iw_cmdline_check_opts();
+
+    return found_opts ? IW_CMD_OPT_OK : IW_CMD_OPT_NONE;
 }
 
 // --------------------------------------------------------------------------

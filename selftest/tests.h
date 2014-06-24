@@ -43,6 +43,10 @@ extern void test_hash_table(test_result *result);
 /// @param result The result of the test.
 extern void test_syslog(test_result *result);
 
+/// @brief The command-line options test suite.
+/// @param result The result of the test.
+extern void test_opts(test_result *result);
+
 // --------------------------------------------------------------------------
 
 #ifdef _cplusplus

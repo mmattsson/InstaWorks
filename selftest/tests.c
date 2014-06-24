@@ -19,6 +19,7 @@ test_info s_tests[] = {
     { test_buff, "Buffer Test" },
     { test_hash_table, "Hash Table Test" },
     { test_syslog, "Syslog Ring Buffer Test" },
+    { test_opts, "Command-line option parsing Test" },
     { NULL, NULL }
 };
 
