@@ -24,6 +24,19 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
+/// Helper macro to stringify tokens
+#define _STR(x) #x
+
+/// @brief Macro to create strings out of tokens.
+/// For example, if you have a define that defines a number, you can use
+/// IW_STR(x) to create a string using that number.
+/// \#define NUM 5
+/// strlen(IW_STR(NUM));
+/// @param x The token to stringify
+#define IW_STR(x) _STR(x)
+
+// --------------------------------------------------------------------------
+
 /// @brief Return the length of the given array.
 /// @param x The array to return the length of.
 /// @return The length of the array.

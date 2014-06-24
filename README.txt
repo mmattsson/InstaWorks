@@ -19,7 +19,9 @@ Therefore, InstaWorks was created to provide an instant debug framework
 support library that can be used when creating new programs. By simply
 linking InstaWorks and use the provided API, a number of services are
 provided that helps provide debug facilities to any new program with a
-minimal amount of time needed.
+minimal amount of time needed. The time savings from not having to create
+debug facilities can be spent on adding more features to the new program
+instead.
 
 
 Features

@@ -19,6 +19,7 @@
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
+#include "iw_version.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -219,6 +220,13 @@ static bool cmd_syslog_clear(FILE *out, const char *cmd, iw_cmd_parse_info *info
 
 // --------------------------------------------------------------------------
 
+static bool cmd_iwver(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    fprintf(out, "InstaWorks version %s", IW_VER_STR);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
 static bool cmd_callstack(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     char *threadidstr = iw_cmd_get_token(info);
     if(threadidstr == NULL) {
@@ -323,6 +331,8 @@ bool iw_cmd_init() {
             "Display the syslog buffer", "Displays the syslogs sent by the process.");
     iw_cmd_add("syslog", "clear", cmd_syslog_clear,
             "Clear the syslog buffer", "Clears all messages from the syslog buffer.");
+    iw_cmd_add(NULL, "iwver", cmd_iwver,
+            "Displays InstaWorks version", "Displays the InstaWorks version information");
 
     return true;
 }
