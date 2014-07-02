@@ -15,11 +15,12 @@
 // --------------------------------------------------------------------------
 
 test_info s_tests[] = {
-    { test_list, "List Test" },
-    { test_buff, "Buffer Test" },
-    { test_hash_table, "Hash Table Test" },
-    { test_syslog, "Syslog Ring Buffer Test" },
-    { test_opts, "Command-line option parsing Test" },
+    { test_list,        "List test" },
+    { test_buff,        "Buffer test" },
+    { test_hash_table,  "Hash table test" },
+    { test_syslog,      "Syslog ring buffer test" },
+    { test_opts,        "Command-line option parsing test" },
+    { test_ip,          "IP address utility test" },
     { NULL, NULL }
 };
 

@@ -14,6 +14,7 @@
 // --------------------------------------------------------------------------
 
 #include <iw_cmds.h>
+#include <iw_ip.h>
 #include <iw_log.h>
 #include <iw_list.h>
 #include <iw_main.h>
@@ -92,32 +93,6 @@ static void delete_tcp_conn(iw_list_node *node) {
 
 // --------------------------------------------------------------------------
 
-/// @brief Convert a socket address to a string representation.
-/// @param address The address to convert.
-/// @param buff The buffer to put the string into. Should be INET6_ADDRSTRLEN.
-/// @param buff_len The size of the buffer.
-/// @param port A pointer to an unsigned short to receive the port number.
-static void addr_to_str(
-    struct sockaddr_storage *address,
-    char *buff,
-    unsigned int buff_len,
-    unsigned short *port)
-{
-    if(address->ss_family == AF_INET) {
-        struct sockaddr_in *s = (struct sockaddr_in *)address;
-        *port = ntohs(s->sin_port);
-        inet_ntop(AF_INET, &s->sin_addr, buff, buff_len);
-    } else if(address->ss_family == AF_INET6) {
-        struct sockaddr_in6 *s = (struct sockaddr_in6 *)address;
-        *port = ntohs(s->sin6_port);
-        inet_ntop(AF_INET6, &s->sin6_addr, buff, buff_len);
-    } else {
-        *port = 0;
-    }
-}
-
-// --------------------------------------------------------------------------
-
 /// @brief List all peers currently connected to the server.
 /// @param out The output file stream to display the connections on.
 /// @param cmd The command request being processed.
@@ -130,50 +105,17 @@ static bool list_connections(FILE *out, const char *cmd, iw_cmd_parse_info *info
         fprintf(out, "<no connections>\n");
     } else {
         for(;conn != NULL;cnt++) {
-            char ipbuff[INET6_ADDRSTRLEN];
+            char ipbuff[IW_IP_BUFF_LEN];
             unsigned short port = 0;
-            addr_to_str(&conn->address, ipbuff, sizeof(ipbuff), &port);
+            iw_ip_addr_to_str(&conn->address, ipbuff, sizeof(ipbuff));
             fprintf(out, "Connection %-3d: FD=%d Client=%s/%d, RX=%d bytes, TX=%d bytes\n",
-                    cnt, conn->fd, ipbuff, port, conn->rx, conn->tx);
+                    cnt, conn->fd, ipbuff,
+                    iw_ip_get_port(&conn->address),
+                    conn->rx, conn->tx);
             conn = (tcp_conn *)conn->node.next;
         }
     }
     iw_mutex_unlock(s_mutex);
-    return true;
-}
-
-// --------------------------------------------------------------------------
-
-/// @brief Open a TCP server socket.
-/// @return True if the socket was successfully opened.
-static bool open_server_socket() {
-    s_sock = socket(AF_INET6, SOCK_STREAM, 0);
-    if(s_sock == -1) {
-        LOG(SIMPLE_LOG, "Failed to open server socket (%d:%s)",
-            errno, strerror(errno));
-        return false;
-    }
-
-    struct sockaddr_in6 address;
-    memset(&address, 0, sizeof(address));
-    address.sin6_family = AF_INET6;
-    address.sin6_addr = in6addr_any;
-    address.sin6_port = htons(s_port);
-    if(bind(s_sock, (struct sockaddr *)&address, sizeof(address)) != 0) {
-        LOG(SIMPLE_LOG, "Failed to bind server socket (%d:%s)",
-            errno, strerror(errno));
-        close(s_sock);
-        return false;
-    }
-
-    if(listen(s_sock, 5) != 0) {
-        LOG(SIMPLE_LOG, "Failed to listen on server socket (%d:%s)",
-            errno, strerror(errno));
-        close(s_sock);
-        return false;
-    }
-
-    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Opened server socket on port %d!", ntohs(address.sin6_port));
     return true;
 }
 
@@ -210,10 +152,9 @@ static bool serve_data() {
                     errno, strerror(errno));
             } else {
                 char ipbuff[INET6_ADDRSTRLEN];
-                unsigned short port = 0;
-                addr_to_str(&address, ipbuff, sizeof(ipbuff), &port);
+                iw_ip_addr_to_str(&address, ipbuff, sizeof(ipbuff));
                 IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Accepted socket FD=%d from client %s:%d",
-                        sock, ipbuff, port);
+                        sock, ipbuff, iw_ip_get_port(&address));
                 conn = create_tcp_conn(sock, &address);
                 iw_list_add(&s_list, (iw_list_node *)conn);
             }
@@ -245,12 +186,10 @@ static bool serve_data() {
                     }
                 } else if(bytes == 0) {
                     // Received a socket disconnect, remove socket from list.
-                    struct sockaddr_in *s = (struct sockaddr_in *)&conn->address;
-                    unsigned short port = ntohs(s->sin_port);
-                    char ipbuff[INET_ADDRSTRLEN];
-                    inet_ntop(AF_INET, &s->sin_addr, ipbuff, sizeof(ipbuff));
+                    char ipbuff[IW_IP_BUFF_LEN];
+                    iw_ip_addr_to_str(&conn->address, ipbuff, sizeof(ipbuff));
                     IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Socket FD=%d, client %s:%d, is closed",
-                            conn->fd, ipbuff, port);
+                            conn->fd, ipbuff, iw_ip_get_port(&conn->address));
                     close(conn->fd);
                     conn = (tcp_conn *)iw_list_delete(&s_list, 
                                                       (iw_list_node *)conn,
@@ -351,9 +290,17 @@ bool main_callback(int argc, char **argv) {
 
     // Open the server socket
     LOG(SIMPLE_LOG, "Starting the simple server.");
-    if(!open_server_socket()) {
+    iw_ip address;
+    if(!iw_ip_str_to_addr("::", &address) ||
+       !iw_ip_set_port(&address, s_port)  ||
+       ((s_sock = iw_ip_open_server_socket(SOCK_STREAM, &address)) == -1))
+    {
+        LOG(SIMPLE_LOG, "Failed to open server socket");
         return false;
     }
+
+    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Opened server socket on port %d!",
+              s_port);
 
     // Start serving clients
     if(!serve_data()) {

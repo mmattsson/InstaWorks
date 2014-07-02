@@ -47,6 +47,9 @@ void iw_init() {
         iw_thread_init();
         iw_health_start();
         s_initialized = true;
+        if(iw_stg.iw_log_level != 0) {
+            iw_log_set_level("stdout", iw_stg.iw_log_level);
+        }
     }
 }
 
@@ -97,9 +100,6 @@ IW_MAIN_EXIT iw_main(
     // we start the client.
     if(iw_stg.iw_foreground) {
         iw_init();
-        if(iw_stg.iw_log_level != 0) {
-            iw_log_set_level("stdout", iw_stg.iw_log_level);
-        }
         iw_thread_register_main();
         bool retval = iw_cmd_srv(main_fn, iw_stg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
         iw_exit();

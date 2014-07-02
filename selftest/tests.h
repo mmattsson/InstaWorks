@@ -47,6 +47,10 @@ extern void test_syslog(test_result *result);
 /// @param result The result of the test.
 extern void test_opts(test_result *result);
 
+/// @brief The IP address utility test suite.
+/// @param result The result of the test.
+extern void test_ip(test_result *result);
+
 // --------------------------------------------------------------------------
 
 #ifdef _cplusplus

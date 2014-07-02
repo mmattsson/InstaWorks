@@ -15,6 +15,9 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 // --------------------------------------------------------------------------
 
@@ -121,10 +124,40 @@ static void run_tests() {
 
 // --------------------------------------------------------------------------
 
+static void print_help() {
+    printf("Usage: selftest [options]\n"
+            "Options can be:\n"
+            "-v : Verbose, show all debug logs\n"
+            "\n");
+    exit(0);
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief The selftest main entrypoint.
 /// @param argc The argument count.
 /// @param argv The arguments.
 int main(int argc, char **argv) {
+    if(argc > 2 || (argc == 2 && strcmp(argv[1], "-v") != 0)) {
+        print_help();
+    }
+
+    int opt;
+    while((opt = getopt(argc, argv, ":v")) != -1) {
+        switch(opt) {
+        case 'v':
+            iw_stg.iw_log_level = 0xFF;
+            break;
+        default :
+            print_help();
+            break;
+        }
+    }
+    if(optind < argc) {
+        // No arguments expected in addition to options.
+        print_help();
+    }
+
     // Disable memory tracking and health check thread to avoid false
     // positives and avoid hiding real issues in valgrind.
     iw_stg.iw_memtrack_enable    = false;
