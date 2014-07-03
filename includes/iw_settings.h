@@ -28,6 +28,9 @@ extern "C" {
 /// The default foreground option character.
 #define IW_DEF_OPT_FOREGROUND       'f'
 
+/// The default daemonize option character.
+#define IW_DEF_OPT_DAEMONIZE        'd'
+
 /// The default log-level option character.
 #define IW_DEF_OPT_LOG_LEVEL        'l'
 
@@ -68,12 +71,21 @@ typedef struct _iw_settings {
         /// tells the program to run as a server.
         char foreground;
 
+        /// The option character to make the process daemonize itself.
+        char daemonize;
+
         /// The option character to set a log level when running the process.
         char log_level;
     } iw_cmd_line;
 
     /// True if the program should be run in the foreground as a server.
     bool iw_foreground;
+
+    /// True if the process should be daemonized.
+    bool iw_daemonize;
+
+    /// True if the client control program is allowed to use the 'quit' command.
+    bool iw_allow_quit;
 
     /// True if the memory tracking module should be used (default is true)
     bool iw_memtrack_enable;
@@ -99,6 +111,25 @@ typedef struct _iw_settings {
 
 /// The global settings variable. All InstaWorks settings can be set from here.
 extern iw_settings iw_stg;
+
+// --------------------------------------------------------------------------
+
+/// The callback for shutdown.
+typedef bool (*IW_SHUTDOWN_CB)();
+
+// --------------------------------------------------------------------------
+
+/// The set of callbacks to register with the library.
+typedef struct _iw_callbacks {
+    /// The shutdown callback. Should be set if the program needs to do
+    /// cleanup at shutdown.
+    IW_SHUTDOWN_CB shutdown;
+} iw_callbacks;
+
+// --------------------------------------------------------------------------
+
+/// The global callback variable.
+extern iw_callbacks iw_cb;
 
 // --------------------------------------------------------------------------
 

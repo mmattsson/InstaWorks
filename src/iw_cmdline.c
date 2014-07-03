@@ -54,8 +54,8 @@ typedef struct _iw_opt_info {
 static iw_htable s_options;
 
 // The locally pre-defined options
-
 static iw_opt s_foreground;
+static iw_opt s_daemon;
 static iw_opt s_loglevel;
 
 // --------------------------------------------------------------------------
@@ -67,6 +67,9 @@ static iw_opt s_loglevel;
 void iw_cmdline_check_opts() {
     if(s_foreground.is_set) {
         iw_stg.iw_foreground = s_foreground.val.flag;
+    }
+    if(s_daemon.is_set) {
+        iw_stg.iw_daemonize = s_daemon.val.flag;
     }
     if(s_loglevel.is_set) {
         iw_stg.iw_log_level = s_loglevel.val.num;
@@ -112,6 +115,10 @@ static bool iw_cmdline_add_predefined_options() {
         iw_stg.iw_cmd_line.foreground,
         IW_OPT_INDENT "Run the program in the foreground.",
         IW_OPT_FLAG, &s_foreground, NULL);
+    iw_cmdline_add_predefined_option(
+        iw_stg.iw_cmd_line.daemonize,
+        IW_OPT_INDENT "Run the process as a daemon.",
+        IW_OPT_FLAG, &s_daemon, NULL);
     iw_cmdline_add_predefined_option(
         iw_stg.iw_cmd_line.log_level,
         NULL,

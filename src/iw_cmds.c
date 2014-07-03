@@ -13,6 +13,7 @@
 
 #include "iw_htable.h"
 #include "iw_log_int.h"
+#include "iw_main.h"
 #include "iw_memory_int.h"
 #include "iw_mutex_int.h"
 #include "iw_settings.h"
@@ -227,6 +228,17 @@ static bool cmd_iwver(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 
 // --------------------------------------------------------------------------
 
+static bool cmd_quit(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    fprintf(out, "Shutting down");
+    if(iw_cb.shutdown != NULL) {
+        iw_cb.shutdown();
+    }
+    iw_exit();
+    exit(0);
+}
+
+// --------------------------------------------------------------------------
+
 static bool cmd_callstack(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     char *threadidstr = iw_cmd_get_token(info);
     if(threadidstr == NULL) {
@@ -333,6 +345,11 @@ bool iw_cmd_init() {
             "Clear the syslog buffer", "Clears all messages from the syslog buffer.");
     iw_cmd_add(NULL, "iwver", cmd_iwver,
             "Displays InstaWorks version", "Displays the InstaWorks version information");
+
+    if(iw_stg.iw_allow_quit) {
+        iw_cmd_add(NULL, "quit", cmd_quit,
+                "Shut down the program", "Sends a command to the running program that causes it to shut down");
+    }
 
     return true;
 }

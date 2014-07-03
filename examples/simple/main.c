@@ -331,6 +331,7 @@ int main(int argc, char **argv) {
     // are set before they are accessed.
     iw_stg.iw_syslog_size = 1000;
     iw_stg.iw_cmd_port    = 10001;
+    iw_stg.iw_allow_quit  = true;
 
     // Calling iw_main(). The exit code tells us if the program was invoked
     // as a client or server, and whether the command line parameters

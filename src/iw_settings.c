@@ -22,9 +22,12 @@ iw_settings iw_stg = {
     IW_DEF_COMMAND_PORT,
     {
         IW_DEF_OPT_FOREGROUND,
+        IW_DEF_OPT_DAEMONIZE,
         IW_DEF_OPT_LOG_LEVEL
     },
-    false,
+    false, // Foreground?
+    false, // Daemonize?
+    false, // Allow quit?
     IW_DEF_MEMTRACK_ENABLE,
     IW_DEF_MEMTRACK_SIZE,
     IW_DEF_LOG_LEVEL,
@@ -33,6 +36,12 @@ iw_settings iw_stg = {
 
     // The following parameters should only be accessed.
     "instaworks"
+};
+
+// --------------------------------------------------------------------------
+
+iw_callbacks iw_cb = {
+        NULL
 };
 
 // --------------------------------------------------------------------------

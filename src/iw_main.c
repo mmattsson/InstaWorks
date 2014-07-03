@@ -98,7 +98,12 @@ IW_MAIN_EXIT iw_main(
     // Decide whether we should run as a server or not. If the
     // 'foreground' option is given then we start the server. Otherwise
     // we start the client.
-    if(iw_stg.iw_foreground) {
+    if(iw_stg.iw_foreground || iw_stg.iw_daemonize) {
+        if(iw_stg.iw_daemonize) {
+            if(daemon(0, 0) != 0) {
+                return IW_MAIN_SRV_FAILED;
+            }
+        }
         iw_init();
         iw_thread_register_main();
         bool retval = iw_cmd_srv(main_fn, iw_stg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
