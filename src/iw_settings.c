@@ -11,10 +11,11 @@
 #include "iw_settings.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // --------------------------------------------------------------------------
 //
-// Function API
+// Data structures
 //
 // --------------------------------------------------------------------------
 
@@ -28,6 +29,7 @@ iw_settings iw_stg = {
     false, // Foreground?
     false, // Daemonize?
     false, // Allow quit?
+    IW_DEF_CRASH_HANDLER_ENABLE,
     IW_DEF_MEMTRACK_ENABLE,
     IW_DEF_MEMTRACK_SIZE,
     IW_DEF_LOG_LEVEL,
@@ -43,5 +45,20 @@ iw_settings iw_stg = {
 iw_callbacks iw_cb = {
         NULL
 };
+
+// --------------------------------------------------------------------------
+
+char *s_callstack_file = NULL;
+
+// --------------------------------------------------------------------------
+//
+// Function API
+//
+// --------------------------------------------------------------------------
+
+void iw_stg_set_callstack_file(const char *file) {
+    free(s_callstack_file);
+    s_callstack_file = strdup(file);
+}
 
 // --------------------------------------------------------------------------

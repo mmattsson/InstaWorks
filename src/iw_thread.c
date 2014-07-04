@@ -15,6 +15,7 @@
 #include "iw_memory.h"
 #include "iw_mutex_int.h"
 #include "iw_settings.h"
+#include "iw_settings_int.h"
 
 #include <execinfo.h>
 #include <fcntl.h>
@@ -101,24 +102,34 @@ static void iw_thread_signal(int sig) {
     case SIGILL  :
     case SIGABRT :
     case SIGFPE  :
-    case SIGSEGV :
-    case SIGBUS  : {
+    case SIGBUS  :
+    case SIGSEGV : {
             // First try to get backtrace and symbols without calling
             // other non-safe functions. These calls aren't safe either
             // but without them we have nothing.
             int cnt = 0;
-            int fd = open("/tmp/callstack.txt",
+            int fd = open(s_callstack_file != NULL ?
+                                s_callstack_file : IW_DEF_CALLSTACK_FILE,
                           O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
             if(fd != -1) {
                 WRITE_STR(fd, "Program: ");
                 WRITE_PTR(fd, iw_stg.iw_prg_name);
                 WRITE_STR(fd, "\r\nCaught signal: ");
                 WRITE_NUM(fd, sig)
-                WRITE_STR(fd, "\r\nCallstack:\r\n-------------------\r\n");
+                WRITE_STR(fd, "(");
+                switch(sig) {
+                case SIGILL  : WRITE_STR(fd, "SIGILL");  break;
+                case SIGABRT : WRITE_STR(fd, "SIGABRT"); break;
+                case SIGFPE  : WRITE_STR(fd, "SIGFPE");  break;
+                case SIGBUS  : WRITE_STR(fd, "SIGBUS");  break;
+                case SIGSEGV : WRITE_STR(fd, "SIGSEGV"); break;
+                }
+                WRITE_STR(fd, ")\r\nCallstack:\r\n-------------------\r\n");
 
                 void *buffer[MAX_STACK];
                 int nptrs = backtrace(buffer, MAX_STACK);
                 backtrace_symbols_fd(buffer, nptrs, fd);
+                WRITE_STR(fd, "\r\n");
                 close(fd);
             }
 
@@ -138,11 +149,14 @@ static void iw_thread_install_sighandler() {
     sa.sa_flags   = SA_RESTART;
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
-    sigaction(SIGILL, &sa, NULL);
-    sigaction(SIGABRT, &sa, NULL);
-    sigaction(SIGFPE, &sa, NULL);
-    sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGBUS, &sa, NULL);
+
+    if(iw_stg.iw_crashhandle_enable) {
+        sigaction(SIGILL, &sa, NULL);
+        sigaction(SIGABRT, &sa, NULL);
+        sigaction(SIGFPE, &sa, NULL);
+        sigaction(SIGBUS, &sa, NULL);
+        sigaction(SIGSEGV, &sa, NULL);
+    }
 }
 
 // --------------------------------------------------------------------------

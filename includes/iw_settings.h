@@ -34,6 +34,12 @@ extern "C" {
 /// The default log-level option character.
 #define IW_DEF_OPT_LOG_LEVEL        'l'
 
+/// The default crash handler setting.
+#define IW_DEF_CRASH_HANDLER_ENABLE true
+
+/// The default file to use for callstacks.
+#define IW_DEF_CALLSTACK_FILE       "/tmp/callstack.txt"
+
 /// The default memory tracking enabled setting.
 #ifdef IW_NO_MEMORY_TRACKING
 #define IW_DEF_MEMTRACK_ENABLE      false
@@ -87,6 +93,9 @@ typedef struct _iw_settings {
     /// True if the client control program is allowed to use the 'quit' command.
     bool iw_allow_quit;
 
+    /// True if the crash handler should be enabled.
+    bool iw_crashhandle_enable;
+
     /// True if the memory tracking module should be used (default is true)
     bool iw_memtrack_enable;
 
@@ -130,6 +139,18 @@ typedef struct _iw_callbacks {
 
 /// The global callback variable.
 extern iw_callbacks iw_cb;
+
+// --------------------------------------------------------------------------
+//
+// Function API
+//
+// --------------------------------------------------------------------------
+
+/// @brief Set the file name of the callstack file.
+/// Set the name of the file where any callstacks should be saved in case
+/// the program crashes.
+/// @param file The name of the callstack file.
+extern void iw_stg_set_callstack_file(const char *file);
 
 // --------------------------------------------------------------------------
 

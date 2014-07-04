@@ -211,6 +211,7 @@ int main(int argc, char **argv) {
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
     iw_stg.iw_cmd_port = 10002;
+    iw_stg_set_callstack_file("/tmp/philo.txt");
 
     if(argc == 1) {
         print_help(NULL);
