@@ -12,6 +12,7 @@
 ///
 // --------------------------------------------------------------------------
 
+#include <iw_cmds.h>
 #include <iw_log.h>
 #include <iw_main.h>
 #include <iw_memory.h>
@@ -113,6 +114,14 @@ void *philo_callback(void *param) {
 
 // --------------------------------------------------------------------------
 
+bool crash(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    char *ptr = NULL;
+    *ptr = 'w';
+    return false;
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief The main callback function.
 /// Called by the framework once the initial setup is done.
 /// @param argc The number of arguments.
@@ -122,6 +131,13 @@ bool main_callback(int argc, char **argv) {
     int max;
     intptr_t cnt;
     char buffer[32];
+
+    // Add a command to display the currently connected clients.
+    iw_cmd_add(NULL, "crash", crash,
+            "Causes a de-reference of an invalid pointer.",
+            "Used to show the InstaWorks crash-handler functionality.\n"
+            );
+
     s_mutexes = (IW_MUTEX *)IW_CALLOC(num_philosophers, sizeof(IW_MUTEX));
 
     // Set the random seed for the philosophers

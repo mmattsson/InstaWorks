@@ -14,12 +14,17 @@
 #include "iw_log.h"
 #include "iw_memory.h"
 #include "iw_mutex_int.h"
+#include "iw_settings.h"
 
 #include <execinfo.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 // --------------------------------------------------------------------------
 //
@@ -29,6 +34,15 @@
 
 /// The maximum number of function calls to include in the backtrace.
 #define MAX_STACK   100
+
+/// Helper macro to write a pointer to a string using write()
+#define WRITE_PTR(fd,x)     for(cnt=0;x[cnt] != '\0';cnt++) {}; write(fd, x, cnt);
+
+/// Helper macro to write a string to a file descriptor using write()
+#define WRITE_STR(fd,x)     write(fd, x, sizeof(x));
+
+/// Helper macro to write a number to a file descriptor using write()
+#define WRITE_NUM(fd,num)   for(cnt=num;num>0;num/=10) { char ch; ch='0'+(num%10); write(fd, &ch, 1); }
 
 // --------------------------------------------------------------------------
 //
@@ -60,8 +74,9 @@ static void iw_thread_info_delete(void *node) {
 /// @brief The thread signal handler.
 /// @param sig The signal being sent to the thread.
 static void iw_thread_signal(int sig) {
-    iw_thread_info *tinfo = pthread_getspecific(s_thread_key);
-    if(sig == SIGUSR1) {
+    switch(sig) {
+    case SIGUSR1 : {
+        iw_thread_info *tinfo = pthread_getspecific(s_thread_key);
         int cnt;
         void *buffer[MAX_STACK];
         int nptrs = backtrace(buffer, MAX_STACK);
@@ -82,7 +97,52 @@ static void iw_thread_signal(int sig) {
             }
         }
         LOG(IW_LOG_IW, " ^-- Thread [%08X] backtrace --^", pthread_self());
+        } break;
+    case SIGILL  :
+    case SIGABRT :
+    case SIGFPE  :
+    case SIGSEGV :
+    case SIGBUS  : {
+            // First try to get backtrace and symbols without calling
+            // other non-safe functions. These calls aren't safe either
+            // but without them we have nothing.
+            int cnt = 0;
+            int fd = open("/tmp/callstack.txt",
+                          O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
+            if(fd != -1) {
+                WRITE_STR(fd, "Program: ");
+                WRITE_PTR(fd, iw_stg.iw_prg_name);
+                WRITE_STR(fd, "\r\nCaught signal: ");
+                WRITE_NUM(fd, sig)
+                WRITE_STR(fd, "\r\nCallstack:\r\n-------------------\r\n");
+
+                void *buffer[MAX_STACK];
+                int nptrs = backtrace(buffer, MAX_STACK);
+                backtrace_symbols_fd(buffer, nptrs, fd);
+                close(fd);
+            }
+
+            // Finally, exit.
+            _exit(-1);
+       } break;
     }
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Install signal handlers for the thread.
+static void iw_thread_install_sighandler() {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = iw_thread_signal;
+    sa.sa_flags   = SA_RESTART;
+    sigfillset(&sa.sa_mask);
+    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
+    sigaction(SIGFPE, &sa, NULL);
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGBUS, &sa, NULL);
 }
 
 // --------------------------------------------------------------------------
@@ -104,10 +164,7 @@ static void *iw_thread_callback(void *param) {
     pthread_rwlock_unlock(&s_thread_lock);
 
     // Install signal handler for the thread
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = iw_thread_signal;
-    sigaction(SIGUSR1, &sa, NULL);
+    iw_thread_install_sighandler();
 
     // Call back into the thread callback function
     tinfo->fn(tinfo->param);
@@ -137,10 +194,8 @@ void iw_thread_init() {
 // --------------------------------------------------------------------------
 
 void iw_thread_register_main() {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = iw_thread_signal;
-    sigaction(SIGUSR1, &sa, NULL);
+    // Install signal handler for the thread
+    iw_thread_install_sighandler();
 
     iw_thread_info *tinfo = (iw_thread_info *)calloc(1,
                                                      sizeof(iw_thread_info));

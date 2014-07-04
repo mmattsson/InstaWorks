@@ -26,7 +26,7 @@ extern "C" {
 #define IW_VERSION_MAJOR        0
 
 /// The minor version number of the InstaWorks library.
-#define IW_VERSION_MINOR        1
+#define IW_VERSION_MINOR        11
 
 /// A string representation of the version number.
 #define IW_VER_STR              IW_STR(IW_VERSION_MAJOR)"."IW_STR(IW_VERSION_MINOR)

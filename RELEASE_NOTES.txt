@@ -1,7 +1,13 @@
 InstaWorks debug framework
 =============================================================================
 
-Release version 0.1 - 2014-06-2x
+Release version 0.11 - 2014-07-03
+-----------------------------------------------------------------------------
+Added
++ Crash handler
++ Daemonize option
+
+Release version 0.1 - 2014-07-01
 -----------------------------------------------------------------------------
 First release, contains features such as:
 + Debug logs

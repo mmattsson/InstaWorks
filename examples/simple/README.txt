@@ -62,7 +62,7 @@ command line options.
 The first thing that is done in the main() function is to set the desired
 InstaWorks settings by assigning values to the members of iw_stg.
 
-No log levels or run-time queries can be registered before the call to
+No log levels or control commands can be registered before the call to
 iw_main(). These has to be registered after the callback is done so this
 is done in main_callback().
 

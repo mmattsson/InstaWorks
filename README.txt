@@ -35,9 +35,9 @@ InstaWorks provides a debug log mechanism so that a program can send debug
 logs to any terminal. Different log levels are supported as well as the
 ability to enable and disable these log levels during run-time.
 
-Run-time query
+Control commands
 -------------------
-InstaWorks has a run-time query feature which allows the same program to be
+InstaWorks has a control command feature which allows the same program to be
 invoked in two different modes. The main mode is the server mode. This is
 used when running the program to provide whatever feature or service that
 the program provides. The other mode is a client mode. All command line
@@ -45,7 +45,7 @@ input in client mode is sent to the currently running server instance and
 the server can respond to the client and have the output be shown on the
 terminal that the client is executed from.
 
-This allows you to provide run-time queries where the user can issue a
+This allows you to provide control commands where the user can issue a
 command and have the server print out information, e.g. the number of
 clients connected to the server and what addresses they are connected
 from.
