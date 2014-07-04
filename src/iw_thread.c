@@ -37,13 +37,13 @@
 #define MAX_STACK   100
 
 /// Helper macro to write a pointer to a string using write()
-#define WRITE_PTR(fd,x)     for(cnt=0;x[cnt] != '\0';cnt++) {}; write(fd, x, cnt);
+#define WRITE_PTR(fd,x)     { int cnt; for(cnt=0;x[cnt] != '\0';cnt++) {}; write(fd, x, cnt); }
 
 /// Helper macro to write a string to a file descriptor using write()
-#define WRITE_STR(fd,x)     write(fd, x, sizeof(x));
+#define WRITE_STR(fd,x)     write(fd, x, sizeof(x))
 
 /// Helper macro to write a number to a file descriptor using write()
-#define WRITE_NUM(fd,num)   for(cnt=num;num>0;num/=10) { char ch; ch='0'+(num%10); write(fd, &ch, 1); }
+#define WRITE_NUM(fd,num)   { int cnt; for(cnt=num;cnt>0;cnt/=10) { char ch; ch='0'+(cnt%10); write(fd, &ch, 1); } }
 
 // --------------------------------------------------------------------------
 //
@@ -107,7 +107,6 @@ static void iw_thread_signal(int sig) {
             // First try to get backtrace and symbols without calling
             // other non-safe functions. These calls aren't safe either
             // but without them we have nothing.
-            int cnt = 0;
             int fd = open(s_callstack_file != NULL ?
                                 s_callstack_file : IW_DEF_CALLSTACK_FILE,
                           O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
@@ -116,13 +115,14 @@ static void iw_thread_signal(int sig) {
                 WRITE_PTR(fd, iw_stg.iw_prg_name);
                 WRITE_STR(fd, "\r\nCaught signal: ");
                 WRITE_NUM(fd, sig)
-                WRITE_STR(fd, "(");
+                WRITE_STR(fd, " (");
                 switch(sig) {
                 case SIGILL  : WRITE_STR(fd, "SIGILL");  break;
                 case SIGABRT : WRITE_STR(fd, "SIGABRT"); break;
                 case SIGFPE  : WRITE_STR(fd, "SIGFPE");  break;
                 case SIGBUS  : WRITE_STR(fd, "SIGBUS");  break;
                 case SIGSEGV : WRITE_STR(fd, "SIGSEGV"); break;
+                default : WRITE_STR(fd, "?"); break;
                 }
                 WRITE_STR(fd, ")\r\nCallstack:\r\n-------------------\r\n");
 
