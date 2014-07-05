@@ -37,13 +37,39 @@
 #define MAX_STACK   100
 
 /// Helper macro to write a pointer to a string using write()
-#define WRITE_PTR(fd,x)     { int cnt; for(cnt=0;x[cnt] != '\0';cnt++) {}; write(fd, x, cnt); }
+#define WRITE_PTR(fd,x)  \
+    { \
+        int cnt; \
+        for(cnt=0;(x)[cnt] != '\0';cnt++) \
+            ; \
+        write(fd, x, cnt); \
+    }
 
 /// Helper macro to write a string to a file descriptor using write()
 #define WRITE_STR(fd,x)     write(fd, x, sizeof(x))
 
 /// Helper macro to write a number to a file descriptor using write()
-#define WRITE_NUM(fd,num)   { int cnt; for(cnt=num;cnt>0;cnt/=10) { char ch; ch='0'+(cnt%10); write(fd, &ch, 1); } }
+#define WRITE_NUM(fd,num)  \
+    { \
+        char buff[16] = ""; \
+        int tmp, idx; \
+        for(idx=14,tmp=num;tmp != 0 && idx >= 0;tmp/=10,idx--) { \
+            buff[idx]='0'+(tmp%10); \
+        } \
+        WRITE_PTR(fd, buff + idx + 1); \
+    }
+
+/// Helper macro to write a hex number to a file descriptor using write()
+#define WRITE_HEX(fd,num) \
+    { \
+        char buff[16] = ""; \
+        unsigned long tmp, idx; \
+        for(idx=14,tmp=(long)num;tmp != 0 && idx >= 0;tmp>>=4,idx--) { \
+            buff[idx] = s_digits[tmp&0xF]; \
+        } \
+        WRITE_STR(fd, "0x"); \
+        WRITE_PTR(fd, buff + idx + 1); \
+    }
 
 // --------------------------------------------------------------------------
 //
@@ -60,6 +86,13 @@ pthread_key_t s_thread_key;
 /// The internal rwlock for access to the mutex hash.
 static pthread_rwlock_t s_thread_lock;
 
+/// Helper for WRITE_HEX() to convert to character string.
+static char s_digits[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+// --------------------------------------------------------------------------
+//
+// Internal helper functions
+//
 // --------------------------------------------------------------------------
 
 /// @brief Thread info deletion function.
@@ -74,7 +107,7 @@ static void iw_thread_info_delete(void *node) {
 
 /// @brief The thread signal handler.
 /// @param sig The signal being sent to the thread.
-static void iw_thread_signal(int sig) {
+static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
     switch(sig) {
     case SIGUSR1 : {
         iw_thread_info *tinfo = pthread_getspecific(s_thread_key);
@@ -124,7 +157,10 @@ static void iw_thread_signal(int sig) {
                 case SIGSEGV : WRITE_STR(fd, "SIGSEGV"); break;
                 default : WRITE_STR(fd, "?"); break;
                 }
-                WRITE_STR(fd, ")\r\nCallstack:\r\n-------------------\r\n");
+                WRITE_STR(fd, ")\r\nAddress: ");
+                void *ptr = si->si_addr;
+                WRITE_HEX(fd, ptr);
+                WRITE_STR(fd, "\r\nCallstack:\r\n-------------------\r\n");
 
                 void *buffer[MAX_STACK];
                 int nptrs = backtrace(buffer, MAX_STACK);
@@ -145,8 +181,8 @@ static void iw_thread_signal(int sig) {
 static void iw_thread_install_sighandler() {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = iw_thread_signal;
-    sa.sa_flags   = SA_RESTART;
+    sa.sa_sigaction = iw_thread_signal;
+    sa.sa_flags     = SA_RESTART | SA_SIGINFO;
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 

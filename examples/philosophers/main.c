@@ -115,7 +115,7 @@ void *philo_callback(void *param) {
 // --------------------------------------------------------------------------
 
 bool crash(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
-    char *ptr = NULL;
+    char *ptr = (char *)0xdeadbeef;
     *ptr = 'w';
     return false;
 }
