@@ -95,7 +95,7 @@ void test_list(test_result *result) {
 
     iw_list_destroy(&list, NULL);
     test(result, list.num_elems == 0, "Destroyed list is empty");
-    iw_list_init(&list);
+    iw_list_init(&list, false);
     test(result, list.num_elems == 0, "Re-initialized list is empty");
 
     test_display("insert element");
@@ -111,7 +111,7 @@ void test_list(test_result *result) {
 
     iw_list_destroy(&list, NULL);
     test(result, list.num_elems == 0, "Destroyed list is empty");
-    iw_list_init(&list);
+    iw_list_init(&list, false);
     test(result, list.num_elems == 0, "Re-initialized list is empty");
 
     test_display("insert element 2 after NULL");

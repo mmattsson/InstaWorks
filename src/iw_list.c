@@ -15,17 +15,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO: Make the allocator/free functions configurable so that we can use
-// the same list code for internal use as well as for users of the library.
-
 // --------------------------------------------------------------------------
 //
 // Function API
 //
 // --------------------------------------------------------------------------
 
-void iw_list_init(iw_list *list) {
+void iw_list_init(iw_list *list, bool iw_mem_alloc) {
     memset(list, 0, sizeof(iw_list));
+    list->iw_mem_alloc = iw_mem_alloc;
 }
 
 // --------------------------------------------------------------------------
@@ -46,7 +44,12 @@ iw_list_node *iw_list_add(iw_list *list, iw_list_node *node) {
 // --------------------------------------------------------------------------
 
 iw_list_node *iw_list_add_data(iw_list *list, void *data) {
-    iw_list_gen_node *node = (iw_list_gen_node *)calloc(1, sizeof(iw_list));
+    iw_list_gen_node *node = NULL;
+    if(list->iw_mem_alloc) {
+        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
+    } else {
+        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
+    }
     if(node == NULL) {
         return false;
     }
@@ -88,7 +91,12 @@ iw_list_node *iw_list_insert_before_data(
     iw_list_node *insert,
     void *data)
 {
-    iw_list_gen_node *node = (iw_list_gen_node *)calloc(1, sizeof(iw_list));
+    iw_list_gen_node *node = NULL;
+    if(list->iw_mem_alloc) {
+        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
+    } else {
+        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
+    }
     if(node == NULL) {
         return false;
     }
@@ -130,7 +138,12 @@ iw_list_node *iw_list_insert_after_data(
     iw_list_node *insert,
     void *data)
 {
-    iw_list_gen_node *node = (iw_list_gen_node *)calloc(1, sizeof(iw_list));
+    iw_list_gen_node *node = NULL;
+    if(list->iw_mem_alloc) {
+        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
+    } else {
+        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
+    }
     if(node == NULL) {
         return false;
     }
@@ -181,7 +194,11 @@ iw_list_node *iw_list_delete(
     if(fn != NULL) {
         fn(node);
     } else {
-        free(node);
+        if(list->iw_mem_alloc) {
+            IW_FREE(node);
+        } else {
+            free(node);
+        }
     }
     return next;
 }
@@ -195,7 +212,11 @@ void iw_list_destroy(iw_list *list, IW_LIST_DEL_FN fn) {
         if(fn != NULL) {
             fn(node);
         } else {
-            free(node);
+            if(list->iw_mem_alloc) {
+                IW_FREE(node);
+            } else {
+                free(node);
+            }
         }
         node = tmp;
     }
