@@ -175,7 +175,7 @@ static void iw_memory_delete_chunk(void *address) {
 
 void iw_memory_init() {
     if(iw_stg.iw_memtrack_enable) {
-        iw_htable_init(&s_memory, 1024, NULL);
+        iw_htable_init(&s_memory, 1024, false, NULL);
     }
 }
 
@@ -383,7 +383,7 @@ static void iw_memory_dump(FILE *out, IW_MEM_DUMP dump) {
             s_mem_corrupt, s_pre_corrupt, s_post_corrupt);
 
     iw_htable sum;
-    iw_htable_init(&sum, s_memory.size, NULL);
+    iw_htable_init(&sum, s_memory.size, false, NULL);
 
     if(dump == IW_MEM_DUMP_ALL) {
         // Print out every single memory allocation.

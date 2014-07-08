@@ -11,6 +11,7 @@
 #include "iw_list.h"
 
 #include "iw_memory.h"
+#include "iw_memory_int.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -45,11 +46,7 @@ iw_list_node *iw_list_add(iw_list *list, iw_list_node *node) {
 
 iw_list_node *iw_list_add_data(iw_list *list, void *data) {
     iw_list_gen_node *node = NULL;
-    if(list->iw_mem_alloc) {
-        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
-    } else {
-        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
-    }
+    INT_CALLOC(list->iw_mem_alloc, node, 1, iw_list_gen_node);
     if(node == NULL) {
         return false;
     }
@@ -92,11 +89,7 @@ iw_list_node *iw_list_insert_before_data(
     void *data)
 {
     iw_list_gen_node *node = NULL;
-    if(list->iw_mem_alloc) {
-        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
-    } else {
-        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
-    }
+    INT_CALLOC(list->iw_mem_alloc, node, 1, iw_list_gen_node);
     if(node == NULL) {
         return false;
     }
@@ -139,11 +132,7 @@ iw_list_node *iw_list_insert_after_data(
     void *data)
 {
     iw_list_gen_node *node = NULL;
-    if(list->iw_mem_alloc) {
-        node = (iw_list_gen_node *)IW_CALLOC(1, sizeof(iw_list_gen_node));
-    } else {
-        node = (iw_list_gen_node *)calloc(1, sizeof(iw_list_gen_node));
-    }
+    INT_CALLOC(list->iw_mem_alloc, node, 1, iw_list_gen_node);
     if(node == NULL) {
         return false;
     }
@@ -194,11 +183,7 @@ iw_list_node *iw_list_delete(
     if(fn != NULL) {
         fn(node);
     } else {
-        if(list->iw_mem_alloc) {
-            IW_FREE(node);
-        } else {
-            free(node);
-        }
+        INT_FREE(list->iw_mem_alloc, node);
     }
     return next;
 }
@@ -212,11 +197,7 @@ void iw_list_destroy(iw_list *list, IW_LIST_DEL_FN fn) {
         if(fn != NULL) {
             fn(node);
         } else {
-            if(list->iw_mem_alloc) {
-                IW_FREE(node);
-            } else {
-                free(node);
-            }
+            INT_FREE(list->iw_mem_alloc, node);
         }
         node = tmp;
     }

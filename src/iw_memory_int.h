@@ -17,6 +17,30 @@ extern "C" {
 #include "iw_memory.h"
 
 // --------------------------------------------------------------------------
+//
+// Internal helper macros
+//
+// --------------------------------------------------------------------------
+
+#define INT_CALLOC(x,ptr,num,tp)    if(x) { \
+                                        ptr = (tp *)IW_CALLOC(num, sizeof(tp)); \
+                                    } else { \
+                                        ptr = (tp *)calloc(num, sizeof(tp)); \
+                                    }
+
+// --------------------------------------------------------------------------
+
+#define INT_FREE(x,ptr)             if(x) { \
+                                        IW_FREE(ptr); \
+                                    } else { \
+                                        free(ptr); \
+                                    }
+
+// --------------------------------------------------------------------------
+//
+// Function API
+//
+// --------------------------------------------------------------------------
 
 /// @brief Initializes the memory module.
 extern void iw_memory_init();

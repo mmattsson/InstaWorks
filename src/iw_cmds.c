@@ -314,7 +314,7 @@ static bool cmd_log(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 bool iw_cmd_init() {
     memset(&s_root, 0, sizeof(s_root));
 
-    iw_htable_init(&s_root.children, 100, NULL);
+    iw_htable_init(&s_root.children, 100, false, NULL);
 
     iw_cmd_add(NULL, "help", cmd_help,
             "Display help", "Displays help for the possible commands.");
@@ -387,7 +387,7 @@ bool iw_cmd_add(
     cinfo->help = strdup(help);
     cinfo->cmd_fn = cmd_fn;
     cinfo->parent = node;
-    iw_htable_init(&cinfo->children, 32, NULL);
+    iw_htable_init(&cinfo->children, 32, false, NULL);
     iw_htable_insert(&node->children, strlen(cmd), (void *)cmd, cinfo);
 
     return true;

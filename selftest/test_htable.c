@@ -30,7 +30,7 @@ void test_hash_table(test_result *result) {
     char *data;
 
     test_display("Initializing hash table");
-    iw_htable_init(&table, 4, iw_hash_data);
+    iw_htable_init(&table, 4, false, iw_hash_data);
     test(result, table.num_elems == 0, "Initalized table has zero elements");
     iw_htable_delete(&table, 4, "abcd", test_hash_node_delete);
     test(result, table.num_elems == 0, "Removing element from empty table");

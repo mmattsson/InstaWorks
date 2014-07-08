@@ -238,7 +238,7 @@ static void *iw_thread_callback(void *param) {
 void iw_thread_init() {
     // Initialize the thread hash table
     pthread_rwlock_init(&s_thread_lock, NULL);
-    iw_htable_init(&s_threads, 128, NULL);
+    iw_htable_init(&s_threads, 128, false, NULL);
 }
 
 // --------------------------------------------------------------------------

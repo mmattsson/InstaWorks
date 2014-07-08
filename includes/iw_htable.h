@@ -44,6 +44,7 @@ typedef struct _iw_hash_node {
 typedef struct _iw_hash_table {
     IW_HASH_FN     fn;          ///< The hash function to use for this table.
     unsigned int   size;        ///< The size of the hash table.
+    bool           iw_mem_alloc;///< True if the IW memory allocation should be used.
     unsigned int   num_elems;   ///< The current number of elements.
     unsigned int   collisions;  ///< The number of collisions in the table.
     iw_hash_node **table;       ///< The allocated array of buckets.
@@ -63,11 +64,13 @@ typedef struct _iw_hash_table {
 /// a linear list.
 /// @param table The hash table to initialize.
 /// @param table_size The size of the hash table.
+/// @param iw_mem_alloc True if the IW memory allocator should be used.
 /// @param hash_fn The hash function to use or NULL for the default.
 /// @return True if the hash table was successfully created.
 extern bool iw_htable_init(
     iw_htable *table,
     unsigned int table_size,
+    bool iw_mem_alloc,
     IW_HASH_FN hash_fn);
 
 // --------------------------------------------------------------------------

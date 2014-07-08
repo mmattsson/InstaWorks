@@ -61,7 +61,7 @@ static iw_mutex_info *iw_mutex_find(IW_MUTEX id) {
 // --------------------------------------------------------------------------
 
 void iw_mutex_init() {
-    iw_htable_init(&s_mutexes, 128, NULL);
+    iw_htable_init(&s_mutexes, 128, false, NULL);
     pthread_rwlock_init(&s_mtx_lock, NULL);
 }
 

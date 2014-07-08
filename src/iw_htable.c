@@ -12,6 +12,7 @@
 
 #include "iw_log.h"
 #include "iw_memory.h"
+#include "iw_memory_int.h"
 
 // --------------------------------------------------------------------------
 //
@@ -22,18 +23,19 @@
 bool iw_htable_init(
     iw_htable *table,
     unsigned int table_size,
+    bool iw_mem_alloc,
     IW_HASH_FN fn)
 {
-    table->table = (iw_hash_node **)calloc(table_size, sizeof(iw_hash_node *));
+    INT_CALLOC(iw_mem_alloc, table->table, table_size, iw_hash_node *);
     if(table->table == NULL) {
-        free(table);
         LOG(IW_LOG_IW, "Failed to allocate memory for table size=%d", table_size);
         return false;
     }
-    table->fn         = fn == NULL ? iw_hash_data : fn;
-    table->size       = table_size;
-    table->num_elems  = 0;
-    table->collisions = 0;
+    table->iw_mem_alloc = iw_mem_alloc;
+    table->fn           = fn == NULL ? iw_hash_data : fn;
+    table->size         = table_size;
+    table->num_elems    = 0;
+    table->collisions   = 0;
     return true;
 }
 
@@ -45,7 +47,8 @@ bool iw_htable_insert(
     void *key,
     void *data) 
 {
-    iw_hash_node *new_node = (iw_hash_node *)calloc(1, sizeof(iw_hash_node));
+    iw_hash_node *new_node;
+    INT_CALLOC(table->iw_mem_alloc, new_node, 1, iw_hash_node);
     if(new_node == NULL) {
         LOG(IW_LOG_IW, "Failed to allocate memory for node");
         return false;
@@ -60,7 +63,7 @@ bool iw_htable_insert(
         while(node != NULL) {
             if(node->hash == hash) {
                 LOG(IW_LOG_IW, "Hash table already contains the value");
-                free(new_node);
+                INT_FREE(table->iw_mem_alloc, new_node);
                 return false;
             }
             node = node->next;
@@ -121,7 +124,7 @@ void *iw_htable_remove(
         if(node->next != NULL) {
             table->collisions--;
         }
-        free(node);
+        INT_FREE(table->iw_mem_alloc, node);
         return data;
     }
 
@@ -132,7 +135,7 @@ void *iw_htable_remove(
         if(node->hash == hash) {
             prev->next = node->next;
             void *data = node->data;
-            free(node);
+            INT_FREE(table->iw_mem_alloc, node);
             table->num_elems--;
             table->collisions--;
             return data;
@@ -172,11 +175,11 @@ void iw_htable_destroy(iw_htable *table, IW_HASH_DEL_FN fn) {
             if(fn != NULL) {
                 fn(node->data);
             }
-            free(node);
+            INT_FREE(table->iw_mem_alloc, node);
             node = tmp;
         }
     }
-    free(table->table);
+    INT_FREE(table->iw_mem_alloc, table->table);
     table->table = NULL;
     table->num_elems = 0;
 }

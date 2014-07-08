@@ -21,7 +21,12 @@ extern "C" {
 // --------------------------------------------------------------------------
 
 /// @brief Initialize a list structure.
-#define IW_LIST_INIT { 0, 0, 0, 1 };
+/// Do not use memory tracking for this list.
+#define IW_LIST_INIT { 0, 0, 0, 0 };
+
+/// @brief Initialize a list structure.
+/// Use memory tracking for this list.
+#define IW_LIST_INIT_MEM { 0, 0, 0, 1 };
 
 // --------------------------------------------------------------------------
 
@@ -47,8 +52,8 @@ typedef struct _iw_list_gen_node {
 typedef struct _iw_list {
     iw_list_node *head; ///< A pointer to the head of the list.
     iw_list_node *tail; ///< A pointer to the tail of the list.
-    int num_elems;      ///< The number of elements in the list.
     bool iw_mem_alloc;  ///< True if the IW memory allocation should be used.
+    int num_elems;      ///< The number of elements in the list.
 } iw_list;
 
 // --------------------------------------------------------------------------
@@ -64,6 +69,9 @@ typedef void (*IW_LIST_DEL_FN)(iw_list_node *);
 // --------------------------------------------------------------------------
 
 /// @brief Initialize a list structure.
+/// If the memory allocator is used, any memory allocated by the list functions
+/// will be allocated using the InstaWorks memory tracking feature, otherwise
+/// the normal C API will be used.
 /// @param list The list to initialize.
 /// @param iw_mem_alloc True if the IW memory allocator should be used.
 extern void iw_list_init(iw_list *list, bool iw_mem_alloc);

@@ -294,7 +294,7 @@ bool iw_cmdline_add_option(
     }
 
     if(!s_initialized) {
-        if(!iw_htable_init(&s_options, 100, NULL)) {
+        if(!iw_htable_init(&s_options, 100, false, NULL)) {
             return false;
         }
         s_initialized = true;
