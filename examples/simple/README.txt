@@ -48,10 +48,37 @@ Connection 0  : FD=7 Client=::1/45901, RX=13 bytes, TX=12 bytes
 Connection 1  : FD=8 Client=::1/45902, RX=6 bytes, TX=19 bytes
 Connection 2  : FD=9 Client=::ffff:192.168.2.1/39882, RX=6 bytes, TX=19 bytes
 -----------------------------------------------------------------------------
-
 Out of these commands, "syslog show" and "memory show" are built into the
 InstaWorks framework. The "connections" command is a custom command added
 by the simple server.
+
+It is also possible to set the logging on a per thread basis. To only see
+logs related to the main thread (the thread serving connections) in this
+example, you can first turn off logs for all threads, then enable them for
+just the main thread.
+-----------------------------------------------------------------------------
+$ simple log thread all off
+Received request: log thread all off
+
+$ simple threads
+Received request: threads
+ v-- Threads --v
+Thread[B6F7CB40]: "CMD Server"
+Thread[B777DB40]: "Health Check"
+Thread[B777E940]: "Main"
+ ^-- Threads --^
+
+$ simple log thread 0xb777e940 on
+Received request: log thread 0xb777e940 on
+
+$ simple log lvl 0xF `tty`
+Received request: log lvl 0xF /dev/pts/0
+
+[B777E940]main.c(157): Accepted socket FD=9 from client ::1:49725
+[B777E940]main.c(79): ++ calloc(1,148)
+
+-----------------------------------------------------------------------------
+
 
 
 Implementation notes

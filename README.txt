@@ -35,6 +35,12 @@ InstaWorks provides a debug log mechanism so that a program can send debug
 logs to any terminal. Different log levels are supported as well as the
 ability to enable and disable these log levels during run-time.
 
+It is also possible to enable and disable logs based on threads. Control
+commands for enabling logging based on thread-id is available by default.
+Programs can create commands for logging based on other criteria, e.g.
+client IP address, by enabling thread logging when handling client requests
+from the specified IP address.
+
 Control commands
 -------------------
 InstaWorks has a control command feature which allows the same program to be
@@ -88,12 +94,12 @@ data structures are found in the 'includes' folder. The resulting linkable
 library is found in the 'bin' directory.
 
 The structure is as follows:
-  bin - The resulting library and self-test
+  bin      - The resulting library and self-test
   examples - Example programs using the InstaWorks library
   includes - All include files needed to work with InstaWorks
-  objs - Temporary directory containing object files
+  objs     - Temporary directory containing object files
   selftest - The selftest source code
-  src - The InstaWorks library source
+  src      - The InstaWorks library source
 
 
 Self-test

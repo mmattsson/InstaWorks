@@ -61,10 +61,10 @@ typedef struct _tcp_conn {
 //
 // --------------------------------------------------------------------------
 
-static int      s_sock = -1;            ///< The server socket.
-static iw_list  s_list = IW_LIST_INIT;  ///< The TCP socket list.
-static IW_MUTEX s_mutex;                ///< The mutex to protect the sockets.
-static unsigned short s_port = 1234;    ///< The port number to use.
+static int      s_sock = -1;               ///< The server socket.
+static iw_list  s_list = IW_LIST_INIT_MEM; ///< The TCP socket list.
+static IW_MUTEX s_mutex;                   ///< The mutex to protect the sockets.
+static unsigned short s_port = 1234;       ///< The port number to use.
 
 // --------------------------------------------------------------------------
 //
@@ -329,8 +329,6 @@ int main(int argc, char **argv) {
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
-    iw_stg.iw_syslog_size = 1000;
-    iw_stg.iw_cmd_port    = 10001;
     iw_stg.iw_allow_quit  = true;
 
     // Calling iw_main(). The exit code tells us if the program was invoked

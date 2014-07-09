@@ -275,7 +275,7 @@ static bool cmd_callstack(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 static void cmd_log_help(FILE *out) {
     fprintf(out,
             "\n"
-            "Usage: log <level> <device>\n"
+            "Usage: log lvl <level> <device>\n"
             " The <level> is the desired log level. The log level is a sum of individual\n"
             " levels in either decimal or hexadecimal. The <device> is either a file path\n"
             " to a file or a tty or the actual word 'stdout' to send the logs to standard output.\n"
