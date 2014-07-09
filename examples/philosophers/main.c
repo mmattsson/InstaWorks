@@ -32,7 +32,7 @@
 //
 // --------------------------------------------------------------------------
 
-static long num_philosophers = 5;
+static long long int num_philosophers = 5;
 
 static bool do_correct = false;
 
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
             iw_stg.iw_foreground = true;
             break;
         case 'l' :
-            if(!iw_strtol(optarg, &iw_stg.iw_log_level, 16)) {
+            if(!iw_strtoll(optarg, &iw_stg.iw_log_level, 16)) {
                 print_help("Invalid log level");
                 exit(-1);
             }
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
     }
 
     if(optind < argc && iw_stg.iw_foreground) {
-        if(!iw_strtol(argv[optind], &num_philosophers, 10)) {
+        if(!iw_strtoll(argv[optind], &num_philosophers, 10)) {
             print_help("Expected number of philosophers");
             exit(-1);
         }

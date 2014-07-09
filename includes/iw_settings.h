@@ -103,7 +103,7 @@ typedef struct _iw_settings {
     int  iw_memtrack_hash_size;
 
     /// The log level to use.
-    long int iw_log_level;
+    long long int iw_log_level;
 
     /// The size of the syslog buffer (default is 10000)
     int  iw_syslog_size;

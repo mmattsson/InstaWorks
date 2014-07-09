@@ -81,6 +81,12 @@ static void iw_cmds_help(FILE *out, iw_cmd_info *cinfo, const char *unknown) {
 
 // --------------------------------------------------------------------------
 
+/// @brief Find the parent command with the given name.
+/// Searches through the hierarcy to find the command with the given name.
+/// This can then be used to add a child command under this parent.
+/// @param table The table to start searching from.
+/// @param parent The name of the parent command.
+/// @return The command info structure of the parent command.
 static iw_cmd_info *iw_cmd_find_parent(iw_htable *table, const char *parent) {
     unsigned long hash;
 
@@ -120,6 +126,14 @@ static iw_cmd_info *iw_cmd_find_parent(iw_htable *table, const char *parent) {
 
 // --------------------------------------------------------------------------
 
+/// @brief Process the command.
+/// Parses the command given in the parse information and tries to execute
+/// the command. If the command is entered incorrectly or is missing
+/// parameters, a help text is printed.
+/// @param parent The command node parsed so far.
+/// @param info The parse information for further parsing.
+/// @param out The output file stream to print responses to.
+/// @return True if the command was successfully processed.
 static bool iw_cmds_process_internal(
     iw_cmd_info *parent,
     iw_cmd_parse_info *info,
@@ -269,9 +283,9 @@ static void cmd_log_help(FILE *out) {
             " To disable logging, set the log level to zero.\n"
             "\n"
             "Examples:\n"
-            " $ %s log 0xF `tty`\n"
+            " $ %s log lvl 0xF `tty`\n"
             "or\n"
-            " $ %s log 8 stdout\n"
+            " $ %s log lvl 8 stdout\n"
             "\n",
             iw_stg.iw_prg_name,
             iw_stg.iw_prg_name);
@@ -281,7 +295,7 @@ static void cmd_log_help(FILE *out) {
 
 // --------------------------------------------------------------------------
 
-static bool cmd_log(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+static bool cmd_log_lvl(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     char *lvlstr = iw_cmd_get_token(info);
     char *dev = iw_cmd_get_token(info);
     if(lvlstr == NULL) {
@@ -289,8 +303,8 @@ static bool cmd_log(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
         cmd_log_help(out);
         return false;
     }
-    long int lvl;
-    if(!iw_strtol(lvlstr, &lvl, 16)) {
+    long long int lvl;
+    if(!iw_strtoll(lvlstr, &lvl, 16)) {
         fprintf(out, "\nInvalid log level\n");
         cmd_log_help(out);
         return false;
@@ -302,6 +316,74 @@ static bool cmd_log(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     }
 
     iw_log_set_level(dev, lvl);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+static void cmd_log_thread_help(FILE *out) {
+    fprintf(out,
+            "\n"
+            "Usage: log thread <thread> <on|off>\n"
+            " The <thread> is either the thread ID of the thread to enable or disable logging\n"
+            " for or the word 'all' for all threads. By default, all threads have logging enabled.\n"
+            " To enable logging for just one thread, do 'log thread all off' followed by\n"
+            " 'log thread <id> on'. This command will not affect log levels as set by 'log lvl'.\n"
+            "\n"
+            "Examples:\n"
+            " $ %s log thread all off\n"
+            "or\n"
+            " $ %s log thread 0x1234abcd on\n"
+            "\n",
+            iw_stg.iw_prg_name,
+            iw_stg.iw_prg_name);
+}
+
+// --------------------------------------------------------------------------
+
+static bool cmd_log_thread(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    long long int threadid;
+    bool log_on = false;
+    char *threadstr = iw_cmd_get_token(info);
+    char *onoffstr  = iw_cmd_get_token(info);
+
+    // Make sure we have two parameters.
+    if(threadstr == NULL || onoffstr == NULL) {
+        fprintf(out, "\nMissing parameter\n");
+        cmd_log_thread_help(out);
+        return false;
+    }
+
+    // Check thread id parameter
+    if(strcmp(threadstr, "all") == 0) {
+        threadid = 0;
+    } else if(!iw_strtoll(threadstr, &threadid, 16)) {
+        fprintf(out, "\nInvalid parameter\n");
+        cmd_log_thread_help(out);
+    }
+
+    // Check on/off parameter
+    if(strcmp(onoffstr, "on") == 0) {
+        log_on = true;
+    } else if(strcmp(onoffstr, "off") != 0) {
+        fprintf(out, "\nInvalid parameter\n");
+        cmd_log_thread_help(out);
+        return false;
+    }
+
+    // At this point we have the thread id and the on/off setting
+    if(threadid == 0) {
+        // Set all threads to on or off
+        iw_thread_set_log_all(log_on);
+    } else {
+        // Set just the given thread to on or off
+        if(!iw_thread_set_log(threadid, log_on)) {
+            fprintf(out, "\nInvalid thread ID\n");
+            cmd_log_thread_help(out);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -324,8 +406,12 @@ bool iw_cmd_init() {
             "Display mutex information", "Display information for all the mutexes created in the process.");
     iw_cmd_add(NULL, "callstack", cmd_callstack,
             "Display callstacks for a given thread", "Displays the callstack for the given thread ID.");
-    iw_cmd_add(NULL, "log", cmd_log,
-            "Set the program log level", "Enables debug log output with the given log level");
+    iw_cmd_add(NULL, "log", NULL,
+            "Log-related commands", "Commands related to debug log settings.");
+    iw_cmd_add("log", "lvl", cmd_log_lvl,
+            "Set the program log level", "Enables debug log output with the given log level.");
+    iw_cmd_add("log", "thread", cmd_log_thread,
+            "Enables or disables logging for threads", "Enables or disables logging for individual threads.");
     iw_cmd_add(NULL, "memory", NULL,
             "Display memory information", "Displays the memory allocated by the process.");
     iw_cmd_add("memory", "show", cmd_memory_show,
@@ -344,7 +430,7 @@ bool iw_cmd_init() {
     iw_cmd_add("syslog", "clear", cmd_syslog_clear,
             "Clear the syslog buffer", "Clears all messages from the syslog buffer.");
     iw_cmd_add(NULL, "iwver", cmd_iwver,
-            "Displays InstaWorks version", "Displays the InstaWorks version information");
+            "Displays InstaWorks version", "Displays the InstaWorks version information.");
 
     if(iw_stg.iw_allow_quit) {
         iw_cmd_add(NULL, "quit", cmd_quit,

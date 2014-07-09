@@ -10,6 +10,8 @@
 
 #include "iw_log.h"
 
+#include "iw_thread_int.h"
+
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -48,6 +50,13 @@ static void iw_vlog(
     va_list argp)
 {
     if(s_fd == NULL) {
+        return;
+    }
+
+    if(!iw_thread_do_log(0)) {
+        // If we can get the thread specific info and logging is disabled
+        // in the thread info, then just return rather than print the
+        // debug log.
         return;
     }
 

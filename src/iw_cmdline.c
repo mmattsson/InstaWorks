@@ -177,7 +177,7 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
             // A number, there must be at least one more argument and it
             // must be a number.
             if(*processed >= argc - 1 ||
-               !iw_strtol(argv[*processed+1], &(opt_info->opt->val.num), 0))
+               !iw_strtoll(argv[*processed+1], &(opt_info->opt->val.num), 0))
             {
                 // No number present.
                 return IW_CMD_OPT_INVALID;

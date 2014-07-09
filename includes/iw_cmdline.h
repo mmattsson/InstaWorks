@@ -41,7 +41,7 @@ typedef struct _iw_opt {
     /// The option value.
     union {
         bool           flag;    ///< A flag.
-        long int       num;     ///< A number.
+        long long int  num;     ///< A number.
         char          *str;     ///< A string.
         char           ch;      ///< A character.
     } val;

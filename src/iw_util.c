@@ -20,10 +20,10 @@
 //
 // --------------------------------------------------------------------------
 
-bool iw_strtol(const char *str, long int *number, unsigned int base) {
+bool iw_strtoll(const char *str, long long int *number, unsigned int base) {
     char *endptr;
     errno = 0;
-    *number = strtol(str, &endptr, base);
+    *number = strtoll(str, &endptr, base);
     if(errno != 0) {
         // Error occurred.
         return false;

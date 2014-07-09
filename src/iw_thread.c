@@ -105,6 +105,34 @@ static void iw_thread_info_delete(void *node) {
 
 // --------------------------------------------------------------------------
 
+/// @brief Thread info creation function.
+/// @param name The name of the thread.
+/// @param thread The thread ID or zero if not known.
+/// @param fn The callback function, or NULL if not applicable.
+/// @param param The callback parameter, or NULL if not applicable.
+/// @return The created thread info structure or NULL for failure.
+static iw_thread_info *iw_thread_info_create(
+    const char *name,
+    pthread_t   thread,
+    IW_THREAD_CALLBACK fn,
+    void *param)
+{
+    iw_thread_info *tinfo = (iw_thread_info *)calloc(1,
+                                                     sizeof(iw_thread_info));
+
+    if(tinfo != NULL) {
+        tinfo->name   = strdup(name);
+        tinfo->log    = true;
+        tinfo->thread = thread;
+        tinfo->fn     = fn;
+        tinfo->param  = param;
+    }
+
+    return tinfo;
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief The thread signal handler.
 /// @param sig The signal being sent to the thread.
 static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
@@ -243,14 +271,16 @@ void iw_thread_init() {
 
 // --------------------------------------------------------------------------
 
-void iw_thread_register_main() {
+bool iw_thread_register_main() {
     // Install signal handler for the thread
     iw_thread_install_sighandler();
 
-    iw_thread_info *tinfo = (iw_thread_info *)calloc(1,
-                                                     sizeof(iw_thread_info));
-    tinfo->name   = strdup("Main");
-    tinfo->thread = pthread_self();
+    iw_thread_info *tinfo = iw_thread_info_create("Main", pthread_self(),
+                                                  NULL, NULL);
+    if(tinfo == NULL) {
+        return false;
+    }
+
     if(pthread_key_create(&s_thread_key, NULL) != 0 ||
        pthread_setspecific(s_thread_key, tinfo) != 0)
     {
@@ -260,22 +290,77 @@ void iw_thread_register_main() {
     }
 
     // No other thread is created yet, no need to lock thread lock
-    iw_htable_insert(&s_threads,
+    return iw_htable_insert(&s_threads,
                      sizeof(tinfo->thread), &(tinfo->thread), tinfo);
 }
 
 // --------------------------------------------------------------------------
 
+bool iw_thread_do_log(unsigned int threadid) {
+    bool retval = false;
+    iw_thread_info *tinfo = NULL;
+    pthread_rwlock_rdlock(&s_thread_lock);
+    if(threadid == 0) {
+        tinfo = (iw_thread_info *)pthread_getspecific(s_thread_key);
+    } else {
+        tinfo = (iw_thread_info *)iw_htable_get(&s_threads,
+                                            sizeof(threadid),
+                                            &threadid);
+    }
+    retval = tinfo != NULL && tinfo->log;
+    pthread_rwlock_unlock(&s_thread_lock);
+
+    return retval;
+}
+
+// --------------------------------------------------------------------------
+
+void iw_thread_set_log_all(bool log_on) {
+    unsigned long hash;
+    pthread_rwlock_rdlock(&s_thread_lock);
+    iw_thread_info *tinfo = (iw_thread_info *)iw_htable_get_first(&s_threads,
+                                                                   &hash);
+    while(tinfo != NULL) {
+        tinfo->log = log_on;
+        tinfo = (iw_thread_info *)iw_htable_get_next(&s_threads, &hash);
+    }
+    pthread_rwlock_unlock(&s_thread_lock);
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_thread_set_log(unsigned int threadid, bool log_on) {
+    bool retval = false;
+    iw_thread_info *tinfo = NULL;
+    pthread_rwlock_rdlock(&s_thread_lock);
+    if(threadid == 0) {
+        tinfo = (iw_thread_info *)pthread_getspecific(s_thread_key);
+    } else {
+        tinfo = (iw_thread_info *)iw_htable_get(&s_threads,
+                                            sizeof(threadid),
+                                            &threadid);
+    }
+    if(tinfo != NULL) {
+        tinfo->log = log_on;
+        retval = true;
+    }
+    pthread_rwlock_unlock(&s_thread_lock);
+    return retval;
+}
+
+// --------------------------------------------------------------------------
+
 bool iw_thread_create(const char *name, IW_THREAD_CALLBACK func, void *param) {
-    iw_thread_info *info = (iw_thread_info *)calloc(1, sizeof(iw_thread_info));
-    info->name  = strdup(name);
-    info->fn    = func;
-    info->param = param;
-    if(pthread_create(&info->thread, NULL, iw_thread_callback, info) == 0) {
+    iw_thread_info *tinfo = iw_thread_info_create(name, 0, func, param);
+    if(tinfo == NULL) {
+        return false;
+    }
+
+    if(pthread_create(&tinfo->thread, NULL, iw_thread_callback, tinfo) == 0) {
         return true;
     } else {
         // Failed to create the thread.
-        iw_thread_info_delete((void *)info);
+        iw_thread_info_delete((void *)tinfo);
         return false;
     }
 }

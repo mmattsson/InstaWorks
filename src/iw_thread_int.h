@@ -37,6 +37,7 @@ typedef struct _iw_thread_info {
     pthread_t    thread;    ///< The thread handle.
     IW_MUTEX     mutex;     ///< The mutex this thread is waiting for (if any).
     IW_THREAD_CALLBACK fn;  ///< The callback function to call.
+    bool         log;       ///< True if logging should be done for this thread.
     void *       param;     ///< The parameter to pass to the callback
 } iw_thread_info;
 
@@ -52,7 +53,30 @@ extern void iw_thread_init();
 // --------------------------------------------------------------------------
 
 /// @brief Register the main thread for record keeping.
-extern void iw_thread_register_main();
+/// @return True if the main thread was successfully registered.
+extern bool iw_thread_register_main();
+
+// --------------------------------------------------------------------------
+
+/// @brief Check if logging should be done for the given thread.
+/// @param threadid The thread to check logging for or 0 for the calling thread.
+/// @return True if logging should be done.
+extern bool iw_thread_do_log(unsigned int threadid);
+
+// --------------------------------------------------------------------------
+
+/// @brief Set logging for all threads.
+/// Set logging to on or off for all threads.
+/// @param log_on True if logging should be enabled, false for disabled.
+extern void iw_thread_set_log_all(bool log_on);
+
+// --------------------------------------------------------------------------
+
+/// @brief Set logging for the given thread.
+/// @param threadid The thread to set logging for or 0 for the calling thread.
+/// @param log_on True if logging should be enabled, false for disabled.
+/// @return True if the thread was found and the log level was set.
+extern bool iw_thread_set_log(unsigned int threadid, bool log_on);
 
 // --------------------------------------------------------------------------
 
@@ -66,8 +90,8 @@ extern void iw_thread_dump(FILE *out);
 /// The callstack will be dumped on the debug logs.
 /// @param out The file stream to write any errors to. Note that the result
 ///        is printed on the debug logs.
-/// @param thread The thread to dump the callstack for.
-extern void iw_thread_callstack(FILE *out, unsigned int thread);
+/// @param threadid The thread to dump the callstack for.
+extern void iw_thread_callstack(FILE *out, unsigned int threadid);
 
 // --------------------------------------------------------------------------
 

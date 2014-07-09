@@ -22,6 +22,9 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
+/// Internal calloc macro, used by utility modules that needs to be able to
+/// work in two modes, one mode where memory is tracked when used by external
+/// callers, and one mode where memory is not tracked when used internally.
 #define INT_CALLOC(x,ptr,num,tp)    if(x) { \
                                         ptr = (tp *)IW_CALLOC(num, sizeof(tp)); \
                                     } else { \
@@ -30,6 +33,9 @@ extern "C" {
 
 // --------------------------------------------------------------------------
 
+/// Internal free macro, used by utility modules that needs to be able to
+/// work in two modes, one mode where memory is tracked when used by external
+/// callers, and one mode where memory is not tracked when used internally.
 #define INT_FREE(x,ptr)             if(x) { \
                                         IW_FREE(ptr); \
                                     } else { \

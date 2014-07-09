@@ -51,7 +51,7 @@ extern "C" {
 /// @param num The resulting number.
 /// @param base The base to use when converting.
 /// @return True if the conversion was successful.
-extern bool iw_strtol(const char *str, long int *num, unsigned int base);
+extern bool iw_strtoll(const char *str, long long int *num, unsigned int base);
 
 // --------------------------------------------------------------------------
 

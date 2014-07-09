@@ -264,8 +264,8 @@ bool main_callback(int argc, char **argv) {
         print_help("Invalid number of arguments");
         return false;
     } else if(argc == 1) {
-        long int port;
-        if(!iw_strtol(argv[0], &port, 10) ||
+        long long int port;
+        if(!iw_strtoll(argv[0], &port, 10) ||
            port < 0 || port > 65535)
         {
             print_help("Invalid port number");
