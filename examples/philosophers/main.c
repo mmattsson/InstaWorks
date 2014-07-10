@@ -32,6 +32,8 @@
 //
 // --------------------------------------------------------------------------
 
+#define PHILO_LOG   8
+
 static long long int num_philosophers = 5;
 
 static bool do_correct = false;
@@ -73,20 +75,26 @@ void philo_take_forks(int num, int left, int right) {
     }
 
     printf("Philosopher[%d] - Taking fork %d\n", num+1, fork1+1);
+    LOG(PHILO_LOG, "Philosopher[%d] - Taking fork %d", num+1, fork1+1);
     iw_mutex_lock(fork1);
     sched_yield();
     usleep(random() % 100000);
 
     printf("Philosopher[%d] - Taking fork %d\n", num+1, fork2+1);
+    LOG(PHILO_LOG, "Philosopher[%d] - Taking fork %d", num+1, fork2+1);
     iw_mutex_lock(fork2);
     sched_yield();
     printf("Philosopher[%d] - Got forks %d and %d\n",
+            num+1, fork1+1, fork2+1);
+    LOG(PHILO_LOG, "Philosopher[%d] - Got forks %d and %d",
             num+1, fork1+1, fork2+1);
 
     // Release forks
     sched_yield();
     usleep(random() % 10000);
     printf("Philosopher[%d] - Releasing forks %d and %d\n",
+            num+1, fork1+1, fork2+1);
+    LOG(PHILO_LOG, "Philosopher[%d] - Releasing forks %d and %d",
             num+1, fork1+1, fork2+1);
 
     iw_mutex_unlock(fork1);
@@ -104,6 +112,9 @@ void *philo_callback(void *param) {
     intptr_t num = (intptr_t)param;
     int left = num > 0 ? num - 1 : num_philosophers-1;
     int right = num < num_philosophers ? num : 0;
+
+    // Add a log level for philosopher specific logs.
+    iw_log_add_level(PHILO_LOG, "The simple application general log level");
 
     while(true) {
         philo_take_forks(num, left, right);

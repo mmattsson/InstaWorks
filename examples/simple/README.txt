@@ -1,5 +1,8 @@
 Simple
 =============================================================================
+
+Program usage
+-----------------------------------------------------------------------------
 This example shows a simple TCP server. The server accepts connections on
 the listening port. If data is received on any connection, this data is sent
 on all other connections. This program can be tested by connecting by telnet
@@ -13,6 +16,8 @@ When you have multiple terminals connected you can simply type text into
 one terminal and it will show up in all other terminals.
 
 
+Control commands
+-----------------------------------------------------------------------------
 Once the program is running with a few connections, you can issue control
 commands to query the current state of the program.
 -----------------------------------------------------------------------------
@@ -52,33 +57,38 @@ Out of these commands, "syslog show" and "memory show" are built into the
 InstaWorks framework. The "connections" command is a custom command added
 by the simple server.
 
+
+Thread-specific logging
+-----------------------------------------------------------
 It is also possible to set the logging on a per thread basis. To only see
 logs related to the main thread (the thread serving connections) in this
 example, you can first turn off logs for all threads, then enable them for
 just the main thread.
 -----------------------------------------------------------------------------
-$ simple log thread all off
+$ examples/simple/simple log thread all off
 Received request: log thread all off
 
-$ simple threads
+$ examples/simple/simple threads
 Received request: threads
- v-- Threads --v
-Thread[B6F7CB40]: "CMD Server"
-Thread[B777DB40]: "Health Check"
-Thread[B777E940]: "Main"
- ^-- Threads --^
+== Thread Information ==
+Thread-ID  Log Mutex  Thread-name
+---------------------------------
+[B6F66B40] off 0000 : "CMD Server"
+[B7767B40] off 0000 : "Health Check"
+[B7768940] off 0000 : "Main"
 
-$ simple log thread 0xb777e940 on
-Received request: log thread 0xb777e940 on
+$ examples/simple/simple log thread 0xB7768940 on
+Received request: log thread 0xB7768940 on
 
-$ simple log lvl 0xF `tty`
+$ examples/simple/simple log lvl 0xF `tty`
 Received request: log lvl 0xF /dev/pts/0
 
-[B777E940]main.c(157): Accepted socket FD=9 from client ::1:49725
-[B777E940]main.c(79): ++ calloc(1,148)
+[B7768940]main.c(157): Accepted socket FD=9 from client ::1:49725
+[B7768940]main.c(79): ++ calloc(1,148)
 
 -----------------------------------------------------------------------------
-
+From this point on, only the Main thread's log output is shown so that we can
+concentrate on debugging the client connections.
 
 
 Implementation notes
@@ -90,6 +100,6 @@ The first thing that is done in the main() function is to set the desired
 InstaWorks settings by assigning values to the members of iw_stg.
 
 No log levels or control commands can be registered before the call to
-iw_main(). These has to be registered after the callback is done so this
+iw_main(). These have to be registered after the callback is done so this
 is done in main_callback().
 

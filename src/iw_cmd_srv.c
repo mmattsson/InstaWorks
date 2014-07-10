@@ -150,9 +150,6 @@ bool iw_cmd_srv(
     int argc,
     char **argv)
 {
-    // Parse arguments
-
-
     // Open command socket
     s_cmd_sock = socket(AF_INET, SOCK_STREAM, 0);
     if(s_cmd_sock == -1) {

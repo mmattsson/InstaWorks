@@ -78,7 +78,7 @@ extern void iw_exit();
 /// @brief The main entry point.
 /// Should be called from main(). If the main program wants to handle
 /// command line options before calling the InstaWorks framework it can do so.
-/// In this case, parse_options should be set to false, othwerise, set it to
+/// In this case, parse_options should be set to false, otherwise, set it to
 /// true for iw_main() to do the parsing of options. If the client parses the
 /// options, it is up to the client to set the iw_stg.iw_foreground flag to
 /// true when the program should be run in server mode.

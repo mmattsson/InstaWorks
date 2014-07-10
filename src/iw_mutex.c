@@ -189,13 +189,14 @@ void iw_mutex_dump(FILE *out) {
     unsigned long hash;
     iw_mutex_info *minfo = (iw_mutex_info *)iw_htable_get_first(&s_mutexes,
                                                                 &hash);
-    fprintf(out, " v-- Mutexes --v\n");
+    fprintf(out, "== Mutex Information ==\n");
+    fprintf(out, "Mutex-ID  Thread-ID  Mutex-name\n");
+    fprintf(out, "---------------------------------\n");
     while(minfo != NULL) {
-        fprintf(out, "Mutex[%04X]: \"%s\", owned by thread=%08X\n",
-            minfo->id, minfo->name, (unsigned int)minfo->thread);
+        fprintf(out, "[%04X]    %08X : \"%s\"\n",
+            minfo->id, (unsigned int)minfo->thread, minfo->name);
         minfo = (iw_mutex_info *)iw_htable_get_next(&s_mutexes, &hash);
     }
-    fprintf(out, " ^-- Mutexes --^\n");
 
     // Unlock the mutex lock
     pthread_rwlock_unlock(&s_mtx_lock);

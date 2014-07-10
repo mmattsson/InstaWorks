@@ -372,18 +372,17 @@ void iw_thread_dump(FILE *out) {
     pthread_rwlock_rdlock(&s_thread_lock);
     iw_thread_info *thread = (iw_thread_info *)iw_htable_get_first(&s_threads,
                                                                    &hash);
-    fprintf(out, " v-- Threads --v\n");
+    fprintf(out, "== Thread Information ==\n");
+    fprintf(out, "Thread-ID  Log Mutex  Thread-name\n");
+    fprintf(out, "---------------------------------\n");
     while(thread != NULL) {
-        if(thread->mutex != 0) {
-            fprintf(out, "Thread[%08X]: \"%s\", waiting for mutex=%04X\n",
-                (unsigned int)thread->thread, thread->name, thread->mutex);
-        } else {
-            fprintf(out, "Thread[%08X]: \"%s\"\n",
-                (unsigned int)thread->thread, thread->name);
-        }
+        fprintf(out, "[%08X] %s %04X : \"%s\"\n",
+            (unsigned int)thread->thread,
+            thread->log ? "on " : "off",
+            thread->mutex,
+            thread->name);
         thread = (iw_thread_info *)iw_htable_get_next(&s_threads, &hash);
     }
-    fprintf(out, " ^-- Threads --^\n");
     pthread_rwlock_unlock(&s_thread_lock);
 }
 
