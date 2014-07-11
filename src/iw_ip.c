@@ -63,6 +63,32 @@ bool iw_ip_str_to_addr(
 
 // --------------------------------------------------------------------------
 
+bool iw_ip_ipv4_to_addr(
+    unsigned int ip,
+    iw_ip *address)
+{
+    memset(address, 0, sizeof(*address));
+    struct sockaddr_in *ss = (struct sockaddr_in *)address;
+    ss->sin_family = AF_INET;
+    ss->sin_addr.s_addr = htonl(ip);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_ip_ipv6_to_addr(
+    struct in6_addr ip,
+    iw_ip *address)
+{
+    memset(address, 0, sizeof(*address));
+    struct sockaddr_in6 *ss = (struct sockaddr_in6 *)address;
+    ss->sin6_family = AF_INET6;
+    ss->sin6_addr   = ip;
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
 bool iw_ip_addr_to_str(
     iw_ip *address,
     char *buff,
@@ -123,12 +149,24 @@ int iw_ip_open_client_socket(int type, iw_ip *address) {
 
 // --------------------------------------------------------------------------
 
-int iw_ip_open_server_socket(int type, iw_ip *address) {
+int iw_ip_open_server_socket(int type, iw_ip *address, bool set_reuse) {
     int sock = socket(address->ss_family, type, 0);
     if(sock == -1) {
         LOG(IW_LOG_IW, "Failed to open server socket (%d:%s)",
             errno, strerror(errno));
         return -1;
+    }
+
+    if(set_reuse) {
+        int enable = 1;
+        if(setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+                      &enable, sizeof(enable)) != 0)
+        {
+            LOG(IW_LOG_IW, "Failed to set SO_REUSEADDR (%d:%s)",
+                errno, strerror(errno));
+            // No need to return for this failure, worst case is we cannot
+            // bind the socket in which case we will return below.
+        }
     }
 
     if(bind(sock, (struct sockaddr *)address, sizeof(*address)) != 0) {

@@ -47,6 +47,26 @@ extern bool iw_ip_str_to_addr(
 
 // --------------------------------------------------------------------------
 
+/// @brief Convert an IPv4 address to a socket address.
+/// @param ip The IPv4 address to convert.
+/// @param address [out] A pointer to the address to receive the result.
+/// @return True if the address was successfully converted.
+extern bool iw_ip_ipv4_to_addr(
+    unsigned int ip,
+    iw_ip *address);
+
+// --------------------------------------------------------------------------
+
+/// @brief Convert an IPv6 address to a socket address.
+/// @param ip The IPv6 address to convert.
+/// @param address [out] A pointer to the address to receive the result.
+/// @return True if the address was successfully converted.
+extern bool iw_ip_ipv6_to_addr(
+    struct in6_addr ip,
+    iw_ip *address);
+
+// --------------------------------------------------------------------------
+
 /// @brief Convert a socket address to a string representation.
 /// @param address The address to convert.
 /// @param buff [out] The buffer to put the string into. Should be at least IW_IP_BUFF_LEN.
@@ -86,8 +106,9 @@ extern int iw_ip_open_client_socket(int type, iw_ip *address);
 /// and binds it to the given address.
 /// @param type The type of socket, SOCK_DGRAM or SOCK_STREAM.
 /// @param address The address to bind the socket to.
+/// @param set_reuse True if SO_REUSEADDR should be set for the socket.
 /// @return The resulting socket file descriptor or -1 for errors.
-extern int iw_ip_open_server_socket(int type, iw_ip *address);
+extern int iw_ip_open_server_socket(int type, iw_ip *address, bool set_reuse);
 
 // --------------------------------------------------------------------------
 

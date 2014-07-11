@@ -17,6 +17,7 @@
 // --------------------------------------------------------------------------
 
 #include "iw_cmd_clnt.h"
+#include "iw_ip.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -33,23 +34,13 @@
 
 bool iw_cmd_clnt(unsigned short port, int argc, char **argv) {
     // Open client socket
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock == -1) {
-        fprintf(stderr,
-                "Failed to open command client socket (%d:%s)\n", 
-                errno, strerror(errno));
-        return false;
-    }
-
-    // Connect to the server socket.
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    address.sin_port = htons(port);
-    if(connect(sock, (struct sockaddr *)&address, sizeof(address)) != 0) {
-        fprintf(stderr,
-                "Failed to connect to server (%d:%s)\n", errno, strerror(errno));
-        close(sock);
+    int sock;
+    iw_ip address;
+    if(!iw_ip_ipv4_to_addr(INADDR_LOOPBACK, &address) ||
+      !iw_ip_set_port(&address, port)  ||
+       (sock = iw_ip_open_client_socket(SOCK_STREAM, &address)) == -1)
+    {
+        fprintf(stderr, "Failed to connect to server\n");
         return false;
     }
 

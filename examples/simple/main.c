@@ -291,9 +291,9 @@ bool main_callback(int argc, char **argv) {
     // Open the server socket
     LOG(SIMPLE_LOG, "Starting the simple server.");
     iw_ip address;
-    if(!iw_ip_str_to_addr("::", &address) ||
+    if(!iw_ip_ipv6_to_addr(in6addr_any, &address) ||
        !iw_ip_set_port(&address, s_port)  ||
-       ((s_sock = iw_ip_open_server_socket(SOCK_STREAM, &address)) == -1))
+       ((s_sock = iw_ip_open_server_socket(SOCK_STREAM, &address, true)) == -1))
     {
         LOG(SIMPLE_LOG, "Failed to open server socket");
         return false;

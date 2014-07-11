@@ -12,6 +12,7 @@
 
 #include "iw_buff.h"
 #include "iw_cmds_int.h"
+#include "iw_ip.h"
 #include "iw_log.h"
 #include "iw_thread.h"
 
@@ -151,33 +152,12 @@ bool iw_cmd_srv(
     char **argv)
 {
     // Open command socket
-    s_cmd_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(s_cmd_sock == -1) {
-        LOG(IW_LOG_IW, "Failed to open command server socket (%d:%s)",
-            errno, strerror(errno));
-        return false;
-    }
-
-    int enable = 1;
-    if(setsockopt(s_cmd_sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) != 0) {
-        LOG(IW_LOG_IW, "Failed to set SO_REUSEADDR (%d:%s)", errno, strerror(errno));
-        // No need to return for this failure.
-    }
-
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    address.sin_port = htons(port);
-    if(bind(s_cmd_sock, (struct sockaddr *)&address, sizeof(address)) != 0) {
-        LOG(IW_LOG_IW, "Failed to bind command server socket (%d:%s)",
-            errno, strerror(errno));
-        close(s_cmd_sock);
-        return false;
-    }
-
-    if(listen(s_cmd_sock, 5) != 0) {
-        LOG(IW_LOG_IW, "Failed to listen to command server socket");
-        close(s_cmd_sock);
+    iw_ip address;
+    if(!iw_ip_ipv4_to_addr(INADDR_LOOPBACK, &address) ||
+      !iw_ip_set_port(&address, port)  ||
+       (s_cmd_sock = iw_ip_open_server_socket(SOCK_STREAM, &address, true)) == -1)
+    {
+        LOG(IW_LOG_IW, "Failed to open command server socket.");
         return false;
     }
 
