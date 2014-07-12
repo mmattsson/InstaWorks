@@ -91,6 +91,33 @@ From this point on, only the Main thread's log output is shown so that we can
 concentrate on debugging the client connections.
 
 
+Client-specific logging
+-----------------------------------------------------------------------------
+In addition to the built-in thread-specific logging, the simple example
+adds client-specific logging. The simple server is registering a 'client'
+sub-command under the 'log' command. This command takes an IP address
+and the word 'on' or 'off'. When the command callback is called, the client
+list is searched for a client with the given IP address and port. If this
+client is found, the logging for that client is enabled or disabled.
+
+This command is implemented in a simplistic fashion to keep the simple 
+server example straight-forward, but could be improved by having a separate
+list of IP addresses that logging should be done for. When a new connection
+is established, the logging for that connection would be set if the peer
+matches an IP address in the list.
+-----------------------------------------------------------------------------
+ $ examples/simple/simple connections
+ Received request: connections
+Connection 0  : FD=8 log=on  Client=[::1]:49870, RX=0 bytes, TX=0 bytes
+Connection 1  : FD=9 log=on  Client=[::1]:49871, RX=0 bytes, TX=0 bytes
+
+ $ examples/simple/simple log client [::1]:49870 off
+ $ examples/simple/simple connections
+ Received request: connections
+Connection 0  : FD=8 log=off Client=[::1]:49870, RX=0 bytes, TX=0 bytes
+Connection 1  : FD=9 log=on  Client=[::1]:49871, RX=0 bytes, TX=0 bytes
+
+
 Implementation notes
 =============================================================================
 The simple example lets the InstaWorks framework handle the parsing of the
@@ -103,3 +130,6 @@ No log levels or control commands can be registered before the call to
 iw_main(). These have to be registered after the callback is done so this
 is done in main_callback().
 
+The simple server registers two commands, 'connections' and 'log client'.
+'connections' is registered as a top-level command with no children and
+'log client is registered as an extension to the existing 'log' command.

@@ -80,6 +80,7 @@ static tcp_conn *create_tcp_conn(int fd, struct sockaddr_storage *address) {
     tcp_conn *conn = (tcp_conn *)IW_CALLOC(1, sizeof(tcp_conn));
     conn->fd = fd;
     conn->address = *address;
+    conn->do_log = true;
     return conn;
 }
 
@@ -239,9 +240,9 @@ static bool serve_data() {
             if(FD_ISSET(conn->fd, &readfds)) {
                 // We received data on the TCP connection
                 // First check if logging should be done for this connection
-                if(conn->do_log) {
-                    iw_thread_set_log(0, true);
-                }
+                bool do_log = iw_thread_get_log(0);
+                iw_thread_set_log(0, conn->do_log);
+
                 char buff[1024];
                 int bytes = recv(conn->fd, buff, sizeof(buff), 0);
                 if(bytes > 0) {
@@ -273,8 +274,8 @@ static bool serve_data() {
                     continue;
                 }
 
-                // Disable logging after we're done
-                iw_thread_set_log(0, false);
+                // Revert logging after we're done
+                iw_thread_set_log(0, do_log);
             }
             conn = (tcp_conn *)conn->node.next;
         }

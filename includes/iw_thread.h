@@ -50,6 +50,13 @@ extern void iw_thread_set_log_all(bool log_on);
 
 // --------------------------------------------------------------------------
 
+/// @brief Check if logging should be done for the given thread.
+/// @param threadid The thread to check logging for or 0 for the calling thread.
+/// @return True if logging should be done.
+extern bool iw_thread_get_log(unsigned int threadid);
+
+// --------------------------------------------------------------------------
+
 /// @brief Set logging for the given thread.
 /// @param threadid The thread to set logging for or 0 for the calling thread.
 /// @param log_on True if logging should be enabled, false for disabled.

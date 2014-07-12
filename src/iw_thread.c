@@ -296,7 +296,7 @@ bool iw_thread_register_main() {
 
 // --------------------------------------------------------------------------
 
-bool iw_thread_do_log(unsigned int threadid) {
+bool iw_thread_get_log(unsigned int threadid) {
     bool retval = false;
     iw_thread_info *tinfo = NULL;
     pthread_rwlock_rdlock(&s_thread_lock);

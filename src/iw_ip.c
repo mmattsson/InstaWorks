@@ -74,6 +74,8 @@ bool iw_ip_str_to_addr(
             long long int tmp;
             if(iw_strtoll(port_start, &tmp, 10) && tmp >= 0 && tmp <= 65535) {
                 port = tmp;
+            } else {
+                return false;
             }
 
             // Need to copy address into buffer since getaddrinfo() will not

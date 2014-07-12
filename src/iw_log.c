@@ -53,7 +53,7 @@ static void iw_vlog(
         return;
     }
 
-    if(!iw_thread_do_log(0)) {
+    if(!iw_thread_get_log(0)) {
         // If we can get the thread specific info and logging is disabled
         // in the thread info, then just return rather than print the
         // debug log.

@@ -58,13 +58,6 @@ extern bool iw_thread_register_main();
 
 // --------------------------------------------------------------------------
 
-/// @brief Check if logging should be done for the given thread.
-/// @param threadid The thread to check logging for or 0 for the calling thread.
-/// @return True if logging should be done.
-extern bool iw_thread_do_log(unsigned int threadid);
-
-// --------------------------------------------------------------------------
-
 /// @brief Dump all thread information on the given file stream.
 /// @param out The file stream to write the response to.
 extern void iw_thread_dump(FILE *out);
