@@ -69,7 +69,7 @@ extern void iw_thread_dump(FILE *out);
 /// @param out The file stream to write any errors to. Note that the result
 ///        is printed on the debug logs.
 /// @param threadid The thread to dump the callstack for.
-extern void iw_thread_callstack(FILE *out, unsigned int threadid);
+extern void iw_thread_callstack(FILE *out, pthread_t threadid);
 
 // --------------------------------------------------------------------------
 

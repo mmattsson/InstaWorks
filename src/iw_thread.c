@@ -143,7 +143,7 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
         void *buffer[MAX_STACK];
         int nptrs = backtrace(buffer, MAX_STACK);
         char **strings = backtrace_symbols(buffer, nptrs);
-        LOG(IW_LOG_IW, " v-- Thread [%08X] backtrace --v", pthread_self());
+        LOG(IW_LOG_IW, " v-- Thread [%08lX] backtrace --v", pthread_self());
         LOG(IW_LOG_IW, "Name: %s", tinfo->name);
         if(tinfo->mutex != 0) {
             LOG(IW_LOG_IW, "Waiting for mutex: %d", tinfo->mutex);
@@ -158,7 +158,7 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
                 LOG(IW_LOG_IW, "[%p]", buffer[cnt]);
             }
         }
-        LOG(IW_LOG_IW, " ^-- Thread [%08X] backtrace --^", pthread_self());
+        LOG(IW_LOG_IW, " ^-- Thread [%08lX] backtrace --^", pthread_self());
         } break;
     case SIGILL  :
     case SIGABRT :
@@ -296,7 +296,7 @@ bool iw_thread_register_main() {
 
 // --------------------------------------------------------------------------
 
-bool iw_thread_get_log(unsigned int threadid) {
+bool iw_thread_get_log(pthread_t threadid) {
     bool retval = false;
     iw_thread_info *tinfo = NULL;
     pthread_rwlock_rdlock(&s_thread_lock);
@@ -329,7 +329,7 @@ void iw_thread_set_log_all(bool log_on) {
 
 // --------------------------------------------------------------------------
 
-bool iw_thread_set_log(unsigned int threadid, bool log_on) {
+bool iw_thread_set_log(pthread_t threadid, bool log_on) {
     bool retval = false;
     iw_thread_info *tinfo = NULL;
     pthread_rwlock_rdlock(&s_thread_lock);
@@ -376,8 +376,8 @@ void iw_thread_dump(FILE *out) {
     fprintf(out, "Thread-ID  Log Mutex  Thread-name\n");
     fprintf(out, "---------------------------------\n");
     while(thread != NULL) {
-        fprintf(out, "[%08X] %s %04X : \"%s\"\n",
-            (unsigned int)thread->thread,
+        fprintf(out, "[%08lX] %s %04X : \"%s\"\n",
+            (unsigned long int)thread->thread,
             thread->log ? "on " : "off",
             thread->mutex,
             thread->name);
@@ -388,7 +388,7 @@ void iw_thread_dump(FILE *out) {
 
 // --------------------------------------------------------------------------
 
-void iw_thread_callstack(FILE *out, unsigned int threadid) {
+void iw_thread_callstack(FILE *out, pthread_t threadid) {
     pthread_rwlock_rdlock(&s_thread_lock);
     iw_thread_info *thread =
         (iw_thread_info *)iw_htable_get(&s_threads,
@@ -396,7 +396,8 @@ void iw_thread_callstack(FILE *out, unsigned int threadid) {
                                         &threadid);
     pthread_rwlock_unlock(&s_thread_lock);
     if(thread == NULL) {
-        fprintf(out, "Error: Thread %08X does not exist\n", threadid);
+        fprintf(out, "Error: Thread %08lX does not exist\n",
+                (unsigned long int)threadid);
         return;
     }
 
@@ -422,8 +423,8 @@ bool iw_thread_deadlock_check(bool log) {
             // This thread is waiting for a mutex. Find out who owns this mutex.
 
             if(log) {
-                LOG(IW_LOG_IW, "Thread %08X is waiting for mutex %d",
-                    (unsigned int)thread->thread, thread->mutex);
+                LOG(IW_LOG_IW, "Thread %08lX is waiting for mutex %d",
+                    (unsigned long int)thread->thread, thread->mutex);
             }
 
             // First get the mutex this thread is waiting for.
@@ -439,8 +440,8 @@ bool iw_thread_deadlock_check(bool log) {
             }
 
             if(log) {
-                LOG(IW_LOG_IW, "Mutex %d is owned by thread %08X",
-                    mutex->id, (unsigned int)mutex->thread);
+                LOG(IW_LOG_IW, "Mutex %d is owned by thread %08lX",
+                    mutex->id, (unsigned long int)mutex->thread);
             }
 
             // Then get the thread owning this mutex.

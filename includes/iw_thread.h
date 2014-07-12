@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <pthread.h>
 
 // --------------------------------------------------------------------------
 //
@@ -53,7 +54,7 @@ extern void iw_thread_set_log_all(bool log_on);
 /// @brief Check if logging should be done for the given thread.
 /// @param threadid The thread to check logging for or 0 for the calling thread.
 /// @return True if logging should be done.
-extern bool iw_thread_get_log(unsigned int threadid);
+extern bool iw_thread_get_log(pthread_t threadid);
 
 // --------------------------------------------------------------------------
 
@@ -61,7 +62,7 @@ extern bool iw_thread_get_log(unsigned int threadid);
 /// @param threadid The thread to set logging for or 0 for the calling thread.
 /// @param log_on True if logging should be enabled, false for disabled.
 /// @return True if the thread was found and the log level was set.
-extern bool iw_thread_set_log(unsigned int threadid, bool log_on);
+extern bool iw_thread_set_log(pthread_t threadid, bool log_on);
 
 // --------------------------------------------------------------------------
 

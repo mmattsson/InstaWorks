@@ -125,6 +125,8 @@ void *philo_callback(void *param) {
 
 // --------------------------------------------------------------------------
 
+/// @brief A crash callback function to show-case the crash handler feature.
+/// Executes an invalid pointer de-reference to cause a crash.
 bool crash(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     char *ptr = (char *)0xdeadbeef;
     *ptr = 'w';
@@ -198,7 +200,7 @@ static void print_help(const char *error) {
     printf("\n"
            "If the program is started without any command line options it will\n"
            "run in client mode and send control commands to a running server.\n"
-           "Run 'simple help' once the server is running for more help on this.\n"
+           "Run 'philosopher help' once the server is running for more help on this.\n"
            "\n");
 }
 
