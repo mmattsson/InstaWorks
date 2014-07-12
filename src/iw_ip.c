@@ -80,7 +80,7 @@ bool iw_ip_str_to_addr(
 
             // Need to copy address into buffer since getaddrinfo() will not
             // accept a non-NUL terminated address.
-            snprintf(buff, sizeof(buff), "%.*s", addr_end - str, str);
+            snprintf(buff, sizeof(buff), "%.*s", (int)(addr_end - str), str);
             str = buff;
         }
     }
@@ -146,29 +146,30 @@ char *iw_ip_addr_to_str(
     char *buff,
     int buff_len)
 {
-    char *ptr = buff;
     bool retval = false;
+    char *ptr = buff;
+    unsigned short port = iw_ip_get_port(address);
     if(address->ss_family == AF_INET) {
         struct sockaddr_in *s = (struct sockaddr_in *)address;
         retval = inet_ntop(AF_INET, &s->sin_addr, buff, buff_len) != NULL;
-        if(include_port) {
+        if(include_port && port != 0) {
             int len = strlen(buff);
             buff += len;
             buff_len -= len;
-            snprintf(buff, buff_len, ":%d", iw_ip_get_port(address));
+            snprintf(buff, buff_len, ":%d", port);
         }
     } else if(address->ss_family == AF_INET6) {
-        if(include_port) {
+        if(include_port && port != 0) {
             *buff++ = '[';
             buff_len--;
         }
         struct sockaddr_in6 *s = (struct sockaddr_in6 *)address;
         retval = inet_ntop(AF_INET6, &s->sin6_addr, buff, buff_len) != NULL;
-        if(include_port) {
+        if(include_port && port != 0) {
             int len = strlen(buff);
             buff += len;
             buff_len -= len;
-            snprintf(buff, buff_len, "]:%d", iw_ip_get_port(address));
+            snprintf(buff, buff_len, "]:%d", port);
         }
     }
     return retval ? ptr : NULL;

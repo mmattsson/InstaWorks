@@ -76,6 +76,12 @@ extern bool iw_ip_ipv6_to_addr(
 // --------------------------------------------------------------------------
 
 /// @brief Convert a socket address to a string representation.
+/// If include_port is set, and the port number is non-zero, the port number
+/// will be added to the string after a colon. If the address is an IPv6 address,
+/// the address will be surrounded by brackets if a port is added.
+/// For example;
+/// 192.168.1.100:1234
+/// [2001:db8::1]:1234
 /// @param address The address to convert.
 /// @param include_port True if the port should be included in the conversion.
 /// @param buff [out] The buffer to put the string into. Should be at least IW_IP_BUFF_LEN.

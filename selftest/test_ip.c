@@ -51,7 +51,7 @@ static char *ip_addr_fail[] = {
     "abcd",
     "2001:db8:1",
     "2001:db8::x",
-    "::ffff:192.168.0.a"
+    "::ffff:192.168.0.a",
     "2002:db8:::1",
     "2001:db8::a::1",
     "[2001:db8::1]:10000" // This conversion is without ports so this should fail
@@ -68,7 +68,7 @@ static char *ip_addr_port_fail[] = {
     "2001:db8:1",
     "[2001:db8:1]",
     "2001:db8::x",
-    "::ffff:192.168.0.a"
+    "::ffff:192.168.0.a",
     "[2002:db8:::1]:1000",
     "[2001:db8::a::1#1000",
     "#2001:db8::1]:10000" // This conversion is without ports so this should fail
@@ -95,7 +95,7 @@ static void test_ip_array(
             }
         }
         test(result, retval,
-             "Converting %s to IP address and back?", ip_addr[cnt]);
+             "Converting '%s' to IP and back?", ip_addr[cnt]);
     }
 }
 
@@ -113,7 +113,7 @@ static void test_ip_array_fail(
     for(cnt=0;cnt < max;cnt++) {
         bool retval = iw_ip_str_to_addr(ip_addr[cnt], do_port, &address);
         test(result, !retval,
-             "Fail to convert invalid string %s?", ip_addr[cnt]);
+             "Fail to convert invalid IP '%s'?", ip_addr[cnt]);
     }
 }
 
@@ -125,6 +125,9 @@ void test_ip(test_result *result) {
 
     test_display("Testing valid IP conversions");
     test_ip_array(result, ip_addr, IW_ARR_LEN(ip_addr), false);
+
+    test_display("Testing valid IP conversions with ports allowed but no port present");
+    test_ip_array(result, ip_addr, IW_ARR_LEN(ip_addr), true);
 
     test_display("Testing valid IP conversions with ports");
     test_ip_array(result, ip_addr_port, IW_ARR_LEN(ip_addr_port), true);
