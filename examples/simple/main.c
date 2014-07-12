@@ -48,11 +48,12 @@
 /// descriptor, the number of received bytes, the number of sent bytes, and
 /// the address of the client.
 typedef struct _tcp_conn {
-    iw_list_node node;  ///< The base list object.
-    int          fd;    ///< The TCP socket file descriptor.
-    unsigned int rx;    ///< The number of bytes received on the connection.
-    unsigned int tx;    ///< The number of bytes sent on the connection.
-    struct sockaddr_storage address; ///< The peer address.
+    iw_list_node node;    ///< The base list object.
+    int          fd;      ///< The TCP socket file descriptor.
+    unsigned int rx;      ///< The number of bytes received on the connection.
+    unsigned int tx;      ///< The number of bytes sent on the connection.
+    iw_ip        address; ///< The peer address.
+    bool         do_log;  ///< True if logging should be done for this connection.
 } tcp_conn;
 
 // --------------------------------------------------------------------------
@@ -107,10 +108,11 @@ static bool list_connections(FILE *out, const char *cmd, iw_cmd_parse_info *info
         for(;conn != NULL;cnt++) {
             char ipbuff[IW_IP_BUFF_LEN];
             unsigned short port = 0;
-            iw_ip_addr_to_str(&conn->address, ipbuff, sizeof(ipbuff));
-            fprintf(out, "Connection %-3d: FD=%d Client=%s/%d, RX=%d bytes, TX=%d bytes\n",
-                    cnt, conn->fd, ipbuff,
-                    iw_ip_get_port(&conn->address),
+            iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff));
+            fprintf(out, "Connection %-3d: FD=%d log=%s Client=%s, RX=%d bytes, TX=%d bytes\n",
+                    cnt, conn->fd,
+                    conn->do_log ? "on " : "off",
+                    ipbuff,
                     conn->rx, conn->tx);
             conn = (tcp_conn *)conn->node.next;
         }
@@ -119,6 +121,76 @@ static bool list_connections(FILE *out, const char *cmd, iw_cmd_parse_info *info
     return true;
 }
 
+// --------------------------------------------------------------------------
+
+/// @brief Enable or disable client logging.
+static bool log_client(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    iw_ip address;
+    char *ipstr    = iw_cmd_get_token(info);
+    char *onoffstr = iw_cmd_get_token(info);
+    if(ipstr == NULL || !iw_ip_str_to_addr(ipstr, true, &address)) {
+        fprintf(out, "\nInvalid address\n");
+        return false;
+    }
+    if(onoffstr == NULL || (strcmp(onoffstr, "on") != 0 && strcmp(onoffstr, "off") != 0)) {
+        fprintf(out, "\nInvalid value, should be either on of off\n");
+        return false;
+    }
+    bool log_on = false;
+    if(strcmp(onoffstr, "on") == 0) {
+        log_on = true;
+    }
+
+    iw_mutex_lock(s_mutex);
+    tcp_conn *conn = (tcp_conn *)s_list.head;
+    while(conn != NULL) {
+        if(iw_ip_equal(&address, &conn->address, true)) {
+            conn->do_log = log_on;
+            break;
+        }
+        conn = (tcp_conn *)conn->node.next;
+    }
+    if(conn == NULL) {
+        char ipbuff[IW_IP_BUFF_LEN];
+        iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff));
+        fprintf(out, "\nAddress %s was not found\n",
+                ipbuff);
+    }
+    iw_mutex_unlock(s_mutex);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Print help for program usage.
+/// @param error The error to print, if any.
+static void print_help(const char *error) {
+    printf("simple - A simple server\n"
+           "\n");
+    if(error != NULL) {
+        printf("Error: %s\n\n", error);
+    }
+    printf("A simple TCP server that listens for connections on the specified port\n"
+           "number. Any data received on a connection is forwarded to all other\n"
+           "connections.\n"
+           "\n"
+           "Usage: simple [options] [port number]\n"
+           "\n"
+           "[port number]\n"
+           "    The port number to use for the server (default is 1234)\n"
+           "\n");
+    iw_cmdline_print_help();
+    printf("\n"
+           "If the program is started without any command line options it will\n"
+           "run in client mode and send control commands to a running server.\n"
+           "Run 'simple help' once the server is running for more help on this.\n"
+           "\n");
+}
+
+// --------------------------------------------------------------------------
+//
+// Main program
+//
 // --------------------------------------------------------------------------
 
 /// @brief Serve the TCP server socket and connections.
@@ -152,9 +224,9 @@ static bool serve_data() {
                     errno, strerror(errno));
             } else {
                 char ipbuff[INET6_ADDRSTRLEN];
-                iw_ip_addr_to_str(&address, ipbuff, sizeof(ipbuff));
-                IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Accepted socket FD=%d from client %s:%d",
-                        sock, ipbuff, iw_ip_get_port(&address));
+                iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff));
+                IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Accepted socket FD=%d from client %s",
+                        sock, ipbuff);
                 conn = create_tcp_conn(sock, &address);
                 iw_list_add(&s_list, (iw_list_node *)conn);
             }
@@ -166,6 +238,10 @@ static bool serve_data() {
         while(conn != NULL) {
             if(FD_ISSET(conn->fd, &readfds)) {
                 // We received data on the TCP connection
+                // First check if logging should be done for this connection
+                if(conn->do_log) {
+                    iw_thread_set_log(0, true);
+                }
                 char buff[1024];
                 int bytes = recv(conn->fd, buff, sizeof(buff), 0);
                 if(bytes > 0) {
@@ -187,15 +263,18 @@ static bool serve_data() {
                 } else if(bytes == 0) {
                     // Received a socket disconnect, remove socket from list.
                     char ipbuff[IW_IP_BUFF_LEN];
-                    iw_ip_addr_to_str(&conn->address, ipbuff, sizeof(ipbuff));
-                    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Socket FD=%d, client %s:%d, is closed",
-                            conn->fd, ipbuff, iw_ip_get_port(&conn->address));
+                    iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff));
+                    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Socket FD=%d, client %s, is closed",
+                            conn->fd, ipbuff);
                     close(conn->fd);
                     conn = (tcp_conn *)iw_list_delete(&s_list, 
                                                       (iw_list_node *)conn,
                                                       delete_tcp_conn);
                     continue;
                 }
+
+                // Disable logging after we're done
+                iw_thread_set_log(0, false);
             }
             conn = (tcp_conn *)conn->node.next;
         }
@@ -222,31 +301,6 @@ static bool serve_data() {
         return false;
     }
     return true;
-}
-
-// --------------------------------------------------------------------------
-
-static void print_help(const char *error) {
-    printf("simple - A simple server\n"
-           "\n");
-    if(error != NULL) {
-        printf("Error: %s\n\n", error);
-    }
-    printf("A simple TCP server that listens for connections on the specified port\n"
-           "number. Any data received on a connection is forwarded to all other\n"
-           "connections.\n"
-           "\n"
-           "Usage: simple [options] [port number]\n"
-           "\n"
-           "[port number]\n"
-           "    The port number to use for the server (default is 1234)\n"
-           "\n");
-    iw_cmdline_print_help();
-    printf("\n"
-           "If the program is started without any command line options it will\n"
-           "run in client mode and send control commands to a running server.\n"
-           "Run 'simple help' once the server is running for more help on this.\n"
-           "\n");
 }
 
 // --------------------------------------------------------------------------
@@ -281,9 +335,12 @@ bool main_callback(int argc, char **argv) {
     // Add a command to display the currently connected clients.
     iw_cmd_add(NULL, "connections", list_connections,
             "List currently connected clients",
-            "Displays information regarding all currently connected clients such as\n"
-            "the file descriptor for the socket connection.\n"
-            );
+            "Displays information regarding all currently connected clients\n"
+            "such as the file descriptor for the socket connection.\n");
+    iw_cmd_add("log", "client", log_client,
+            "Enable or disable logging for a given client",
+            "Used to enable or disable logging for a given client by specifying\n"
+            "the peer IP address and port, e.g. 'log client 1.1.1.1:1234 on'.\n");
 
     // Create the mutex to protect the TCP connection list.
     s_mutex = iw_mutex_create("TCP Connections");
@@ -299,8 +356,7 @@ bool main_callback(int argc, char **argv) {
         return false;
     }
 
-    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Opened server socket on port %d!",
-              s_port);
+    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Opened server socket on port %d!", s_port);
 
     // Start serving clients
     if(!serve_data()) {
@@ -310,10 +366,6 @@ bool main_callback(int argc, char **argv) {
     return true;
 }
 
-// --------------------------------------------------------------------------
-//
-// Main program
-//
 // --------------------------------------------------------------------------
 
 /// @brief The program main entry-point.

@@ -29,7 +29,7 @@ typedef struct sockaddr_storage iw_ip;
 
 /// The size needed for a buffer to contain a string representation of an IP
 /// address.
-#define IW_IP_BUFF_LEN  INET6_ADDRSTRLEN
+#define IW_IP_BUFF_LEN  (INET6_ADDRSTRLEN + 8)
 
 //---------------------------------------------------------------------------
 //
@@ -38,11 +38,19 @@ typedef struct sockaddr_storage iw_ip;
 // --------------------------------------------------------------------------
 
 /// @brief Convert a string to a socket address.
+/// If a port number is allowed in the conversion, the port number must
+/// be entered with a colon followed by the port number. If the address
+/// is an IPv6 address, the address must be enclosed in brackets if a port
+/// number is present. For example;
+/// 192.168.1.100:1234
+/// [2001:db8::1]:1234
 /// @param str The string to convert.
+/// @param allow_port True if a port number is allowed.
 /// @param address [out] A pointer to the address to receive the result.
 /// @return True if the address was successfully converted.
 extern bool iw_ip_str_to_addr(
     char *str,
+    bool allow_port,
     iw_ip *address);
 
 // --------------------------------------------------------------------------
@@ -69,13 +77,15 @@ extern bool iw_ip_ipv6_to_addr(
 
 /// @brief Convert a socket address to a string representation.
 /// @param address The address to convert.
+/// @param include_port True if the port should be included in the conversion.
 /// @param buff [out] The buffer to put the string into. Should be at least IW_IP_BUFF_LEN.
 /// @param buff_len The size of the buffer.
-/// @return True if the address was successfully converted.
-extern bool iw_ip_addr_to_str(
+/// @return A pointer to buff if successful, NULL otherwise.
+extern char *iw_ip_addr_to_str(
     iw_ip *address,
+    bool include_port,
     char *buff,
-    unsigned int buff_len);
+    int buff_len);
 
 // --------------------------------------------------------------------------
 
@@ -90,6 +100,15 @@ extern unsigned short iw_ip_get_port(iw_ip *address);
 /// @param address The address to set the port number for.
 /// @param port The port number to set.
 extern bool iw_ip_set_port(iw_ip *address, unsigned short port);
+
+// --------------------------------------------------------------------------
+
+/// @brief Compares two IP addresses and returns true if they are equal.
+/// @param addr1 The first address to compare.
+/// @param addr2 The second address to compare.
+/// @param cmp_port True if the port numbers should be compared as well.
+/// @return True if the addresses are equal.
+extern bool iw_ip_equal(iw_ip *addr1, iw_ip *addr2, bool cmp_port);
 
 // --------------------------------------------------------------------------
 

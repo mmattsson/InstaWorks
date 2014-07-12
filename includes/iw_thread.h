@@ -43,6 +43,21 @@ extern bool iw_thread_create(
 
 // --------------------------------------------------------------------------
 
+/// @brief Set logging for all threads.
+/// Set logging to on or off for all threads.
+/// @param log_on True if logging should be enabled, false for disabled.
+extern void iw_thread_set_log_all(bool log_on);
+
+// --------------------------------------------------------------------------
+
+/// @brief Set logging for the given thread.
+/// @param threadid The thread to set logging for or 0 for the calling thread.
+/// @param log_on True if logging should be enabled, false for disabled.
+/// @return True if the thread was found and the log level was set.
+extern bool iw_thread_set_log(unsigned int threadid, bool log_on);
+
+// --------------------------------------------------------------------------
+
 #ifdef _cplusplus
 }
 #endif

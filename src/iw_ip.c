@@ -11,6 +11,7 @@
 #include "iw_ip.h"
 
 #include "iw_log.h"
+#include "iw_util.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -28,14 +29,58 @@
 
 bool iw_ip_str_to_addr(
     char *str,
+    bool allow_port,
     iw_ip *address)
 {
     struct addrinfo hints;
     struct addrinfo *result;
     int retval;
+    unsigned short port = 0;
+    char buff[IW_IP_BUFF_LEN];
 
-    if(address == NULL) {
+    if(address == NULL || str == NULL) {
         return false;
+    }
+
+    if(allow_port) {
+        char *addr_end = NULL;
+        char *port_start = NULL;
+        if(*str == '[') {
+            // A bracket, this must be an IPv6 address with or without a port.
+            addr_end = port_start = strrchr(str, ']');
+            if(port_start != NULL && *++port_start == ':') {
+                port_start++;
+            }
+            // Also update the address start to go beyond the bracket.
+            str++;
+        } else {
+            // Check for an IPv4 address with a port, be careful to not
+            // mistake an IPv6 address with colons for a port marker
+            addr_end = port_start = strrchr(str, ':');
+            if(port_start != NULL &&
+               strspn(str, ".1234567890") == port_start - str)
+            {
+                // There are just numbers and/or dots leading up to the last
+                // colon. This could be an IPv4 address. Let's use the port
+                // we found. The address validity will be confirmed in the
+                // conversion below.
+                port_start++;
+            } else {
+                // Not an IPv4 address with port, just reset port_start.
+                port_start = NULL;
+            }
+        }
+        if(port_start != NULL) {
+            long long int tmp;
+            if(iw_strtoll(port_start, &tmp, 10) && tmp >= 0 && tmp <= 65535) {
+                port = tmp;
+            }
+
+            // Need to copy address into buffer since getaddrinfo() will not
+            // accept a non-NUL terminated address.
+            snprintf(buff, sizeof(buff), "%.*s", addr_end - str, str);
+            str = buff;
+        }
     }
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -55,6 +100,10 @@ bool iw_ip_str_to_addr(
     }
 
     memcpy(address, result->ai_addr, result->ai_addrlen);
+
+    if(port != 0) {
+        iw_ip_set_port(address, port);
+    }
 
     freeaddrinfo(result);
 
@@ -89,19 +138,38 @@ bool iw_ip_ipv6_to_addr(
 
 // --------------------------------------------------------------------------
 
-bool iw_ip_addr_to_str(
+char *iw_ip_addr_to_str(
     iw_ip *address,
+    bool include_port,
     char *buff,
-    unsigned int buff_len)
+    int buff_len)
 {
+    char *ptr = buff;
+    bool retval = false;
     if(address->ss_family == AF_INET) {
         struct sockaddr_in *s = (struct sockaddr_in *)address;
-        return inet_ntop(AF_INET, &s->sin_addr, buff, buff_len) == NULL;
+        retval = inet_ntop(AF_INET, &s->sin_addr, buff, buff_len) != NULL;
+        if(include_port) {
+            int len = strlen(buff);
+            buff += len;
+            buff_len -= len;
+            snprintf(buff, buff_len, ":%d", iw_ip_get_port(address));
+        }
     } else if(address->ss_family == AF_INET6) {
+        if(include_port) {
+            *buff++ = '[';
+            buff_len--;
+        }
         struct sockaddr_in6 *s = (struct sockaddr_in6 *)address;
-        return inet_ntop(AF_INET6, &s->sin6_addr, buff, buff_len) == NULL;
+        retval = inet_ntop(AF_INET6, &s->sin6_addr, buff, buff_len) != NULL;
+        if(include_port) {
+            int len = strlen(buff);
+            buff += len;
+            buff_len -= len;
+            snprintf(buff, buff_len, "]:%d", iw_ip_get_port(address));
+        }
     }
-    return false;
+    return retval ? ptr : NULL;
 }
 
 // --------------------------------------------------------------------------
@@ -126,6 +194,30 @@ bool iw_ip_set_port(iw_ip *address, unsigned short port) {
         break;
     }
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_ip_equal(iw_ip *addr1, iw_ip *addr2, bool cmp_port) {
+    if(addr1->ss_family != addr2->ss_family) {
+        return false;
+    }
+    switch(addr1->ss_family) {
+    case AF_INET : {
+        struct sockaddr_in *a1 = (struct sockaddr_in *)addr1;
+        struct sockaddr_in *a2 = (struct sockaddr_in *)addr2;
+        return (!cmp_port || a1->sin_port == a2->sin_port) &&
+               (a1->sin_addr.s_addr == a2->sin_addr.s_addr);
+        }
+    case AF_INET6 : {
+        struct sockaddr_in6 *a1 = (struct sockaddr_in6 *)addr1;
+        struct sockaddr_in6 *a2 = (struct sockaddr_in6 *)addr2;
+        return (!cmp_port || a1->sin6_port == a2->sin6_port) &&
+               (memcmp(&a1->sin6_addr, &a2->sin6_addr, sizeof(a1->sin6_addr)) == 0);
+        }
+    default :
+        return false;
+    }
 }
 
 // --------------------------------------------------------------------------

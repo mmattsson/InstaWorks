@@ -116,6 +116,9 @@ static void iw_cmd_srv_process_request(int fd) {
     } while(bytes > 0);
 
 done:
+    // Give the client time to close the connection to avoid having the server
+    // socket go into a TIME_WAIT state after program termination.
+    usleep(100000);
     fclose(out);
     iw_buff_destroy(&buff);
     LOG(IW_LOG_IW, "Closed a client connection, fd=%d", fd);
