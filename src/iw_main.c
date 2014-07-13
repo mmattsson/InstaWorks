@@ -39,7 +39,6 @@ static bool s_initialized = false;
 
 void iw_init() {
     if(!s_initialized) {
-        iw_log_init();
         iw_memory_init();
         iw_mutex_init();
         iw_syslog_reinit(1000);
@@ -79,6 +78,10 @@ IW_MAIN_EXIT iw_main(
             iw_stg.iw_prg_name = prg_name + 1;
         }
     }
+
+    // Must set log level before command line parsing. If parsing fails
+    // we must print out program usage help and that includes log levels.
+    iw_log_init();
 
     if(parse_options) {
         // Try to process the command line to determine how we should run.

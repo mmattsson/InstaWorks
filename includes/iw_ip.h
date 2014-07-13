@@ -28,13 +28,25 @@ extern "C" {
 typedef struct sockaddr_storage iw_ip;
 
 /// The size needed for a buffer to contain a string representation of an IP
-/// address.
+/// address and port.
 #define IW_IP_BUFF_LEN  (INET6_ADDRSTRLEN + 8)
 
 //---------------------------------------------------------------------------
 //
 // Function API
 //
+// --------------------------------------------------------------------------
+
+/// @brief Convert a string to a port number.
+/// Validates that the port is a number and within the range or a port
+/// number.
+/// @param str The string to convert.
+/// @param port [out] A pointer to the variable to receive the port number.
+/// @return True if the port number was successfully converted.
+extern bool iw_ip_str_to_port(
+    char *str,
+    unsigned short *port);
+
 // --------------------------------------------------------------------------
 
 /// @brief Convert a string to a socket address.

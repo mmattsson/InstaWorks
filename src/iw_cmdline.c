@@ -83,6 +83,7 @@ static bool iw_cmdline_help_log(const char *option) {
            IW_OPT_INDENT"The <loglevel> is the desired log level. The log level is a sum of individual\n"
            IW_OPT_INDENT"levels in either decimal or hexadecimal.\n");
     iw_log_list(stdout);
+    printf("\n");
     return true;
 }
 
@@ -152,8 +153,13 @@ IW_CMD_OPT_RET iw_cmdline_process(int *processed, int argc, char **argv) {
             // The option is not found. If the argument starts with a dash,
             // then consider this an unknown option, otherwise, it may be
             // further input to the program. In either case, let the main
-            // program decide.
-            return (cur_argv[0] == '-') ? IW_CMD_OPT_UNKNOWN : IW_CMD_OPT_OK;
+            // program decide. Since this is not necessarily an invalid
+            // result, we must set the options we've processed so far.
+            iw_cmdline_check_opts();
+
+            return (cur_argv[0] == '-') ?
+                            IW_CMD_OPT_UNKNOWN :
+                            (found_opts ? IW_CMD_OPT_OK : IW_CMD_OPT_NONE);
         }
 
         found_opts = true;

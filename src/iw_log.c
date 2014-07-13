@@ -33,7 +33,7 @@ typedef struct _log_level {
     const char *desc;   ///< The description of the log level.
 } log_level;
 
-static log_level s_levels[32];
+static log_level s_levels[32] = { { NULL } };
 
 unsigned int s_log_level = 0;
 
@@ -72,19 +72,24 @@ static void iw_vlog(
 // --------------------------------------------------------------------------
 
 void iw_log_init() {
-    memset(&s_levels, 0, sizeof(s_levels));
-    iw_log_add_level(IW_LOG_IW,     "General InstaWorks logs");
-    iw_log_add_level(IW_LOG_SYSLOG, "Syslog messages");
-    iw_log_add_level(IW_LOG_MEM,    "Memory allocation");
+    static bool initialized = false;
+    if(!initialized) {
+        iw_log_add_level(IW_LOG_IW,     "General InstaWorks logs");
+        iw_log_add_level(IW_LOG_SYSLOG, "Syslog messages");
+        iw_log_add_level(IW_LOG_MEM,    "Memory allocation");
+        initialized = true;
+    }
 }
 
 // --------------------------------------------------------------------------
 
 void iw_log_list(FILE *out) {
+    iw_log_init(); // Ensure that log levels have been added.
+
     int cnt;
     for(cnt=0;cnt < 32;cnt++) {
         if(s_levels[cnt].desc != NULL) {
-            fprintf(out, " 0x%08X - %s\n",
+            fprintf(out, "    0x%08X - %s\n",
                     1 << cnt,
                     s_levels[cnt].desc);
         }

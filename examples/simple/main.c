@@ -108,12 +108,10 @@ static bool list_connections(FILE *out, const char *cmd, iw_cmd_parse_info *info
     } else {
         for(;conn != NULL;cnt++) {
             char ipbuff[IW_IP_BUFF_LEN];
-            unsigned short port = 0;
-            iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff));
             fprintf(out, "Connection %-3d: FD=%d log=%s Client=%s, RX=%d bytes, TX=%d bytes\n",
                     cnt, conn->fd,
                     conn->do_log ? "on " : "off",
-                    ipbuff,
+                    iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)),
                     conn->rx, conn->tx);
             conn = (tcp_conn *)conn->node.next;
         }
@@ -153,9 +151,8 @@ static bool log_client(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     }
     if(conn == NULL) {
         char ipbuff[IW_IP_BUFF_LEN];
-        iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff));
         fprintf(out, "\nAddress %s was not found\n",
-                ipbuff);
+                iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff)));
     }
     iw_mutex_unlock(s_mutex);
     return true;
@@ -225,9 +222,8 @@ static bool serve_data() {
                     errno, strerror(errno));
             } else {
                 char ipbuff[INET6_ADDRSTRLEN];
-                iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff));
                 IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Accepted socket FD=%d from client %s",
-                        sock, ipbuff);
+                        sock, iw_ip_addr_to_str(&address, true, ipbuff, sizeof(ipbuff)));
                 conn = create_tcp_conn(sock, &address);
                 iw_list_add(&s_list, (iw_list_node *)conn);
             }
@@ -264,9 +260,8 @@ static bool serve_data() {
                 } else if(bytes == 0) {
                     // Received a socket disconnect, remove socket from list.
                     char ipbuff[IW_IP_BUFF_LEN];
-                    iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff));
                     IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Socket FD=%d, client %s, is closed",
-                            conn->fd, ipbuff);
+                            conn->fd, iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)));
                     close(conn->fd);
                     conn = (tcp_conn *)iw_list_delete(&s_list, 
                                                       (iw_list_node *)conn,
@@ -319,21 +314,15 @@ bool main_callback(int argc, char **argv) {
         print_help("Invalid number of arguments");
         return false;
     } else if(argc == 1) {
-        long long int port;
-        if(!iw_strtoll(argv[0], &port, 10) ||
-           port < 0 || port > 65535)
-        {
+        if(!iw_ip_str_to_port(argv[0], &s_port)) {
             print_help("Invalid port number");
             return false;
         }
-        s_port = port;
         printf("Using port number %d\n", s_port);
     }
 
-    // Add a log level for simple server specific logs.
-    iw_log_add_level(SIMPLE_LOG, "The simple application general log level");
-
-    // Add a command to display the currently connected clients.
+    // Add commands to display the currently connected clients and to set
+    // log level based on client connections.
     iw_cmd_add(NULL, "connections", list_connections,
             "List currently connected clients",
             "Displays information regarding all currently connected clients\n"
@@ -383,6 +372,10 @@ int main(int argc, char **argv) {
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
     iw_stg.iw_allow_quit  = true;
+
+    // Also, adding log levels should be done before the iw_main() call
+    // so that the log levels can be displayed in the program usage text.
+    iw_log_add_level(SIMPLE_LOG, "The simple application general log level");
 
     // Calling iw_main(). The exit code tells us if the program was invoked
     // as a client or server, and whether the command line parameters

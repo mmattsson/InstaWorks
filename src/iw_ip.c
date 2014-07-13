@@ -27,6 +27,22 @@
 //
 // --------------------------------------------------------------------------
 
+bool iw_ip_str_to_port(
+    char *str,
+    unsigned short *port)
+{
+    long long int tmp;
+    if(!iw_strtoll(str, &tmp, 10) ||
+       tmp < 0 || tmp > 65535)
+    {
+        return false;
+    }
+    *port = tmp;
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
 bool iw_ip_str_to_addr(
     char *str,
     bool allow_port,
