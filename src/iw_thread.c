@@ -214,7 +214,7 @@ static void iw_thread_install_sighandler() {
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 
-    if(iw_stg.iw_crashhandle_enable) {
+    if(iw_stg.iw_enable_crashhandle) {
         sigaction(SIGILL, &sa, NULL);
         sigaction(SIGABRT, &sa, NULL);
         sigaction(SIGFPE, &sa, NULL);

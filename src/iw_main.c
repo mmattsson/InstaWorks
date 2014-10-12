@@ -24,6 +24,7 @@
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
+#include "iw_web_srv.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -48,6 +49,9 @@ void iw_init() {
         s_initialized = true;
         if(iw_stg.iw_log_level != 0) {
             iw_log_set_level("stdout", iw_stg.iw_log_level);
+        }
+        if(iw_stg.iw_enable_web_server) {
+            iw_web_srv(NULL, 0);
         }
     }
 }

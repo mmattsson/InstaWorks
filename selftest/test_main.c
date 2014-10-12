@@ -160,8 +160,8 @@ int main(int argc, char **argv) {
 
     // Disable memory tracking and health check thread to avoid false
     // positives and avoid hiding real issues in valgrind.
-    iw_stg.iw_memtrack_enable    = false;
-    iw_stg.iw_healthcheck_enable = false;
+    iw_stg.iw_enable_memtrack    = false;
+    iw_stg.iw_enable_healthcheck = false;
 
     iw_init();
     printf(" == Running self-test ===============================\n");

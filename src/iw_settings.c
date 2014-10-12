@@ -29,12 +29,13 @@ iw_settings iw_stg = {
     false, // Foreground?
     false, // Daemonize?
     false, // Allow quit?
-    IW_DEF_CRASH_HANDLER_ENABLE,
-    IW_DEF_MEMTRACK_ENABLE,
+    IW_DEF_ENABLE_CRASH_HANDLER,
+    IW_DEF_ENABLE_MEMTRACK,
     IW_DEF_MEMTRACK_SIZE,
     IW_DEF_LOG_LEVEL,
     IW_DEF_SYSLOG_SIZE,
-    IW_DEF_HEALTHCHECK_ENABLE,
+    IW_DEF_ENABLE_HEALTHCHECK,
+    IW_DEF_ENABLE_WEB_SERVER,
 
     // The following parameters should only be accessed.
     "instaworks"

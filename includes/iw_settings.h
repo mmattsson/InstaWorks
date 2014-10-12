@@ -35,16 +35,16 @@ extern "C" {
 #define IW_DEF_OPT_LOG_LEVEL        'l'
 
 /// The default crash handler setting.
-#define IW_DEF_CRASH_HANDLER_ENABLE true
+#define IW_DEF_ENABLE_CRASH_HANDLER true
 
 /// The default file to use for callstacks.
 #define IW_DEF_CALLSTACK_FILE       "/tmp/callstack.txt"
 
 /// The default memory tracking enabled setting.
 #ifdef IW_NO_MEMORY_TRACKING
-#define IW_DEF_MEMTRACK_ENABLE      false
+#define IW_DEF_ENABLE_MEMTRACK      false
 #else
-#define IW_DEF_MEMTRACK_ENABLE      true
+#define IW_DEF_ENABLE_MEMTRACK      true
 #endif
 
 /// The default memory tracking hash table size.
@@ -57,7 +57,10 @@ extern "C" {
 #define IW_DEF_SYSLOG_SIZE          10000
 
 /// The default healthcheck enabled setting.
-#define IW_DEF_HEALTHCHECK_ENABLE   true
+#define IW_DEF_ENABLE_HEALTHCHECK   true
+
+/// The web server enabled setting.
+#define IW_DEF_ENABLE_WEB_SERVER    true
 
 // --------------------------------------------------------------------------
 //
@@ -94,22 +97,25 @@ typedef struct _iw_settings {
     bool iw_allow_quit;
 
     /// True if the crash handler should be enabled.
-    bool iw_crashhandle_enable;
+    bool iw_enable_crashhandle;
 
-    /// True if the memory tracking module should be used (default is true)
-    bool iw_memtrack_enable;
+    /// True if the memory tracking module should be used.
+    bool iw_enable_memtrack;
 
-    /// The size of the memory tracking hash table (default is 10000)
+    /// The size of the memory tracking hash table.
     int  iw_memtrack_hash_size;
 
     /// The log level to use.
     long long int iw_log_level;
 
-    /// The size of the syslog buffer (default is 10000)
+    /// The size of the syslog buffer.
     int  iw_syslog_size;
 
-    /// True if health-check should be enabled (default is true).
-    bool iw_healthcheck_enable;
+    /// True if health-check should be enabled.
+    bool iw_enable_healthcheck;
+
+    /// True if the web server should be enabled.
+    bool iw_enable_web_server;
 
     /// The program name
     const char *iw_prg_name;
