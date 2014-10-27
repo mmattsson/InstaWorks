@@ -11,6 +11,7 @@
 #include "iw_web_srv.h"
 
 #include "iw_buff.h"
+#include "iw_list.h"
 #include "iw_log.h"
 #include "iw_thread.h"
 
@@ -40,37 +41,202 @@
 static int s_web_sock = -1;
 
 // --------------------------------------------------------------------------
+
+/// The parse return value
+typedef enum _PARSE {
+    PARSE_COMPLETE,
+    PARSE_INCOMPLETE,
+    PARSE_ERROR
+} PARSE;
+
+// --------------------------------------------------------------------------
+
+/// The HTTP method used for the request.
+typedef enum {
+    METHOD_NONE,
+    METHOD_GET,
+    METHOD_POST
+} METHOD;
+
+// --------------------------------------------------------------------------
+
+/// An index into the request for a particular structure.
+typedef struct _iw_index {
+    char *start; ///< The start of the structure.
+    int   len;   ///< The length of the structure.
+} iw_index;
+
+// --------------------------------------------------------------------------
+
+/// The HTTP request parse structure.
+typedef struct _web_req {
+    // ----------------------------------------------------------------------
+    //
+    // Transient data on the progress of the parsing.
+    //
+    // ----------------------------------------------------------------------
+
+    /// The request buffer to parse.
+    iw_buff buff;
+
+    /// The point of parsing, used for sub-sequent calls to the parse function.
+    char   *parse_point;
+
+    // ----------------------------------------------------------------------
+    //
+    // Information about the parsed request, used to process the request.
+    //
+    // ----------------------------------------------------------------------
+
+    /// The method of the request.
+    METHOD   method;
+
+    /// The protocol version.
+    iw_index version;
+
+    /// The URI being requested.
+    iw_index uri;
+
+    /// The headers of the request.
+    iw_list  headers;
+
+    /// True if all request headers have been parsed.
+    bool     headers_complete;
+
+    /// The length of the content of the body (or zero if no body).
+    int      content_length;
+
+    /// The content of the request (if any).
+    iw_index content;
+
+} web_req;
+
+// --------------------------------------------------------------------------
 //
 // Helper functions
 //
 // --------------------------------------------------------------------------
 
-/// @brief Attempt to parse a client request.
-/// @param buff The buffer containing the client request.
-/// @param file The file stream to write the response to.
-/// @return True if a request was found (whether or not it was a valid request).
-static bool iw_web_srv_parse_request(iw_buff *buff, FILE *out) {
-    // Search for the newline signifying the end of the request.
-    char *end = strstr(buff->buff, "\r\n");
-    if(end != NULL) {
-        char *content = "<html><head><title>Response</title></head><body><h1>Response</h1></body></html>";
-        // There is a request, go ahead and parse it.
-        *end = '\0';
-        LOG(IW_LOG_IW, "Received request \"%s\"", buff->buff);
-        fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                        "Content-Length: %ld\r\n"
-                        "\r\n"
-                        "%s\r\n",
-                        strlen(content),
-                        content);
-        int len = end - buff->buff;
-
-        // Remove the request we just processed. Make sure to remove the '\r\n'
-        // even though we did not use it for the parsing.
-        iw_buff_remove_data(buff, len + 2);
-        return true;
+static char *iw_method_str(METHOD method) {
+    switch(method) {
+    case METHOD_GET  : return "GET";
+    case METHOD_POST : return "POST";
+    case METHOD_NONE : return "Not Set";
+    default : return "UNSUPPORTED";
     }
-    return false;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Create a response and send it.
+/// @param out The file stream to write the response to.
+/// @return True if the response was successfully written.
+static bool iw_web_srv_construct_response(FILE *out) {
+    char *content = "<html><head><title>Response2</title></head><body><h1>Response2</h1></body></html>";
+    fprintf(out, "HTTP/1.1 200 Ok\r\n"
+                    "Content-Length: %d\r\n"
+                    "\r\n"
+                    "%s\r\n",
+                    strlen(content),
+                    content);
+
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Attempt to parse a client request.
+/// @param req The request parse information.
+/// @return The parsing result.
+static PARSE iw_web_srv_parse_request(web_req *req) {
+    char *start;
+    int len;
+
+    // Search for the newline signifying the end of the request URI or header.
+    char *end = strstr(req->buff.buff, "\r\n");
+    if(end == NULL) {
+        // Didn't find another line, just return.
+        return PARSE_INCOMPLETE;
+    }
+
+    if(req->method == METHOD_NONE) {
+        // No method set yet, try to parse request line. We should have
+        // received a whole line since we passed the test above.
+        char *sep = strstr(req->buff.buff, " ");
+        if(sep == NULL) {
+            // We received a line so we should have a separator.
+            return PARSE_ERROR;
+        }
+        start = req->buff.buff;
+        len = sep - start;
+        if(strncmp(start, "GET", len) == 0) {
+            req->method = METHOD_GET;
+        } else if(strncmp(start, "POST", len) == 0) {
+            req->method = METHOD_POST;
+        } else {
+            // Unsupported method
+            return PARSE_ERROR;
+        }
+        req->parse_point = sep + 1;
+
+        // Parse the request URI
+        sep = strstr(req->parse_point, " ");
+        if(sep == NULL) {
+            // We received a line so we should have a separator.
+            return PARSE_ERROR;
+        }
+        req->uri.start = req->parse_point;
+        req->uri.len   = sep - req->uri.start;
+        req->parse_point = sep + 1;
+
+        // Parse the protocol version
+        sep = strstr(req->parse_point, "\r\n");
+        if(sep == NULL) {
+            // We recieved a line so we should have a separator.
+            return PARSE_ERROR;
+        }
+        req->version.start = req->parse_point;
+        req->version.len   = sep - req->version.start;
+        req->parse_point = sep + 1;
+    }
+
+    // Now try to find headers until we have an empty line.
+    while(!req->headers_complete) {
+        if(strncmp(req->parse_point, "\r\n", 2) == 0) {
+            // An empty line, we've completed parsing the headers.
+            req->parse_point += 2;
+            req->headers_complete = true;
+            break;
+        }
+        char *sep = strstr(req->parse_point, ":");
+        if(sep == NULL) {
+            // We've received a line, we should have a proper header.
+            return PARSE_ERROR;
+        }
+
+        // Create a header index for this header
+    }
+
+    // The presence of an empty line signifies the end of the request header.
+    // Either the request is complete, or if a Content-Length header was
+    // received with a non-zero value, we know how much data there is in the
+    // body.
+    if(req->content_length > 0) {
+        int buff_len = iw_buff_remainder(&req->buff);
+        if(buff_len - (req->parse_point - req->buff.buff) < req->content_length) {
+            // We do not have enough data to complete the request
+            return PARSE_INCOMPLETE;
+        }
+    }
+
+    LOG(IW_LOG_IW, "Received %s method, data=\"%s\"",
+        iw_method_str(req->method),
+        req->buff.buff);
+
+    // Remove the request we just processed.
+//    iw_buff_remove_data(&req->buff, len);
+
+    return PARSE_COMPLETE;
 }
 
 // --------------------------------------------------------------------------
@@ -78,27 +244,21 @@ static bool iw_web_srv_parse_request(iw_buff *buff, FILE *out) {
 /// @brief Process a client request.
 /// @param fd The client's socket file descriptor.
 static void iw_web_srv_process_request(int fd) {
-    iw_buff buff;
-    if(!iw_buff_create(&buff, BUFF_SIZE, 10 * BUFF_SIZE)) {
+    web_req req;
+    memset(&req, 0, sizeof(req));
+    if(!iw_buff_create(&req.buff, BUFF_SIZE, 10 * BUFF_SIZE)) {
         LOG(IW_LOG_IW, "Failed to create command server request buffer");
         goto done;
     }
     FILE *out = fdopen(fd, "r+w+");
     int bytes;
     do {
-        int remainder = iw_buff_remainder(&buff);
-        if(remainder == 0) {
-            // Out of buffer space and could not parse request, close socket
-            // and return
-            LOG(IW_LOG_IW, "Failed to parse request");
-            goto done;
-        }
         char *ptr;
-        if(!iw_buff_reserve_data(&buff, &ptr, remainder)) {
+        if(!iw_buff_reserve_data(&req.buff, &ptr, BUFF_SIZE)) {
             LOG(IW_LOG_IW, "Failed to allocate command server request buffer");
             goto done;
         }
-        bytes = recv(fd, ptr, remainder, 0);
+        bytes = recv(fd, ptr, BUFF_SIZE, 0);
         if(bytes == -1) {
             LOG(IW_LOG_IW, "Request failed (%d:%s)", errno, strerror(errno));
             goto done;
@@ -106,21 +266,25 @@ static void iw_web_srv_process_request(int fd) {
             goto done;
         }
 
-        iw_buff_commit_data(&buff, bytes);
-        if(iw_web_srv_parse_request(&buff, out)) {
-            // Successfully parsed a request (whether the request was valid
-            // or not). Return from this function.
-            send(fd, "\0", 1, 0);
+        iw_buff_commit_data(&req.buff, bytes);
+        PARSE parse = iw_web_srv_parse_request(&req);
+        if(parse == PARSE_ERROR) {
+            LOG(IW_LOG_IW, "Failed to parse request");
+            goto done;
+        } if(parse == PARSE_COMPLETE) {
+            // Successfully parsed a request. Return from this function.
             goto done;
         }
     } while(bytes > 0);
 
 done:
+    iw_web_srv_construct_response(out);
+
     // Give the client time to close the connection to avoid having the server
     // socket go into a TIME_WAIT state after program termination.
     usleep(100000);
     fclose(out);
-    iw_buff_destroy(&buff);
+    iw_buff_destroy(&req.buff);
     LOG(IW_LOG_IW, "Closed a client connection, fd=%d", fd);
 }
 
