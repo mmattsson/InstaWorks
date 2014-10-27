@@ -58,7 +58,7 @@ static bool iw_web_srv_parse_request(iw_buff *buff, FILE *out) {
         *end = '\0';
         LOG(IW_LOG_IW, "Received request \"%s\"", buff->buff);
         fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                        "Content-Length: %d\r\n"
+                        "Content-Length: %ld\r\n"
                         "\r\n"
                         "%s\r\n",
                         strlen(content),
