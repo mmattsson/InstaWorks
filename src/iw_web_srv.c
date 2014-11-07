@@ -13,6 +13,7 @@
 #include "iw_buff.h"
 #include "iw_list.h"
 #include "iw_log.h"
+#include "iw_memory.h"
 #include "iw_thread.h"
 
 #include <arpa/inet.h>
@@ -62,9 +63,18 @@ typedef enum {
 
 /// An index into the request for a particular structure.
 typedef struct _iw_index {
-    char *start; ///< The start of the structure.
-    int   len;   ///< The length of the structure.
+    const char *start;  ///< The start of the structure.
+    int   len;          ///< The length of the structure.
 } iw_index;
+
+// --------------------------------------------------------------------------
+
+/// An HTTP request header.
+typedef struct _iw_header {
+    iw_list_node node;  ///< The list node.
+    iw_index     name;  ///< The name of the header.
+    iw_index     value; ///< The value of the header.
+} iw_header;
 
 // --------------------------------------------------------------------------
 
@@ -117,6 +127,32 @@ typedef struct _web_req {
 //
 // --------------------------------------------------------------------------
 
+/// @brief Create an HTTP header object.
+static iw_header *iw_add_header(
+    const char *name,
+    int name_len,
+    const char *value,
+    int value_len)
+{
+    iw_header *hdr = (iw_header *)IW_CALLOC(1, sizeof(iw_header));
+    hdr->name.start  = name;
+    hdr->name.len    = name_len;
+    hdr->value.start = value;
+    hdr->value.len   = value_len;
+    return hdr;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Delete an HTTP header object.
+/// @param node The header object to delete.
+static void iw_delete_header(iw_list_node *node) {
+    iw_header *hdr = (iw_header *)node;
+    IW_FREE(hdr);
+}
+
+// --------------------------------------------------------------------------
+
 static char *iw_method_str(METHOD method) {
     switch(method) {
     case METHOD_GET  : return "GET";
@@ -134,7 +170,7 @@ static char *iw_method_str(METHOD method) {
 static bool iw_web_srv_construct_response(FILE *out) {
     char *content = "<html><head><title>Response2</title></head><body><h1>Response2</h1></body></html>";
     fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                    "Content-Length: %d\r\n"
+                    "Content-Length: %ld\r\n"
                     "\r\n"
                     "%s\r\n",
                     strlen(content),
@@ -215,6 +251,9 @@ static PARSE iw_web_srv_parse_request(web_req *req) {
         }
 
         // Create a header index for this header
+
+        // Move to the next line
+        req->parse_point = strstr(sep, "\r\n");
     }
 
     // The presence of an empty line signifies the end of the request header.
