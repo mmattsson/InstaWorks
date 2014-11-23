@@ -129,16 +129,21 @@ typedef struct _web_req {
 
 /// @brief Create an HTTP header object.
 static iw_header *iw_add_header(
+    web_req *req,
     const char *name,
     int name_len,
     const char *value,
     int value_len)
 {
     iw_header *hdr = (iw_header *)IW_CALLOC(1, sizeof(iw_header));
+    if(hdr == NULL) {
+        return NULL;
+    }
     hdr->name.start  = name;
     hdr->name.len    = name_len;
     hdr->value.start = value;
     hdr->value.len   = value_len;
+    iw_list_add(&req->headers, (iw_list_node *)hdr);
     return hdr;
 }
 
@@ -170,13 +175,23 @@ static char *iw_method_str(METHOD method) {
 static bool iw_web_srv_construct_response(FILE *out) {
     char *content = "<html><head><title>Response2</title></head><body><h1>Response2</h1></body></html>";
     fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                    "Content-Length: %ld\r\n"
+                    "Content-Length: %d\r\n"
                     "\r\n"
                     "%s\r\n",
                     strlen(content),
                     content);
 
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Free all memory allocated by a web request.
+/// This does not free the request pointer itself, only the memory allocated
+/// as part of parsing the request.
+/// @param req The request to free.
+static void iw_web_srv_free_request(web_req *req) {
+    iw_list_destroy(&req->headers, iw_delete_header);
 }
 
 // --------------------------------------------------------------------------
@@ -233,7 +248,7 @@ static PARSE iw_web_srv_parse_request(web_req *req) {
         }
         req->version.start = req->parse_point;
         req->version.len   = sep - req->version.start;
-        req->parse_point = sep + 1;
+        req->parse_point = sep + 2;
     }
 
     // Now try to find headers until we have an empty line.
@@ -250,10 +265,15 @@ static PARSE iw_web_srv_parse_request(web_req *req) {
             return PARSE_ERROR;
         }
 
-        // Create a header index for this header
-
         // Move to the next line
-        req->parse_point = strstr(sep, "\r\n");
+        end = strstr(sep, "\r\n");
+
+        // Create a header index for this header
+        iw_add_header(req,
+                      req->parse_point, sep - req->parse_point,
+                      sep + 1, end - sep - 1);
+
+        req->parse_point = end + 2;
     }
 
     // The presence of an empty line signifies the end of the request header.
@@ -268,9 +288,18 @@ static PARSE iw_web_srv_parse_request(web_req *req) {
         }
     }
 
+    // Debug log the request we just received
     LOG(IW_LOG_IW, "Received %s method, data=\"%s\"",
         iw_method_str(req->method),
         req->buff.buff);
+    iw_list_node *node = req->headers.head;
+    while(node != NULL) {
+        iw_header *hdr = (iw_header *)node;
+        node = node->next;
+        LOG(IW_LOG_IW, "HDR: \"%.*s\" -> \"%.*s\"",
+            hdr->name.len, hdr->name.start,
+            hdr->value.len, hdr->value.start);
+    }
 
     // Remove the request we just processed.
 //    iw_buff_remove_data(&req->buff, len);
@@ -318,6 +347,8 @@ static void iw_web_srv_process_request(int fd) {
 
 done:
     iw_web_srv_construct_response(out);
+
+    iw_web_srv_free_request(&req);
 
     // Give the client time to close the connection to avoid having the server
     // socket go into a TIME_WAIT state after program termination.
