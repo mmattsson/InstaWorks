@@ -51,6 +51,10 @@ extern void test_opts(test_result *result);
 /// @param result The result of the test.
 extern void test_ip(test_result *result);
 
+/// @brief The web server test suite.
+/// @param result The result of the test.
+extern void test_web_srv(test_result *result);
+
 // --------------------------------------------------------------------------
 
 #ifdef _cplusplus

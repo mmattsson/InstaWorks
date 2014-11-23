@@ -53,6 +53,7 @@ void iw_init() {
         if(iw_stg.iw_enable_web_server) {
             iw_web_srv(NULL, 0);
         }
+        iw_thread_register_main();
     }
 }
 
@@ -112,7 +113,6 @@ IW_MAIN_EXIT iw_main(
             }
         }
         iw_init();
-        iw_thread_register_main();
         bool retval = iw_cmd_srv(main_fn, iw_stg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
         iw_exit();
         return retval ? IW_MAIN_SRV_OK : IW_MAIN_SRV_FAILED;

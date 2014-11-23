@@ -103,7 +103,7 @@ extern void iw_buff_remove_data(iw_buff *buff, unsigned int size);
 /// to provide that space.
 /// @param buff A pointer to the buffer structure.
 /// @return The number of bytes that remains in the current buffer.
-extern int iw_buff_remainder(iw_buff *buff);
+extern int iw_buff_remainder(const iw_buff *buff);
 
 // --------------------------------------------------------------------------
 

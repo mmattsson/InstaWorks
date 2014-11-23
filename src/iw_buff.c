@@ -108,7 +108,7 @@ void iw_buff_remove_data(iw_buff *buff, unsigned int size) {
 
 // --------------------------------------------------------------------------
 
-int iw_buff_remainder(iw_buff *buff) {
+int iw_buff_remainder(const iw_buff *buff) {
     return buff->size - buff->end;
 }
 

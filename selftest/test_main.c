@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
     // positives and avoid hiding real issues in valgrind.
     iw_stg.iw_enable_memtrack    = false;
     iw_stg.iw_enable_healthcheck = false;
+    iw_stg.iw_enable_web_server  = false;
 
     iw_init();
     printf(" == Running self-test ===============================\n");

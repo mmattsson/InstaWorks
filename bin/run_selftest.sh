@@ -6,7 +6,7 @@ command -v valgrind > /dev/null
 HAS_VALGRIND=$?
 
 if [ $HAS_VALGRIND = "0" ]; then
-    valgrind -q --error-exitcode=123 --leak-check=full "$DIR/selftest"
+    valgrind -q --error-exitcode=123 --leak-check=full "$DIR/selftest" $*
     _EXIT_CODE=$?
     echo ""
     if [ "$_EXIT_CODE" = "123" ]; then
@@ -16,6 +16,6 @@ if [ $HAS_VALGRIND = "0" ]; then
     fi
     echo ""
 else
-    "$DIR/selftest"
+    "$DIR/selftest $*"
 fi
 

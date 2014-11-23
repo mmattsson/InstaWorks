@@ -21,6 +21,7 @@ test_info s_tests[] = {
     { test_syslog,      "Syslog ring buffer test" },
     { test_opts,        "Command-line option parsing test" },
     { test_ip,          "IP address utility test" },
+    { test_web_srv,     "Web server parsing test" },
     { NULL, NULL }
 };
 
