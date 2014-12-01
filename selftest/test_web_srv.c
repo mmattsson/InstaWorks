@@ -8,6 +8,7 @@
 ///
 // --------------------------------------------------------------------------
 
+#include "iw_web_req.h"
 #include "iw_web_srv.h"
 
 #include "tests.h"
@@ -42,22 +43,16 @@ void test_web_srv(test_result *result) {
     IW_WEB_PARSE retval;
 
     test_display("Parsing basic request");
-    retval = iw_web_srv_parse_request_str(basic_req, &req);
+    retval = iw_web_req_parse_str(basic_req, &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    iw_web_srv_free_request(&req);
+    test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
+    iw_web_req_free(&req);
 
     test_display("Parsing favico request");
-    retval = iw_web_srv_parse_request_str(favico, &req);
+    retval = iw_web_req_parse_str(favico, &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    iw_web_srv_free_request(&req);
-    /*
-    test_display("iw_buff_add_data, adding '%s'", test6);
-    test(result, !retval, "iw_buff_add_data failed");
-    test(result, buff.size == 8 && buff.end == 8,
-         "Buffer size is 8 and end is 8");
-    test(result, strncmp(buff.buff, "cdefghij", 8) == 0,
-         "Buffer contains 'cdefghij'");
-         */
+    test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
+    iw_web_req_free(&req);
 }
 
 // --------------------------------------------------------------------------
