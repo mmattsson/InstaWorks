@@ -52,10 +52,10 @@ static int s_web_sock = -1;
 static bool iw_web_srv_construct_response(FILE *out) {
     char *content = "<html><head><title>Response2</title></head><body><h1>Response</h1></body></html>";
     fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                    "Content-Length: %d\r\n"
+                    "Content-Length: %ld\r\n"
                     "\r\n"
                     "%s\r\n",
-                    strlen(content),
+                    (long int)strlen(content),
                     content);
 
     return true;
