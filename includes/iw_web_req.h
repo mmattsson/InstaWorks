@@ -20,6 +20,7 @@ extern "C" {
 #include "iw_ip.h"
 #include "iw_list.h"
 #include "iw_main.h"
+#include "iw_parse.h"
 
 #include <stdbool.h>
 
@@ -39,19 +40,11 @@ typedef enum {
 // --------------------------------------------------------------------------
 
 /// The parse return value
-typedef enum _PARSE {
+typedef enum _IW_WEB_PARSE {
     IW_WEB_PARSE_COMPLETE,
     IW_WEB_PARSE_INCOMPLETE,
     IW_WEB_PARSE_ERROR
 } IW_WEB_PARSE;
-
-// --------------------------------------------------------------------------
-
-/// An index into the request for a particular structure.
-typedef struct _iw_parse_index {
-    const char *start;  ///< The start of the structure.
-    int   len;          ///< The length of the structure.
-} iw_parse_index;
 
 // --------------------------------------------------------------------------
 
@@ -80,6 +73,9 @@ typedef struct _iw_web_req {
     // Information about the parsed request, used to process the request.
     //
     // ----------------------------------------------------------------------
+
+    /// True if the request has been successfully parsed.
+    bool complete;
 
     /// The method of the request.
     IW_WEB_METHOD   method;
@@ -119,16 +115,12 @@ typedef struct _iw_web_req {
 /// and will not be altered, the values pointed to are not NUL terminated and
 /// only the given length bytes for the name or the value should be used.
 /// @param req The request to add the header to.
-/// @param name The name of the request.
-/// @param name_len The length of the name.
+/// @param name The name of the header.
 /// @param value The value of the header.
-/// @param value_len The length of the value.
 extern iw_web_req_header *iw_web_req_add_header(
     iw_web_req *req,
-    const char *name,
-    int name_len,
-    const char *value,
-    int value_len);
+    iw_parse_index *name,
+    iw_parse_index *value);
 
 // --------------------------------------------------------------------------
 
@@ -185,6 +177,37 @@ extern char *iw_web_req_method_str(IW_WEB_METHOD method);
 /// @param req The request to get the method for.
 /// @return The method for the request.
 extern IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the first header with the given name.
+/// If no header matches the given name, NULL is returned. If several headers
+/// match, the first header matching the name is returned. If no name is given,
+/// The first header in the request is returned.
+/// @param buff The buffer of the request.
+/// @param req The request to find the header in.
+/// @param name The name of the header to return or NULL for the first header.
+/// @return The request header or NULL for no match.
+extern iw_web_req_header *iw_web_req_get_header(
+    const char *buff,
+    iw_web_req *req,
+    const char *name);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the next header with the given name.
+/// Returns the next header with the given name or NULL if no more matches
+/// were found.
+/// @param buff The buffer of the request.
+/// @param req The request to find the header in.
+/// @param name The name of the header to return or NULL for all headers.
+/// @param hdr The previously found header.
+/// @return The next matching header or NULL for no more matches.
+extern iw_web_req_header *iw_web_req_get_next_header(
+    const char *buff,
+    iw_web_req *req,
+    const char *name,
+    const iw_web_req_header *hdr);
 
 // --------------------------------------------------------------------------
 

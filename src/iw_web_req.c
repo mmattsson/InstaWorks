@@ -32,21 +32,18 @@
 
 iw_web_req_header *iw_web_req_add_header(
     iw_web_req *req,
-    const char *name,
-    int name_len,
-    const char *value,
-    int value_len)
+    iw_parse_index *name,
+    iw_parse_index *value)
 {
     iw_web_req_header *hdr =
             (iw_web_req_header *)IW_CALLOC(1, sizeof(iw_web_req_header));
     if(hdr == NULL) {
         return NULL;
     }
-    hdr->name.start  = name;
-    hdr->name.len    = name_len;
-    hdr->value.start = value;
-    hdr->value.len   = value_len;
+    hdr->name  = *name;
+    hdr->value = *value;
     iw_list_add(&req->headers, (iw_list_node *)hdr);
+
     return hdr;
 }
 
@@ -77,13 +74,15 @@ IW_WEB_PARSE iw_web_req_parse_str(const char *str, iw_web_req *req) {
 }
 
 // --------------------------------------------------------------------------
-
+// Todo: need to rewrite this to not take a buffer. The parse method should
+// take a pointer to a string only. The caller may have the string in a buffer
+// and can remove the successfully parsed bytes from the buffer at completion.
 IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
     char *start;
     int len;
 
     // Search for the newline signifying the end of the request URI or header.
-    char *end = strstr(buff->buff, "\r\n");
+    char *end = strstr(buff->buff, IW_PARSE_CRLF);
     if(end == NULL) {
         // Didn't find another line, just return.
         return IW_WEB_PARSE_INCOMPLETE;
@@ -115,45 +114,50 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        req->uri.start = buff->buff + req->parse_point;
-        req->uri.len   = sep - req->uri.start;
+        req->uri.start   = req->parse_point;
+        req->uri.len     = sep - buff->buff - req->uri.start;
         req->parse_point = sep + 1 - buff->buff;
 
         // Parse the protocol version
-        sep = strstr(buff->buff + req->parse_point, "\r\n");
+        sep = strstr(buff->buff + req->parse_point, IW_PARSE_CRLF);
         if(sep == NULL) {
             // We recieved a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        req->version.start = req->parse_point + buff->buff;
-        req->version.len   = sep - req->version.start;
-        req->parse_point = sep + 2 - buff->buff;
+        req->version.start = req->parse_point;
+        req->version.len   = sep - buff->buff - req->version.start;
+        req->parse_point   = sep + 2 - buff->buff;
     }
 
     // Now try to find headers until we have an empty line.
     while(!req->headers_complete) {
-        if(strncmp(buff->buff + req->parse_point, "\r\n", 2) == 0) {
+        if(strncmp(buff->buff + req->parse_point, IW_PARSE_CRLF, 2) == 0) {
             // An empty line, we've completed parsing the headers.
             req->parse_point += 2;
             req->headers_complete = true;
             break;
         }
-        char *sep = strstr(buff->buff + req->parse_point, ":");
-        if(sep == NULL) {
+
+        // Get the name of the header
+        iw_parse_index name;
+        IW_PARSE retval = iw_parse_find_sep(buff->buff, &req->parse_point,
+                                            ":", true, &name);
+        if(retval != IW_PARSE_MATCH) {
             // We've received a line, we should have a proper header.
             return IW_WEB_PARSE_ERROR;
         }
 
-        // Move to the next line
-        end = strstr(sep, "\r\n");
+        // Get the value of the header
+        iw_parse_index value;
+        retval = iw_parse_find_sep(buff->buff, &req->parse_point,
+                                   IW_PARSE_CRLF, true, &value);
+        if(retval != IW_PARSE_MATCH) {
+            // We've received a line, we should have a proper header.
+            return IW_WEB_PARSE_ERROR;
+        }
 
         // Create a header index for this header
-        iw_web_req_add_header(req,
-                      buff->buff + req->parse_point,
-                      sep - buff->buff - req->parse_point,
-                      sep + 1, end - sep - 1);
-
-        req->parse_point = end - buff->buff + 2;
+        iw_web_req_add_header(req, &name, &value);
     }
 
     // The presence of an empty line signifies the end of the request header.
@@ -177,12 +181,11 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
         node = node->next;
         LOG(IW_LOG_IW, "HDR: \"%.*s\" -> \"%.*s\"",
-            hdr->name.len, hdr->name.start,
-            hdr->value.len, hdr->value.start);
+            hdr->name.len, buff->buff + hdr->name.start,
+            hdr->value.len, buff->buff + hdr->value.start);
     }
 
-    // Remove the request we just processed.
-//    iw_buff_remove_data(&req->buff, len);
+    req->complete = true;
 
     return IW_WEB_PARSE_COMPLETE;
 }
@@ -194,7 +197,7 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
 // --------------------------------------------------------------------------
 
 IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req) {
-    return req->method;
+    return req->complete ? req->method : IW_WEB_METHOD_NONE;
 }
 
 // --------------------------------------------------------------------------
@@ -206,6 +209,47 @@ char *iw_web_req_method_str(IW_WEB_METHOD method) {
     case IW_WEB_METHOD_NONE : return "Not Set";
     default : return "UNSUPPORTED";
     }
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_header *iw_web_req_get_header(
+    const char *buff,
+    iw_web_req *req,
+    const char *name)
+{
+    iw_list_node *node = req->headers.head;
+    while(node != NULL) {
+        iw_web_req_header *hdr = (iw_web_req_header *)node;
+        if(strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0 &&
+           strlen(name) == hdr->name.len)
+        {
+            return hdr;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_header *iw_web_req_get_next_header(
+    const char *buff,
+    iw_web_req *req,
+    const char *name,
+    const iw_web_req_header *hdr)
+{
+    iw_list_node *node = (iw_list_node *)hdr;
+    while(node != NULL) {
+        iw_web_req_header *hdr = (iw_web_req_header *)node;
+        if(strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0 &&
+           strlen(name) == hdr->name.len)
+        {
+            return hdr;
+        }
+        node = node->next;
+    }
+    return NULL;
 }
 
 // --------------------------------------------------------------------------

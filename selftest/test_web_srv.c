@@ -38,6 +38,41 @@ static char *favico =
 
 // --------------------------------------------------------------------------
 
+static void test_hdr(
+    test_result *result,
+    const char *buff,
+    iw_web_req *req,
+    bool present,
+    const char *name,
+    const char *value)
+{
+    iw_web_req_header *hdr;
+    hdr = iw_web_req_get_header(buff, req, name);
+    if(hdr == NULL) {
+        if(present) {
+            // The header should be present, the fact that we didn't find it
+            // means this test failed.
+            test(result, false, "Failed to get header \"%s\"", name);
+        } else {
+            // The header should not be present. The fact that we didn't find it
+            // means that this test passed.
+            test(result, true,
+                 "Could not get non-existent header \"%s\"", name);
+        }
+        return;
+    }
+    test(result,
+         strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0,
+         "Getting header \"%.*s\", expected \"%s\"",
+         hdr->name.len, buff + hdr->name.start, name);
+    test(result,
+         strncasecmp(buff + hdr->value.start, value, hdr->value.len) == 0,
+         "Getting value \"%.*s\", expected \"%s\"",
+         hdr->value.len, buff + hdr->value.start, value);
+}
+
+// --------------------------------------------------------------------------
+
 void test_web_srv(test_result *result) {
     iw_web_req req;
     IW_WEB_PARSE retval;
@@ -46,12 +81,16 @@ void test_web_srv(test_result *result) {
     retval = iw_web_req_parse_str(basic_req, &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
     test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
+    test_hdr(result, basic_req, &req, true, "Host", "127.0.0.1:8080");
+    test_hdr(result, basic_req, &req, true, "hOsT", "127.0.0.1:8080");
+    test_hdr(result, basic_req, &req, false, "hXsT", NULL);
     iw_web_req_free(&req);
 
     test_display("Parsing favico request");
     retval = iw_web_req_parse_str(favico, &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
     test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
+    test_hdr(result, favico, &req, true, "Host", "127.0.0.1:8080");
     iw_web_req_free(&req);
 }
 
