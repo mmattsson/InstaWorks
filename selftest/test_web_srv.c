@@ -26,7 +26,7 @@ static char *basic_req =
     "Accept-Language: en-US,en;q=0.8,sv;q=0.6\r\n"
     "\r\n";
 
-static char *favico =
+static char *favicon =
     "GET /favicon.ico HTTP/1.1\r\n"
     "Host: 127.0.0.1:8080\r\n"
     "Connection: keep-alive\r\n"
@@ -35,6 +35,20 @@ static char *favico =
     "Accept-Encoding: gzip, deflate, sdch\r\n"
     "Accept-Language: en-US,en;q=0.8,sv;q=0.6\r\n"
     "\r\n";
+
+// --------------------------------------------------------------------------
+
+static void test_value(
+    test_result *result,
+    const char *buff,
+    iw_parse_index *value,
+    const char *reference)
+{
+    test(result,
+         strncasecmp(reference, buff + value->start, value->len) == 0,
+         "Checking value \"%.*s\", expected \"%s\"",
+         value->len, buff + value->start, reference);
+}
 
 // --------------------------------------------------------------------------
 
@@ -73,25 +87,33 @@ static void test_hdr(
 
 // --------------------------------------------------------------------------
 
-void test_web_srv(test_result *result) {
+static void test_req(
+    test_result *result,
+    const char *name,
+    const char *buff,
+    const char *uri)
+{
     iw_web_req req;
     IW_WEB_PARSE retval;
 
-    test_display("Parsing basic request");
-    retval = iw_web_req_parse_str(basic_req, &req);
+    test_display(name);
+    retval = iw_web_req_parse_str(buff, &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
-    test_hdr(result, basic_req, &req, true, "Host", "127.0.0.1:8080");
-    test_hdr(result, basic_req, &req, true, "hOsT", "127.0.0.1:8080");
-    test_hdr(result, basic_req, &req, false, "hXsT", NULL);
+    test_value(result, buff, &req.version, "HTTP/1.1");
+    test_value(result, buff, &req.uri, uri);
+    test(result, iw_web_req_get_method(&req)==IW_WEB_METHOD_GET, "GET method");
+    test_hdr(result, buff, &req, true, "Host", "127.0.0.1:8080");
+    test_hdr(result, buff, &req, true, "hOsT", "127.0.0.1:8080");
+    test_hdr(result, buff, &req, false, "hXsT", NULL);
     iw_web_req_free(&req);
+}
 
-    test_display("Parsing favico request");
-    retval = iw_web_req_parse_str(favico, &req);
-    test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    test(result, iw_web_req_get_method(&req) == IW_WEB_METHOD_GET, "GET method");
-    test_hdr(result, favico, &req, true, "Host", "127.0.0.1:8080");
-    iw_web_req_free(&req);
+// --------------------------------------------------------------------------
+
+void test_web_srv(test_result *result) {
+    test_req(result, "Parsing basic request", basic_req, "/");
+
+    test_req(result, "Parsing favicon request", favicon, "/favicon.ico");
 }
 
 // --------------------------------------------------------------------------

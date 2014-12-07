@@ -78,8 +78,7 @@ IW_WEB_PARSE iw_web_req_parse_str(const char *str, iw_web_req *req) {
 // take a pointer to a string only. The caller may have the string in a buffer
 // and can remove the successfully parsed bytes from the buffer at completion.
 IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
-    char *start;
-    int len;
+    IW_PARSE parse;
 
     // Search for the newline signifying the end of the request URI or header.
     char *end = strstr(buff->buff, IW_PARSE_CRLF);
@@ -91,47 +90,41 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
     if(req->method == IW_WEB_METHOD_NONE) {
         // No method set yet, try to parse request line. We should have
         // received a whole line since we passed the test above.
-        char *sep = strstr(buff->buff, " ");
-        if(sep == NULL) {
+        iw_parse_index idx;
+        parse = iw_parse_read_token(buff->buff, &req->parse_point,
+                                    IW_PARSE_SPACE, true, &idx);
+        if(parse != IW_PARSE_MATCH) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        start = buff->buff;
-        len = sep - start;
-        if(strncmp(start, "GET", len) == 0) {
+        if(strncmp(buff->buff + idx.start, "GET", idx.len) == 0) {
             req->method = IW_WEB_METHOD_GET;
-        } else if(strncmp(start, "POST", len) == 0) {
+        } else if(strncmp(buff->buff + idx.start, "POST", idx.len) == 0) {
             req->method = IW_WEB_METHOD_POST;
         } else {
             // Unsupported method
             return IW_WEB_PARSE_ERROR;
         }
-        req->parse_point = sep - buff->buff + 1;
 
         // Parse the request URI
-        sep = strstr(buff->buff + req->parse_point, " ");
-        if(sep == NULL) {
+        parse = iw_parse_read_token(buff->buff, &req->parse_point,
+                                    IW_PARSE_SPACE, true, &req->uri);
+        if(parse != IW_PARSE_MATCH) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        req->uri.start   = req->parse_point;
-        req->uri.len     = sep - buff->buff - req->uri.start;
-        req->parse_point = sep + 1 - buff->buff;
 
         // Parse the protocol version
-        sep = strstr(buff->buff + req->parse_point, IW_PARSE_CRLF);
-        if(sep == NULL) {
+        parse = iw_parse_read_token(buff->buff, &req->parse_point,
+                                    IW_PARSE_CRLF, true, &req->version);
+        if(parse != IW_PARSE_MATCH) {
             // We recieved a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        req->version.start = req->parse_point;
-        req->version.len   = sep - buff->buff - req->version.start;
-        req->parse_point   = sep + 2 - buff->buff;
     }
 
     // Now try to find headers until we have an empty line.
     while(!req->headers_complete) {
-        IW_PARSE parse;
         parse = iw_parse_is_token(buff->buff, &req->parse_point, IW_PARSE_CRLF);
         if(parse == IW_PARSE_MATCH) {
             // An empty line, we've completed parsing the headers.

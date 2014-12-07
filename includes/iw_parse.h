@@ -25,7 +25,10 @@ extern "C" {
 // --------------------------------------------------------------------------
 
 /// Define for carriage-return and line-feed
-#define IW_PARSE_CRLF    "\r\n"
+#define IW_PARSE_CRLF   "\r\n"
+
+/// Define for space
+#define IW_PARSE_SPACE  " "
 
 /// The parse return value
 typedef enum _IW_PARSE {
