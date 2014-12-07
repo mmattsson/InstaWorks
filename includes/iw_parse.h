@@ -48,7 +48,35 @@ typedef struct _iw_parse_index {
 //
 // --------------------------------------------------------------------------
 
-/// @brief Find the next separator in the given buffer.
+/// @brief Checks whether the next characters is a given token.
+/// Updates the \a offset if the token is found.
+/// @param buff The buffer to process.
+/// @param offset [in/out] The offset into the buffer to start. Will be updated
+///        to the offset of the character after the separator.
+/// @param sep The separator to search for.
+/// @return A parse value to signify whether the operation succeeded or not.
+extern IW_PARSE iw_parse_is_token(
+    const char *buff,
+    unsigned int *offset,
+    const char *sep);
+
+// --------------------------------------------------------------------------
+
+/// @brief Search for the given token.
+/// Updates the \a offset if the token is found.
+/// @param buff The buffer to process.
+/// @param offset [in/out] The offset into the buffer to start. Will be updated
+///        to the offset of the character after the separator.
+/// @param sep The separator to search for.
+/// @return A parse value to signify whether the operation succeeded or not.
+extern IW_PARSE iw_parse_find_token(
+    const char *buff,
+    unsigned int *offset,
+    const char *sep);
+
+// --------------------------------------------------------------------------
+
+/// @brief Read the next token up until the given separator.
 /// Searches the buffer given by \a buff and \a offset and finds the next
 /// occurance of the separator \a sep. If trim is set, the value between the
 /// current start and the separator is trimmed of whitespace. The start
@@ -60,7 +88,7 @@ typedef struct _iw_parse_index {
 /// @param trim True if whitespace should be trimmed.
 /// @param index [out] The start and length of the value before the separator.
 /// @return A parse value to signify whether the operation succeeded or not.
-extern IW_PARSE iw_parse_find_sep(
+extern IW_PARSE iw_parse_read_token(
     const char *buff,
     unsigned int *offset,
     const char *sep,

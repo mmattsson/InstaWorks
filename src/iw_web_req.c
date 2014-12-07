@@ -131,27 +131,28 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
 
     // Now try to find headers until we have an empty line.
     while(!req->headers_complete) {
-        if(strncmp(buff->buff + req->parse_point, IW_PARSE_CRLF, 2) == 0) {
+        IW_PARSE parse;
+        parse = iw_parse_is_token(buff->buff, &req->parse_point, IW_PARSE_CRLF);
+        if(parse == IW_PARSE_MATCH) {
             // An empty line, we've completed parsing the headers.
-            req->parse_point += 2;
             req->headers_complete = true;
             break;
         }
 
         // Get the name of the header
         iw_parse_index name;
-        IW_PARSE retval = iw_parse_find_sep(buff->buff, &req->parse_point,
-                                            ":", true, &name);
-        if(retval != IW_PARSE_MATCH) {
+        parse = iw_parse_read_token(buff->buff, &req->parse_point,
+                                    ":", true, &name);
+        if(parse != IW_PARSE_MATCH) {
             // We've received a line, we should have a proper header.
             return IW_WEB_PARSE_ERROR;
         }
 
         // Get the value of the header
         iw_parse_index value;
-        retval = iw_parse_find_sep(buff->buff, &req->parse_point,
-                                   IW_PARSE_CRLF, true, &value);
-        if(retval != IW_PARSE_MATCH) {
+        parse = iw_parse_read_token(buff->buff, &req->parse_point,
+                                    IW_PARSE_CRLF, true, &value);
+        if(parse != IW_PARSE_MATCH) {
             // We've received a line, we should have a proper header.
             return IW_WEB_PARSE_ERROR;
         }

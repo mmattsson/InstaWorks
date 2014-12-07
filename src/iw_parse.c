@@ -21,7 +21,40 @@
 //
 // --------------------------------------------------------------------------
 
-IW_PARSE iw_parse_find_sep(
+IW_PARSE iw_parse_is_token(
+    const char *buff,
+    unsigned int *offset,
+    const char *sep)
+{
+    const char *start = buff + *offset;
+    if(strncmp(start, sep, strlen(sep)) != 0) {
+        return IW_PARSE_NO_MATCH;
+    }
+
+    *offset += strlen(sep);
+    return IW_PARSE_MATCH;
+}
+
+// --------------------------------------------------------------------------
+
+IW_PARSE iw_parse_find_token(
+    const char *buff,
+    unsigned int *offset,
+    const char *sep)
+{
+    const char *start = buff + *offset;
+    char *end = strstr(start, sep);
+    if(end == NULL) {
+        return IW_PARSE_NO_MATCH;
+    }
+
+    *offset = end - buff + strlen(sep);
+    return IW_PARSE_MATCH;
+}
+
+// --------------------------------------------------------------------------
+
+IW_PARSE iw_parse_read_token(
     const char *buff,
     unsigned int *offset,
     const char *sep,
