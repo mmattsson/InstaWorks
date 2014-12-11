@@ -98,6 +98,7 @@ static void iw_web_srv_process_request(int fd) {
             goto done;
         } if(parse == IW_WEB_PARSE_COMPLETE) {
             // Successfully parsed a request. Return from this function.
+            iw_buff_remove_data(&buff, req.parse_point);
             goto done;
         }
     } while(bytes > 0);

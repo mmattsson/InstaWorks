@@ -157,11 +157,10 @@ static void test_partial_req_buff(
     test(result, true, "Called parse with partial buffer [1-%d] bytes",
          tot_len - 1);
 
-    // Do final step with the whole length (not a multiple of increment to
-    // avoid missing a byte due to a rounding error.
+    // Do final step with the whole length.
     retval = iw_web_req_parse(buff, tot_len, &req);
-    test(result, retval == IW_WEB_PARSE_COMPLETE, "Complete parse %d bytes",
-         tot_len);
+    test(result, retval == IW_WEB_PARSE_COMPLETE, "Complete parse successful");
+    test(result, req.parse_point == tot_len, "Parsing read %d bytes", tot_len);
     test_req(result, buff, uri, &req);
     iw_web_req_free(&req);
 }
