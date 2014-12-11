@@ -108,26 +108,50 @@ static void run_test(TEST_FN fn, const char *name) {
 
 // --------------------------------------------------------------------------
 
-static void run_tests() {
+static void run_tests(const char *test) {
     int cnt;
+    bool did_run = false;
     for(cnt=0;s_tests[cnt].fn != NULL;cnt++) {
-        run_test(s_tests[cnt].fn, s_tests[cnt].name);
+        if(test == NULL || strcmp(test, s_tests[cnt].name) == 0) {
+            did_run = true;
+            run_test(s_tests[cnt].fn, s_tests[cnt].desc);
+        }
     }
-    printf(" == Total Test Summary ==============================\n");
-    if(s_results.failed > 0) {
-        printf(" THERE WERE FAILED TESTS!\n");
+    if(test != NULL && !did_run) {
+        printf(" No such test \'%s\'\n", test);
+    } else {
+        printf(" == Total Test Summary ==============================\n");
+        if(s_results.failed > 0) {
+            printf(" THERE WERE FAILED TESTS!\n");
+        }
+        printf(" Failed tests: %d\n", s_results.failed);
+        printf(" Passed tests: %d\n", s_results.passed);
+        printf(" Total tests:  %d\n", s_results.failed + s_results.passed);
     }
-    printf(" Failed tests: %d\n", s_results.failed);
-    printf(" Passed tests: %d\n", s_results.passed);
-    printf(" Total tests:  %d\n", s_results.failed + s_results.passed);
+}
+
+// --------------------------------------------------------------------------
+
+static void print_tests() {
+    int cnt;
+    printf(" == Available Tests =================================\n");
+    for(cnt=0;s_tests[cnt].fn != NULL;cnt++) {
+        printf(" %-10s : %s\n", s_tests[cnt].name, s_tests[cnt].desc);
+    }
+    printf("\n");
 }
 
 // --------------------------------------------------------------------------
 
 static void print_help() {
-    printf("Usage: selftest [options]\n"
+    printf("Usage: selftest [options] <cmd>\n"
             "Options can be:\n"
-            "-v : Verbose, show all debug logs\n"
+            "-v : Verbose, show all debug logs.\n"
+            "\n"
+            "Command can be:\n"
+            "all   : Run all tests.\n"
+            "show  : Show what tests are available.\n"
+            "<test>: Run only this particular test.\n"
             "\n");
     exit(0);
 }
@@ -138,10 +162,6 @@ static void print_help() {
 /// @param argc The argument count.
 /// @param argv The arguments.
 int main(int argc, char **argv) {
-    if(argc > 2 || (argc == 2 && strcmp(argv[1], "-v") != 0)) {
-        print_help();
-    }
-
     int opt;
     while((opt = getopt(argc, argv, ":v")) != -1) {
         switch(opt) {
@@ -150,12 +170,21 @@ int main(int argc, char **argv) {
             break;
         default :
             print_help();
-            break;
+            return 0;
         }
     }
-    if(optind < argc) {
-        // No arguments expected in addition to options.
+    if(optind != argc - 1) {
+        // Only one argument expected in addition to options.
         print_help();
+        return 0;
+    }
+
+    char *test = NULL;
+    if(strcmp(argv[optind], "show") == 0) {
+        print_tests();
+        return 0;
+    } else if(strcmp(argv[optind], "all") != 0) {
+        test = argv[optind];
     }
 
     // Disable memory tracking and health check thread to avoid false
@@ -166,7 +195,7 @@ int main(int argc, char **argv) {
 
     iw_init();
     printf(" == Running self-test ===============================\n");
-    run_tests();
+    run_tests(test);
     printf(" == Completed self-test =============================\n");
     printf("\n");
     iw_exit();

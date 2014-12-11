@@ -30,6 +30,12 @@
 //
 // --------------------------------------------------------------------------
 
+void iw_web_req_init(iw_web_req *req) {
+    memset(req, 0, sizeof(*req));
+}
+
+// --------------------------------------------------------------------------
+
 iw_web_req_header *iw_web_req_add_header(
     iw_web_req *req,
     iw_parse_index *name,
@@ -62,44 +68,39 @@ void iw_web_req_free(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
-IW_WEB_PARSE iw_web_req_parse_str(const char *str, iw_web_req *req) {
-    // We cheat here and cast the string to non-const since the string member
-    // of the buffer is not const. It can't be const because other uses of the
-    // buffer may not be const, but we know that this use is indeed const.
-    iw_buff buff;
-    buff.buff = (char *)str;
-    buff.end = buff.size = buff.max_size = strlen(str);
-    memset(req, 0, sizeof(*req));
-    return iw_web_req_parse(&buff, req);
-}
+// Todo: Need to make this function possible to call multiple
+// times with incrementally more data available. Preferably we shouldn't need
+// to reparse data we've already parsed in these subsequent calls.
 
-// --------------------------------------------------------------------------
-// Todo: need to rewrite this to not take a buffer. The parse method should
-// take a pointer to a string only. The caller may have the string in a buffer
-// and can remove the successfully parsed bytes from the buffer at completion.
-IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
+IW_WEB_PARSE iw_web_req_parse(
+    const char *buff,
+    unsigned int len,
+    iw_web_req *req)
+{
     IW_PARSE parse;
-
-    // Search for the newline signifying the end of the request URI or header.
-    char *end = strstr(buff->buff, IW_PARSE_CRLF);
-    if(end == NULL) {
-        // Didn't find another line, just return.
-        return IW_WEB_PARSE_INCOMPLETE;
-    }
+    unsigned int offset;
 
     if(req->method == IW_WEB_METHOD_NONE) {
+        // Search for the newline signifying the end of the request URI or header.
+        offset = 0;
+        parse = iw_parse_find_token(buff, len, &offset, IW_PARSE_CRLF);
+        if(parse != IW_PARSE_MATCH) {
+            // Didn't find another line, just return.
+            return IW_WEB_PARSE_INCOMPLETE;
+        }
+
         // No method set yet, try to parse request line. We should have
         // received a whole line since we passed the test above.
         iw_parse_index idx;
-        parse = iw_parse_read_token(buff->buff, &req->parse_point,
-                                    IW_PARSE_SPACE, true, &idx);
+        parse = iw_parse_read_to_token(buff, len, &req->parse_point,
+                                       IW_PARSE_SPACE, true, &idx);
         if(parse != IW_PARSE_MATCH) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
-        if(strncmp(buff->buff + idx.start, "GET", idx.len) == 0) {
+        if(iw_parse_cmp("GET", buff, &idx)) {
             req->method = IW_WEB_METHOD_GET;
-        } else if(strncmp(buff->buff + idx.start, "POST", idx.len) == 0) {
+        } else if(iw_parse_cmp("POST", buff, &idx) == 0) {
             req->method = IW_WEB_METHOD_POST;
         } else {
             // Unsupported method
@@ -107,16 +108,16 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
         }
 
         // Parse the request URI
-        parse = iw_parse_read_token(buff->buff, &req->parse_point,
-                                    IW_PARSE_SPACE, true, &req->uri);
+        parse = iw_parse_read_to_token(buff, len, &req->parse_point,
+                                       IW_PARSE_SPACE, true, &req->uri);
         if(parse != IW_PARSE_MATCH) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
         }
 
         // Parse the protocol version
-        parse = iw_parse_read_token(buff->buff, &req->parse_point,
-                                    IW_PARSE_CRLF, true, &req->version);
+        parse = iw_parse_read_to_token(buff, len, &req->parse_point,
+                                       IW_PARSE_CRLF, true, &req->version);
         if(parse != IW_PARSE_MATCH) {
             // We recieved a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
@@ -125,17 +126,26 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
 
     // Now try to find headers until we have an empty line.
     while(!req->headers_complete) {
-        parse = iw_parse_is_token(buff->buff, &req->parse_point, IW_PARSE_CRLF);
+        parse = iw_parse_is_token(buff, len, &req->parse_point, IW_PARSE_CRLF);
         if(parse == IW_PARSE_MATCH) {
             // An empty line, we've completed parsing the headers.
             req->headers_complete = true;
             break;
         }
 
+        // Find a new-line to make sure we have enough data to parse a header.
+        // However, don't update the parse point until we've read the header.
+        offset = req->parse_point;
+        parse = iw_parse_find_token(buff, len, &offset, IW_PARSE_CRLF);
+        if(parse != IW_PARSE_MATCH) {
+            // Didn't find another line, just return.
+            return IW_WEB_PARSE_INCOMPLETE;
+        }
+
         // Get the name of the header
         iw_parse_index name;
-        parse = iw_parse_read_token(buff->buff, &req->parse_point,
-                                    ":", true, &name);
+        parse = iw_parse_read_to_token(buff, len, &req->parse_point,
+                                       IW_PARSE_COLON, true, &name);
         if(parse != IW_PARSE_MATCH) {
             // We've received a line, we should have a proper header.
             return IW_WEB_PARSE_ERROR;
@@ -143,8 +153,8 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
 
         // Get the value of the header
         iw_parse_index value;
-        parse = iw_parse_read_token(buff->buff, &req->parse_point,
-                                    IW_PARSE_CRLF, true, &value);
+        parse = iw_parse_read_to_token(buff, len, &req->parse_point,
+                                       IW_PARSE_CRLF, true, &value);
         if(parse != IW_PARSE_MATCH) {
             // We've received a line, we should have a proper header.
             return IW_WEB_PARSE_ERROR;
@@ -159,8 +169,7 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
     // received with a non-zero value, we know how much data there is in the
     // body.
     if(req->content_length > 0) {
-        int buff_len = iw_buff_remainder(buff);
-        if(buff_len - req->parse_point < req->content_length) {
+        if(len - req->parse_point < req->content_length) {
             // We do not have enough data to complete the request
             return IW_WEB_PARSE_INCOMPLETE;
         }
@@ -169,14 +178,14 @@ IW_WEB_PARSE iw_web_req_parse(const iw_buff *buff, iw_web_req *req) {
     // Debug log the request we just received
     LOG(IW_LOG_IW, "Received %s method, data=\"%s\"",
         iw_web_req_method_str(req->method),
-        buff->buff);
+        buff);
     iw_list_node *node = req->headers.head;
     while(node != NULL) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
         node = node->next;
         LOG(IW_LOG_IW, "HDR: \"%.*s\" -> \"%.*s\"",
-            hdr->name.len, buff->buff + hdr->name.start,
-            hdr->value.len, buff->buff + hdr->value.start);
+            hdr->name.len, buff + hdr->name.start,
+            hdr->value.len, buff + hdr->value.start);
     }
 
     req->complete = true;
@@ -215,9 +224,7 @@ iw_web_req_header *iw_web_req_get_header(
     iw_list_node *node = req->headers.head;
     while(node != NULL) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
-        if(strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0 &&
-           strlen(name) == hdr->name.len)
-        {
+        if(iw_parse_casecmp(name, buff, &hdr->name)) {
             return hdr;
         }
         node = node->next;
@@ -236,9 +243,7 @@ iw_web_req_header *iw_web_req_get_next_header(
     iw_list_node *node = (iw_list_node *)hdr;
     while(node != NULL) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
-        if(strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0 &&
-           strlen(name) == hdr->name.len)
-        {
+        if(iw_parse_casecmp(name, buff, &hdr->name)) {
             return hdr;
         }
         node = node->next;

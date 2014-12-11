@@ -45,7 +45,7 @@ static void test_value(
     const char *reference)
 {
     test(result,
-         strncasecmp(reference, buff + value->start, value->len) == 0,
+         iw_parse_casecmp(reference, buff, value),
          "Checking value \"%.*s\", expected \"%s\"",
          value->len, buff + value->start, reference);
 }
@@ -76,11 +76,11 @@ static void test_hdr(
         return;
     }
     test(result,
-         strncasecmp(buff + hdr->name.start, name, hdr->name.len) == 0,
+         iw_parse_casecmp(name, buff, &hdr->name),
          "Getting header \"%.*s\", expected \"%s\"",
          hdr->name.len, buff + hdr->name.start, name);
     test(result,
-         strncasecmp(buff + hdr->value.start, value, hdr->value.len) == 0,
+         iw_parse_casecmp(value, buff, &hdr->value),
          "Getting value \"%.*s\", expected \"%s\"",
          hdr->value.len, buff + hdr->value.start, value);
 }
@@ -89,6 +89,22 @@ static void test_hdr(
 
 static void test_req(
     test_result *result,
+    const char *buff,
+    const char *uri,
+    iw_web_req *req)
+{
+    test_value(result, buff, &req->version, "HTTP/1.1");
+    test_value(result, buff, &req->uri, uri);
+    test(result, iw_web_req_get_method(req)==IW_WEB_METHOD_GET, "GET method");
+    test_hdr(result, buff, req, true, "Host", "127.0.0.1:8080");
+    test_hdr(result, buff, req, true, "hOsT", "127.0.0.1:8080");
+    test_hdr(result, buff, req, false, "hXsT", NULL);
+}
+
+// --------------------------------------------------------------------------
+/*
+static void test_req_buff(
+    test_result *result,
     const char *name,
     const char *buff,
     const char *uri)
@@ -96,24 +112,68 @@ static void test_req(
     iw_web_req req;
     IW_WEB_PARSE retval;
 
+    iw_web_req_init(&req);
     test_display(name);
-    retval = iw_web_req_parse_str(buff, &req);
+    retval = iw_web_req_parse(buff, strlen(buff), &req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    test_value(result, buff, &req.version, "HTTP/1.1");
-    test_value(result, buff, &req.uri, uri);
-    test(result, iw_web_req_get_method(&req)==IW_WEB_METHOD_GET, "GET method");
-    test_hdr(result, buff, &req, true, "Host", "127.0.0.1:8080");
-    test_hdr(result, buff, &req, true, "hOsT", "127.0.0.1:8080");
-    test_hdr(result, buff, &req, false, "hXsT", NULL);
+    test_req(result, buff, uri, &req);
+    iw_web_req_free(&req);
+}
+*/
+// --------------------------------------------------------------------------
+
+/// @brief Testing partial parsing of request.
+/// This function will call the parse function multiple times before finally
+/// calling the parse function with the complete request. This is done to test
+/// the ability to handle partially received requests that are not
+/// NUL-terminated.
+/// @param result The test result structure.
+/// @param name The name of the test.
+/// @param buff The buffer to parse.
+/// @param uri The URI that is expected in this request.
+static void test_partial_req_buff(
+    test_result *result,
+    const char *name,
+    const char *buff,
+    const char *uri)
+{
+    iw_web_req req;
+    IW_WEB_PARSE retval;
+
+    iw_web_req_init(&req);
+    test_display(name);
+
+    unsigned int cnt;
+    unsigned int tot_len = strlen(buff);
+    // Do a parse call with one byte extra each time.
+    for(cnt=1;cnt < tot_len;cnt++) {
+        retval = iw_web_req_parse(buff, cnt, &req);
+        if(retval != IW_WEB_PARSE_INCOMPLETE) {
+            test(result, false, "Failed partial parsing at %d bytes", cnt);
+            iw_web_req_free(&req);
+            return;
+        }
+    }
+    test(result, true, "Called parse with partial buffer [1-%d] bytes",
+         tot_len - 1);
+
+    // Do final step with the whole length (not a multiple of increment to
+    // avoid missing a byte due to a rounding error.
+    retval = iw_web_req_parse(buff, tot_len, &req);
+    test(result, retval == IW_WEB_PARSE_COMPLETE, "Complete parse %d bytes",
+         tot_len);
+    test_req(result, buff, uri, &req);
     iw_web_req_free(&req);
 }
 
 // --------------------------------------------------------------------------
 
 void test_web_srv(test_result *result) {
-    test_req(result, "Parsing basic request", basic_req, "/");
-
-    test_req(result, "Parsing favicon request", favicon, "/favicon.ico");
+    test_partial_req_buff(result,
+                      "Parsing basic request incrementally", basic_req, "/");
+    test_partial_req_buff(result,
+                      "Parsing favicon request incrementally", favicon,
+                      "/favicon.ico");
 }
 
 // --------------------------------------------------------------------------

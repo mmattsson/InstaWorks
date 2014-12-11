@@ -106,6 +106,12 @@ typedef struct _iw_web_req {
 //
 // --------------------------------------------------------------------------
 
+/// @brief Initialize a web request object.
+/// @param req The request to initialize.
+extern void iw_web_req_init(iw_web_req *req);
+
+// --------------------------------------------------------------------------
+
 /// @brief Create an HTTP header object.
 /// Adds an HTTP header to the request object. The header object points into
 /// the HTTP request memory to track where the header name and value is. It
@@ -133,23 +139,14 @@ extern void iw_web_req_delete_header(iw_list_node *node);
 // --------------------------------------------------------------------------
 
 /// @brief Attempt to parse a client request.
+/// The string being parsed does not have to be NUL-terminated.
 /// @param str The string to parse.
-/// @param req The request parse information.
-/// @return The parsing result.
-extern IW_WEB_PARSE iw_web_req_parse_str(
-    const char *str,
-    iw_web_req *req);
-
-// --------------------------------------------------------------------------
-
-/// @brief Attempt to parse a client request.
-/// This function may be called multiple times. The \a req parameter must be
-/// initialized for the first call.
-/// @param buff The buffer to parse.
+/// @param len The length of the string.
 /// @param req The request parse information.
 /// @return The parsing result.
 extern IW_WEB_PARSE iw_web_req_parse(
-    const iw_buff *buff,
+    const char *str,
+    unsigned int len,
     iw_web_req *req);
 
 // --------------------------------------------------------------------------

@@ -5,6 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 command -v valgrind > /dev/null
 HAS_VALGRIND=$?
 
+# If we're just querying the selftest binary, then don't run the test
+if [ "$#" = "0" -o "$1" = "show" ]; then
+    $DIR/selftest $*
+    exit 0
+fi
+
 if [ $HAS_VALGRIND = "0" ]; then
     valgrind -q --error-exitcode=123 --leak-check=full "$DIR/selftest" $*
     _EXIT_CODE=$?
@@ -16,6 +22,6 @@ if [ $HAS_VALGRIND = "0" ]; then
     fi
     echo ""
 else
-    "$DIR/selftest $*"
+    $DIR/selftest $*
 fi
 

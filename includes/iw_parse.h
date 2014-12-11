@@ -30,6 +30,9 @@ extern "C" {
 /// Define for space
 #define IW_PARSE_SPACE  " "
 
+/// Define for colon
+#define IW_PARSE_COLON    ":"
+
 /// The parse return value
 typedef enum _IW_PARSE {
     IW_PARSE_MATCH,
@@ -51,51 +54,81 @@ typedef struct _iw_parse_index {
 //
 // --------------------------------------------------------------------------
 
+/// @brief Search for a token from the given starting point.
+/// @param buff The buffer to process.
+/// @param len The length of the buffer.
+/// @param offset [in/out] The offset into the buffer to start. Will be updated
+///        to the offset of the character after the separator.
+/// @param token Token to search for.
+/// @return A parse value to signify whether the operation succeeded or not.
+extern IW_PARSE iw_parse_find_token(
+    const char *buff,
+    unsigned int len,
+    unsigned int *offset,
+    const char *token);
+
+// --------------------------------------------------------------------------
+
 /// @brief Checks whether the next characters is a given token.
 /// Updates the \a offset if the token is found.
 /// @param buff The buffer to process.
+/// @param len The length of the buffer.
 /// @param offset [in/out] The offset into the buffer to start. Will be updated
 ///        to the offset of the character after the separator.
 /// @param sep The separator to search for.
 /// @return A parse value to signify whether the operation succeeded or not.
 extern IW_PARSE iw_parse_is_token(
     const char *buff,
+    unsigned int len,
     unsigned int *offset,
     const char *sep);
 
 // --------------------------------------------------------------------------
 
-/// @brief Search for the given token.
-/// Updates the \a offset if the token is found.
-/// @param buff The buffer to process.
-/// @param offset [in/out] The offset into the buffer to start. Will be updated
-///        to the offset of the character after the separator.
-/// @param sep The separator to search for.
-/// @return A parse value to signify whether the operation succeeded or not.
-extern IW_PARSE iw_parse_find_token(
-    const char *buff,
-    unsigned int *offset,
-    const char *sep);
-
-// --------------------------------------------------------------------------
-
-/// @brief Read the next token up until the given separator.
+/// @brief Read data up to the next token.
 /// Searches the buffer given by \a buff and \a offset and finds the next
-/// occurance of the separator \a sep. If trim is set, the value between the
-/// current start and the separator is trimmed of whitespace. The start
+/// occurance of the token \a token. If trim is set, the value between the
+/// current start and the token is trimmed of whitespace. The start
 /// of the data and the length of the data is returned in \a index.
 /// @param buff The buffer to process.
+/// @param len The length of the buffer.
 /// @param offset [in/out] The offset into the buffer to start. Will be updated
-///        to the offset of the character after the separator.
-/// @param sep The separator to search for.
+///        to the offset of the character after the token.
+/// @param token The token to search for.
 /// @param trim True if whitespace should be trimmed.
 /// @param index [out] The start and length of the value before the separator.
 /// @return A parse value to signify whether the operation succeeded or not.
-extern IW_PARSE iw_parse_read_token(
+extern IW_PARSE iw_parse_read_to_token(
     const char *buff,
+    unsigned int len,
     unsigned int *offset,
-    const char *sep,
+    const char *token,
     bool trim,
+    iw_parse_index *index);
+
+// --------------------------------------------------------------------------
+
+/// @brief Compare the parse index with the given reference string.
+/// @param compare The string to compare agains.
+/// @param buffer The buffer to apply the parse index against.
+/// @param index The parse index to compare.
+/// @return True if the value matches the reference string.
+extern bool iw_parse_cmp(
+    const char *compare,
+    const char *buffer,
+    iw_parse_index *index);
+
+// --------------------------------------------------------------------------
+
+/// @brief Compare the parse index with the given reference string.
+/// Uses a case insensitive comparison.
+/// @param compare The string to compare agains.
+/// @param buffer The buffer to apply the parse index against.
+/// @param index The parse index to compare.
+/// @return True if the value matches the reference string.
+extern bool iw_parse_casecmp(
+    const char *compare,
+    const char *buffer,
     iw_parse_index *index);
 
 // --------------------------------------------------------------------------

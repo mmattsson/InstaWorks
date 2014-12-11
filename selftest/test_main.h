@@ -36,6 +36,7 @@ typedef void (*TEST_FN)(test_result *result);
 typedef struct _test_info {
     TEST_FN fn; ///< A function pointer to the test to run.
     char *name; ///< The name of the function to run.
+    char *desc; ///< A description of the test.
 } test_info;
 
 // --------------------------------------------------------------------------

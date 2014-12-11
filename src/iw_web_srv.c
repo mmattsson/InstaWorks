@@ -76,6 +76,7 @@ static void iw_web_srv_process_request(int fd) {
     }
     FILE *out = fdopen(fd, "r+w+");
     int bytes;
+    iw_web_req_init(&req);
     do {
         char *ptr;
         if(!iw_buff_reserve_data(&buff, &ptr, BUFF_SIZE)) {
@@ -91,7 +92,7 @@ static void iw_web_srv_process_request(int fd) {
         }
 
         iw_buff_commit_data(&buff, bytes);
-        IW_WEB_PARSE parse = iw_web_req_parse(&buff, &req);
+        IW_WEB_PARSE parse = iw_web_req_parse(buff.buff, buff.size, &req);
         if(parse == IW_WEB_PARSE_ERROR) {
             LOG(IW_LOG_IW, "Failed to parse request");
             goto done;
