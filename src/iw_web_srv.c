@@ -50,7 +50,16 @@ static int s_web_sock = -1;
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully written.
 static bool iw_web_srv_construct_response(FILE *out) {
-    char *content = "<html><head><title>Response2</title></head><body><h1>Response</h1></body></html>";
+    char *content =
+        "<html><head><title>Response2</title></head>\n"
+        "<body>\n"
+        "<h1>Response</h1>\n"
+        "<form action='/submit'>\n"
+        "Name: <input type='text' name='name'></input>\n"
+        "<input type='submit' value='Submit'></input>\n"
+        "</form>\n"
+        "</body>\n"
+        "</html>";
     fprintf(out, "HTTP/1.1 200 Ok\r\n"
                     "Content-Length: %ld\r\n"
                     "\r\n"
