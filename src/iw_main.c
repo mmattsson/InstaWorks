@@ -10,6 +10,7 @@
 
 #include "iw_main.h"
 
+#include "iw_cfg.h"
 #include "iw_cmdline.h"
 #include "iw_cmdline_int.h"
 #include "iw_cmds.h"
@@ -20,7 +21,6 @@
 #include "iw_log_int.h"
 #include "iw_memory_int.h"
 #include "iw_mutex_int.h"
-#include "iw_settings.h"
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
@@ -47,10 +47,10 @@ void iw_init() {
         iw_thread_init();
         iw_health_start();
         s_initialized = true;
-        if(iw_stg.iw_log_level != 0) {
-            iw_log_set_level("stdout", iw_stg.iw_log_level);
+        if(iw_cfg.iw_log_level != 0) {
+            iw_log_set_level("stdout", iw_cfg.iw_log_level);
         }
-        if(iw_stg.iw_enable_web_server) {
+        if(iw_cfg.iw_enable_web_server) {
             iw_web_srv(NULL, 0);
         }
         iw_thread_register_main();
@@ -80,7 +80,7 @@ IW_MAIN_EXIT iw_main(
     if(argc > 0 && argv[0] != NULL) {
         const char *prg_name = strrchr(argv[0], '/');
         if(prg_name != NULL) {
-            iw_stg.iw_prg_name = prg_name + 1;
+            iw_cfg.iw_prg_name = prg_name + 1;
         }
     }
 
@@ -106,18 +106,18 @@ IW_MAIN_EXIT iw_main(
     // Decide whether we should run as a server or not. If the
     // 'foreground' option is given then we start the server. Otherwise
     // we start the client.
-    if(iw_stg.iw_foreground || iw_stg.iw_daemonize) {
-        if(iw_stg.iw_daemonize) {
+    if(iw_cfg.iw_foreground || iw_cfg.iw_daemonize) {
+        if(iw_cfg.iw_daemonize) {
             if(daemon(0, 0) != 0) {
                 return IW_MAIN_SRV_FAILED;
             }
         }
         iw_init();
-        bool retval = iw_cmd_srv(main_fn, iw_stg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
+        bool retval = iw_cmd_srv(main_fn, iw_cfg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
         iw_exit();
         return retval ? IW_MAIN_SRV_OK : IW_MAIN_SRV_FAILED;
     } else {
-        return iw_cmd_clnt(iw_stg.iw_cmd_port, argc-cnt-1, argv+cnt+1) ?
+        return iw_cmd_clnt(iw_cfg.iw_cmd_port, argc-cnt-1, argv+cnt+1) ?
                 IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
     }
 }

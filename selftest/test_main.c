@@ -11,7 +11,7 @@
 #include "tests.h"
 
 #include <iw_main.h>
-#include <iw_settings.h>
+#include <iw_cfg.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
     while((opt = getopt(argc, argv, ":v")) != -1) {
         switch(opt) {
         case 'v':
-            iw_stg.iw_log_level = 0xFF;
+            iw_cfg.iw_log_level = 0xFF;
             break;
         default :
             print_help();
@@ -189,9 +189,9 @@ int main(int argc, char **argv) {
 
     // Disable memory tracking and health check thread to avoid false
     // positives and avoid hiding real issues in valgrind.
-    iw_stg.iw_enable_memtrack    = false;
-    iw_stg.iw_enable_healthcheck = false;
-    iw_stg.iw_enable_web_server  = false;
+    iw_cfg.iw_enable_memtrack    = false;
+    iw_cfg.iw_enable_healthcheck = false;
+    iw_cfg.iw_enable_web_server  = false;
 
     iw_init();
     printf(" == Running self-test ===============================\n");

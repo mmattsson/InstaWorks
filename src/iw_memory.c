@@ -21,10 +21,10 @@
 
 #include "iw_memory.h"
 
+#include "iw_cfg.h"
 #include "iw_htable.h"
 #include "iw_list.h"
 #include "iw_log.h"
-#include "iw_settings.h"
 #include "iw_util.h"
 
 #include <arpa/inet.h>
@@ -174,7 +174,7 @@ static void iw_memory_delete_chunk(void *address) {
 // --------------------------------------------------------------------------
 
 void iw_memory_init() {
-    if(iw_stg.iw_enable_memtrack) {
+    if(iw_cfg.iw_enable_memtrack) {
         iw_htable_init(&s_memory, 1024, false, NULL);
     }
 }
@@ -182,7 +182,7 @@ void iw_memory_init() {
 // --------------------------------------------------------------------------
 
 void iw_memory_exit() {
-    if(iw_stg.iw_enable_memtrack) {
+    if(iw_cfg.iw_enable_memtrack) {
         iw_htable_destroy(&s_memory, free);
     }
 }
@@ -190,7 +190,7 @@ void iw_memory_exit() {
 // --------------------------------------------------------------------------
 
 void *iw_malloc(const char *file, unsigned int line, int size) {
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         return malloc(size);
     }
 
@@ -220,7 +220,7 @@ void *iw_malloc(const char *file, unsigned int line, int size) {
 // --------------------------------------------------------------------------
 
 void *iw_calloc(const char *file, unsigned int line, int elems, int size) {
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         return calloc(elems, size);
     }
 
@@ -236,7 +236,7 @@ void *iw_calloc(const char *file, unsigned int line, int elems, int size) {
 // --------------------------------------------------------------------------
 
 void *iw_realloc(const char *file, unsigned int line, void *ptr, int size) {
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         return realloc(ptr, size);
     }
 
@@ -267,7 +267,7 @@ void *iw_realloc(const char *file, unsigned int line, void *ptr, int size) {
 // --------------------------------------------------------------------------
 
 char *iw_strdup(const char *file, unsigned int line, const char *ptr) {
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         return strdup(ptr);
     }
 
@@ -283,7 +283,7 @@ char *iw_strdup(const char *file, unsigned int line, const char *ptr) {
 // --------------------------------------------------------------------------
 
 void iw_free(void *ptr) {
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         free(ptr);
         return;
     }
@@ -356,7 +356,7 @@ static void iw_memory_dump(FILE *out, IW_MEM_DUMP dump) {
     char buff1[64];
     char buff2[64];
 
-    if(!iw_stg.iw_enable_memtrack) {
+    if(!iw_cfg.iw_enable_memtrack) {
         fprintf(out, "Memory tracking is disabled.\n");
         return;
     }

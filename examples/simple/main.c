@@ -13,6 +13,7 @@
 ///
 // --------------------------------------------------------------------------
 
+#include <iw_cfg.h>
 #include <iw_cmds.h>
 #include <iw_ip.h>
 #include <iw_log.h>
@@ -20,7 +21,6 @@
 #include <iw_main.h>
 #include <iw_memory.h>
 #include <iw_mutex.h>
-#include <iw_settings.h>
 #include <iw_syslog.h>
 
 #include <arpa/inet.h>
@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
-    iw_stg.iw_allow_quit  = true;
+    iw_cfg.iw_allow_quit  = true;
 
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.

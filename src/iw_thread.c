@@ -11,11 +11,11 @@
 #include "iw_thread.h"
 #include "iw_thread_int.h"
 
+#include "iw_cfg.h"
+#include "iw_cfg_int.h"
 #include "iw_log.h"
 #include "iw_memory.h"
 #include "iw_mutex_int.h"
-#include "iw_settings.h"
-#include "iw_settings_int.h"
 
 #include <execinfo.h>
 #include <fcntl.h>
@@ -173,7 +173,7 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
                           O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
             if(fd != -1) {
                 WRITE_STR(fd, "Program: ");
-                WRITE_PTR(fd, iw_stg.iw_prg_name);
+                WRITE_PTR(fd, iw_cfg.iw_prg_name);
                 WRITE_STR(fd, "\r\nCaught signal: ");
                 WRITE_NUM(fd, sig)
                 WRITE_STR(fd, " (");
@@ -214,7 +214,7 @@ static void iw_thread_install_sighandler() {
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 
-    if(iw_stg.iw_enable_crashhandle) {
+    if(iw_cfg.iw_enable_crashhandle) {
         sigaction(SIGILL, &sa, NULL);
         sigaction(SIGABRT, &sa, NULL);
         sigaction(SIGFPE, &sa, NULL);

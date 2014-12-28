@@ -10,8 +10,8 @@
 
 #include "iw_health_int.h"
 
+#include "iw_cfg.h"
 #include "iw_log.h"
-#include "iw_settings.h"
 #include "iw_thread_int.h"
 #include "iw_thread.h"
 
@@ -44,7 +44,7 @@ static void *iw_health_thread(void *param) {
 // --------------------------------------------------------------------------
 
 void iw_health_start() {
-    if(iw_stg.iw_enable_healthcheck) {
+    if(iw_cfg.iw_enable_healthcheck) {
         if(!iw_thread_create("Health Check", iw_health_thread, NULL)) {
             LOG(IW_LOG_IW, "Failed to create health check thread");
         }

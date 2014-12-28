@@ -12,12 +12,12 @@
 ///
 // --------------------------------------------------------------------------
 
+#include <iw_cfg.h>
 #include <iw_cmds.h>
 #include <iw_log.h>
 #include <iw_main.h>
 #include <iw_memory.h>
 #include <iw_mutex.h>
-#include <iw_settings.h>
 #include <iw_thread.h>
 #include <iw_util.h>
 
@@ -223,8 +223,8 @@ int main(int argc, char **argv) {
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
-    iw_stg.iw_cmd_port = 10002;
-    iw_stg_set_callstack_file("/tmp/philo.txt");
+    iw_cfg.iw_cmd_port = 10002;
+    iw_cfg_set_callstack_file("/tmp/philo.txt");
 
     if(argc == 1) {
         print_help(NULL);
@@ -238,10 +238,10 @@ int main(int argc, char **argv) {
             do_correct = true;
             break;
         case 'f' :
-            iw_stg.iw_foreground = true;
+            iw_cfg.iw_foreground = true;
             break;
         case 'l' :
-            if(!iw_strtoll(optarg, &iw_stg.iw_log_level, 16)) {
+            if(!iw_strtoll(optarg, &iw_cfg.iw_log_level, 16)) {
                 print_help("Invalid log level");
                 exit(-1);
             }
@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if(optind < argc && iw_stg.iw_foreground) {
+    if(optind < argc && iw_cfg.iw_foreground) {
         if(!iw_strtoll(argv[optind], &num_philosophers, 10)) {
             print_help("Expected number of philosophers");
             exit(-1);

@@ -2,9 +2,7 @@
 ///
 /// @file iw_settings.h
 ///
-/// This file controls the settings for the InstaWorks library. To change
-/// the settings, just write the new value to the corresponding variable
-/// before calling iw_main().
+/// A module for handling values and keeping the values in a value store.
 ///
 /// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
@@ -22,45 +20,21 @@ extern "C" {
 
 // --------------------------------------------------------------------------
 
-/// The default command control port to use for the program.
-#define IW_DEF_COMMAND_PORT         10000
+typedef enum {
+    CFG_TYPE_NONE   = 0,
+    CFG_TYPE_NUMBER = 1,
+    CFG_TYPE_STRING = 2
+} IW_VALUE_TYPE;
 
-/// The default foreground option character.
-#define IW_DEF_OPT_FOREGROUND       'f'
+// --------------------------------------------------------------------------
 
-/// The default daemonize option character.
-#define IW_DEF_OPT_DAEMONIZE        'd'
-
-/// The default log-level option character.
-#define IW_DEF_OPT_LOG_LEVEL        'l'
-
-/// The default crash handler setting.
-#define IW_DEF_ENABLE_CRASH_HANDLER true
-
-/// The default file to use for callstacks.
-#define IW_DEF_CALLSTACK_FILE       "/tmp/callstack.txt"
-
-/// The default memory tracking enabled setting.
-#ifdef IW_NO_MEMORY_TRACKING
-#define IW_DEF_ENABLE_MEMTRACK      false
-#else
-#define IW_DEF_ENABLE_MEMTRACK      true
-#endif
-
-/// The default memory tracking hash table size.
-#define IW_DEF_MEMTRACK_SIZE        10000
-
-/// The default log level.
-#define IW_DEF_LOG_LEVEL            0
-
-/// The default syslog buffer size.
-#define IW_DEF_SYSLOG_SIZE          10000
-
-/// The default healthcheck enabled setting.
-#define IW_DEF_ENABLE_HEALTHCHECK   true
-
-/// The web server enabled setting.
-#define IW_DEF_ENABLE_WEB_SERVER    true
+typedef struct _iw_value {
+    IW_VALUE_TYPE m_type;
+    union {
+        int num;
+        char *str;
+    } v;
+} iw_value;
 
 // --------------------------------------------------------------------------
 //
@@ -68,95 +42,54 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
-/// The InstaWorks settings structure.
-typedef struct _iw_settings {
-    /// The command control port number to use for this program.
-    unsigned short iw_cmd_port;
-
-    /// Comand line option character settings. If an options should not be
-    /// used, '\0' can be assigned to the option.
-    struct {
-        /// The option character to foreground the process. This in effect
-        /// tells the program to run as a server.
-        char foreground;
-
-        /// The option character to make the process daemonize itself.
-        char daemonize;
-
-        /// The option character to set a log level when running the process.
-        char log_level;
-    } iw_cmd_line;
-
-    /// True if the program should be run in the foreground as a server.
-    bool iw_foreground;
-
-    /// True if the process should be daemonized.
-    bool iw_daemonize;
-
-    /// True if the client control program is allowed to use the 'quit' command.
-    bool iw_allow_quit;
-
-    /// True if the crash handler should be enabled.
-    bool iw_enable_crashhandle;
-
-    /// True if the memory tracking module should be used.
-    bool iw_enable_memtrack;
-
-    /// The size of the memory tracking hash table.
-    int  iw_memtrack_hash_size;
-
-    /// The log level to use.
-    long long int iw_log_level;
-
-    /// The size of the syslog buffer.
-    int  iw_syslog_size;
-
-    /// True if health-check should be enabled.
-    bool iw_enable_healthcheck;
-
-    /// True if the web server should be enabled.
-    bool iw_enable_web_server;
-
-    /// The program name
-    const char *iw_prg_name;
-
-} iw_settings;
+iw_value *iw_val_create_num(int num);
 
 // --------------------------------------------------------------------------
 
-/// The global settings variable. All InstaWorks settings can be set from here.
-extern iw_settings iw_stg;
+iw_value *iw_val_create_str(char *str);
 
 // --------------------------------------------------------------------------
 
-/// The callback for shutdown.
-typedef bool (*IW_SHUTDOWN_CB)();
+void iw_val_destroy(iw_value *val);
 
 // --------------------------------------------------------------------------
 
-/// The set of callbacks to register with the library.
-typedef struct _iw_callbacks {
-    /// The shutdown callback. Should be set if the program needs to do
-    /// cleanup at shutdown.
-    IW_SHUTDOWN_CB shutdown;
-} iw_callbacks;
+bool iw_val_init_store();
 
 // --------------------------------------------------------------------------
 
-/// The global callback variable.
-extern iw_callbacks iw_cb;
+void iw_val_destroy_store(iw_store *store);
 
 // --------------------------------------------------------------------------
-//
-// Function API
-//
+
+bool iw_val_set(iw_store *store, const char *name, iw_value *value);
+
 // --------------------------------------------------------------------------
 
-/// @brief Set the file name of the callstack file.
-/// Set the name of the file where any callstacks should be saved in case
-/// the program crashes.
-/// @param file The name of the callstack file.
-extern void iw_stg_set_callstack_file(const char *file);
+bool iw_val_set_num(iw_store *store, const char *name, int num);
+
+// --------------------------------------------------------------------------
+
+bool iw_val_set_str(iw_store *store, const char *name, const char *str);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the first element of the hash table.
+/// Starts an iteration of the elements in the hash table. The \p hash
+/// parameter is used to return the hash of the element returned. This will
+/// then be passed to the iw_htable_get_next() function.
+/// @param table The hash table to get the first element from.
+/// @param hash [out] A variable to store the hash of the found element.
+/// @return The data in the first element in the hash table.
+extern void *iw_val_get_first(iw_store *store, unsigned long *hash);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the next element of the hash table.
+/// @param table The hash table to get the next element from.
+/// @param hash [in/out] A variable to store the hash of the found element.
+/// @return The data in the next element in the hash table or NULL at the end.
+extern void *iw_val_get_next(iw_store *store, unsigned long *hash);
 
 // --------------------------------------------------------------------------
 

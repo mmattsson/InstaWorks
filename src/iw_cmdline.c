@@ -11,9 +11,9 @@
 #include "iw_cmdline.h"
 #include "iw_cmdline_int.h"
 
+#include "iw_cfg.h"
 #include "iw_htable.h"
 #include "iw_log.h"
-#include "iw_settings.h"
 #include "iw_util.h"
 
 #include <stdlib.h>
@@ -66,13 +66,13 @@ static iw_opt s_loglevel;
 
 void iw_cmdline_check_opts() {
     if(s_foreground.is_set) {
-        iw_stg.iw_foreground = s_foreground.val.flag;
+        iw_cfg.iw_foreground = s_foreground.val.flag;
     }
     if(s_daemon.is_set) {
-        iw_stg.iw_daemonize = s_daemon.val.flag;
+        iw_cfg.iw_daemonize = s_daemon.val.flag;
     }
     if(s_loglevel.is_set) {
-        iw_stg.iw_log_level = s_loglevel.val.num;
+        iw_cfg.iw_log_level = s_loglevel.val.num;
     }
 }
 
@@ -113,15 +113,15 @@ static bool iw_cmdline_add_predefined_option(
 
 static bool iw_cmdline_add_predefined_options() {
     iw_cmdline_add_predefined_option(
-        iw_stg.iw_cmd_line.foreground,
+        iw_cfg.iw_cmd_line.foreground,
         IW_OPT_INDENT "Run the program in the foreground.",
         IW_OPT_FLAG, &s_foreground, NULL);
     iw_cmdline_add_predefined_option(
-        iw_stg.iw_cmd_line.daemonize,
+        iw_cfg.iw_cmd_line.daemonize,
         IW_OPT_INDENT "Run the process as a daemon.",
         IW_OPT_FLAG, &s_daemon, NULL);
     iw_cmdline_add_predefined_option(
-        iw_stg.iw_cmd_line.log_level,
+        iw_cfg.iw_cmd_line.log_level,
         NULL,
         IW_OPT_NUM, &s_loglevel, iw_cmdline_help_log);
 

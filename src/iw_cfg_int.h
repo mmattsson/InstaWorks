@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 ///
-/// @file iw_settings_int.h
+/// @file iw_cfg_int.h
 ///
 /// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
@@ -8,8 +8,8 @@
 ///
 // --------------------------------------------------------------------------
 
-#ifndef _IW_SETTINGS_INT_H_
-#define _IW_SETTINGS_INT_H_
+#ifndef _IW_CFG_INT_H_
+#define _IW_CFG_INT_H_
 #ifdef _cplusplus
 extern "C" {
 #endif
@@ -24,6 +24,6 @@ extern char *s_callstack_file;
 #ifdef _cplusplus
 }
 #endif
-#endif // _IW_SETTINGS_INT_H_
+#endif // _IW_CFG_INT_H_
 
 // --------------------------------------------------------------------------

@@ -16,7 +16,7 @@
 #include "iw_main.h"
 #include "iw_memory_int.h"
 #include "iw_mutex_int.h"
-#include "iw_settings.h"
+#include "iw_cfg.h"
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
@@ -287,8 +287,8 @@ static void cmd_log_help(FILE *out) {
             "or\n"
             " $ %s log lvl 8 stdout\n"
             "\n",
-            iw_stg.iw_prg_name,
-            iw_stg.iw_prg_name);
+            iw_cfg.iw_prg_name,
+            iw_cfg.iw_prg_name);
     fprintf(out, "The following log levels are available:\n");
     iw_log_list(out);
 }
@@ -335,8 +335,8 @@ static void cmd_log_thread_help(FILE *out) {
             "or\n"
             " $ %s log thread 0x1234abcd on\n"
             "\n",
-            iw_stg.iw_prg_name,
-            iw_stg.iw_prg_name);
+            iw_cfg.iw_prg_name,
+            iw_cfg.iw_prg_name);
 }
 
 // --------------------------------------------------------------------------
@@ -432,7 +432,7 @@ bool iw_cmd_init() {
     iw_cmd_add(NULL, "iwver", cmd_iwver,
             "Displays InstaWorks version", "Displays the InstaWorks version information.");
 
-    if(iw_stg.iw_allow_quit) {
+    if(iw_cfg.iw_allow_quit) {
         iw_cmd_add(NULL, "quit", cmd_quit,
                 "Shut down the program", "Sends a command to the running program that causes it to shut down");
     }
