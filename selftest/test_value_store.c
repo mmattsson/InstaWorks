@@ -79,29 +79,39 @@ static void test_get_str_value(test_result *result, char *name, char *value) {
 
 // --------------------------------------------------------------------------
 
+static void test_insert_value(
+    test_result *result,
+    int value_index,
+    IW_VALUE_TYPE type)
+{
+    char name_buff[16];
+    char value_buff[16];
+    if(type == IW_VALUE_TYPE_NUMBER) {
+        snprintf(name_buff, sizeof(name_buff), "num_%d", value_index);
+        iw_value *value = iw_val_create_number(name_buff, value_index);
+        bool ret = iw_val_store_set(&store, name_buff, value);
+        test(result, ret, "Successfully inserted '%s'->%d",
+                name_buff, value_index);
+    } else if(type == IW_VALUE_TYPE_STRING) {
+        snprintf(name_buff, sizeof(name_buff), "str_%d", value_index);
+        snprintf(value_buff, sizeof(value_buff), "str_%d", value_index);
+        iw_value *value = iw_val_create_string(name_buff, value_buff);
+        bool ret = iw_val_store_set(&store, name_buff, value);
+        test(result, ret, "Successfully inserted '%s'->'%s'",
+                name_buff, value_buff);
+    }
+}
+
+// --------------------------------------------------------------------------
+
 static void test_insert_values(
     test_result *result,
     int num_values,
     IW_VALUE_TYPE type)
 {
     int cnt;
-    char name_buff[16];
-    char value_buff[16];
     for(cnt=0;cnt < num_values;cnt++) {
-        if(type == IW_VALUE_TYPE_NUMBER) {
-            snprintf(name_buff, sizeof(name_buff), "num_%d", cnt);
-            iw_value *value = iw_val_create_number(name_buff, cnt);
-            bool ret = iw_val_store_set(&store, name_buff, value);
-            test(result, ret, "Successfully inserted '%s'->%d",
-                 name_buff, cnt);
-        } else if(type == IW_VALUE_TYPE_STRING) {
-            snprintf(name_buff, sizeof(name_buff), "str_%d", cnt);
-            snprintf(value_buff, sizeof(value_buff), "str_%d", cnt);
-            iw_value *value = iw_val_create_string(name_buff, value_buff);
-            bool ret = iw_val_store_set(&store, name_buff, value);
-            test(result, ret, "Successfully inserted '%s'->'%s'",
-                 name_buff, value_buff);
-        }
+        test_insert_value(result, cnt, type);
     }
 }
 
@@ -119,11 +129,16 @@ void test_value_store(test_result *result) {
     test_get_num_value(result, "num_3", 3);
     test_get_value_failure(result, "num_7", IW_VALUE_TYPE_NUMBER);
     test_get_value_failure(result, "str_1", IW_VALUE_TYPE_NUMBER);
+    test_display("Testing overwriting values");
+    test_insert_value(result, 4, IW_VALUE_TYPE_NUMBER);
+    test_insert_value(result, 5, IW_VALUE_TYPE_NUMBER);
     test_get_str_value(result, "str_1", "str_1");
     test_get_str_value(result, "str_2", "str_2");
     test_get_str_value(result, "str_3", "str_3");
     test_get_value_failure(result, "str_7", IW_VALUE_TYPE_STRING);
     test_get_value_failure(result, "num_3", IW_VALUE_TYPE_STRING);
+    test_insert_value(result, 4, IW_VALUE_TYPE_STRING);
+    test_insert_value(result, 5, IW_VALUE_TYPE_STRING);
 
     test_display("Re-initializing value store");
     iw_val_store_destroy(&store);
