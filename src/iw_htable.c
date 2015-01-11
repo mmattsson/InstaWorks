@@ -44,7 +44,7 @@ bool iw_htable_init(
 bool iw_htable_insert(
     iw_htable *table,
     unsigned int key_len,
-    void *key,
+    const void *key,
     void *data) 
 {
     iw_hash_node *new_node;

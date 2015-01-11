@@ -11,7 +11,7 @@
 #include "iw_cmdline.h"
 #include "iw_cmdline_int.h"
 #include "iw_util.h"
-#include "iw_settings.h"
+#include "iw_cfg.h"
 
 #include "tests.h"
 

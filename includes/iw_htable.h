@@ -84,7 +84,7 @@ extern bool iw_htable_init(
 extern bool iw_htable_insert(
     iw_htable *table, 
     unsigned int key_size,
-    void *key,
+    const void *key,
     void *data);
 
 // --------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 ///
-/// @file iw_value_store.c
+/// @file iw_val_store.c
 ///
 /// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
@@ -8,13 +8,17 @@
 ///
 // --------------------------------------------------------------------------
 
-#include "iw_value_store.h"
+#include "iw_val_store.h"
 
 #include "iw_memory.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+// --------------------------------------------------------------------------
+//
+// Function API
+//
 // --------------------------------------------------------------------------
 
 iw_value *iw_val_create_number(const char *name, int num) {
@@ -33,7 +37,7 @@ iw_value *iw_val_create_number(const char *name, int num) {
 
 // --------------------------------------------------------------------------
 
-iw_value *iw_val_create_string(const char *name, char *str) {
+iw_value *iw_val_create_string(const char *name, const char *str) {
     iw_value *value = IW_CALLOC(1, sizeof(iw_value));
     if(value == NULL) {
         return NULL;
@@ -49,7 +53,7 @@ iw_value *iw_val_create_string(const char *name, char *str) {
 
 // --------------------------------------------------------------------------
 
-iw_value *iw_val_create_address(const char *name, iw_ip *address) {
+iw_value *iw_val_create_address(const char *name, const iw_ip *address) {
     iw_value *value = IW_CALLOC(1, sizeof(iw_value));
     if(value == NULL) {
         return NULL;
@@ -79,14 +83,20 @@ void iw_val_destroy(iw_value *value) {
 //
 // --------------------------------------------------------------------------
 
-bool iw_val_store_init(iw_store *store) {
-    iw_htable_init(&store->table, 1024, false, NULL);
+static void iw_val_destroy_htable(void *value) {
+    iw_val_destroy((iw_value *)value);
 }
 
 // --------------------------------------------------------------------------
 
-void iw_val_store_destroy(iw_store *store) {
-    iw_htable_destroy(&store->table, iw_val_destroy);
+bool iw_val_store_initialize(iw_val_store *store) {
+    return iw_htable_init(&store->table, 1024, false, NULL);
+}
+
+// --------------------------------------------------------------------------
+
+void iw_val_store_destroy(iw_val_store *store) {
+    iw_htable_destroy(&store->table, iw_val_destroy_htable);
 }
 
 // --------------------------------------------------------------------------
@@ -96,7 +106,7 @@ void iw_val_store_destroy(iw_store *store) {
 // --------------------------------------------------------------------------
 
 bool iw_val_store_set(
-    iw_store *store,
+    iw_val_store *store,
     const char *name,
     iw_value *value)
 {
@@ -106,7 +116,7 @@ bool iw_val_store_set(
 // --------------------------------------------------------------------------
 
 bool iw_val_store_set_number(
-    iw_store *store,
+    iw_val_store *store,
     const char *name,
     int num)
 {
@@ -124,7 +134,7 @@ bool iw_val_store_set_number(
 // --------------------------------------------------------------------------
 
 bool iw_val_store_set_string(
-    iw_store *store,
+    iw_val_store *store,
     const char *name,
     const char *str)
 {
@@ -142,7 +152,7 @@ bool iw_val_store_set_string(
 // --------------------------------------------------------------------------
 
 bool iw_val_store_set_address(
-    iw_store *store,
+    iw_val_store *store,
     const char *name,
     const iw_ip *address)
 {
@@ -160,7 +170,7 @@ bool iw_val_store_set_address(
 // --------------------------------------------------------------------------
 
 iw_value *iw_val_store_get(
-    iw_store *store,
+    iw_val_store *store,
     const char *name)
 {
     return iw_htable_get(&store->table, strlen(name), name);
@@ -169,25 +179,40 @@ iw_value *iw_val_store_get(
 // --------------------------------------------------------------------------
 
 int *iw_val_store_get_number(
-    iw_store *store,
+    iw_val_store *store,
     const char *name)
 {
+    iw_value *value = iw_val_store_get(store, name);
+    if(value == NULL || value->type != IW_VALUE_TYPE_NUMBER) {
+        return NULL;
+    }
+    return &value->v.number;
 }
 
 // --------------------------------------------------------------------------
 
 char *iw_val_store_get_string(
-    iw_store *store,
+    iw_val_store *store,
     const char *name)
 {
+    iw_value *value = iw_val_store_get(store, name);
+    if(value == NULL || value->type != IW_VALUE_TYPE_STRING) {
+        return NULL;
+    }
+    return value->v.string;
 }
 
 // --------------------------------------------------------------------------
 
 iw_ip *iw_val_store_get_address(
-    iw_store *store,
+    iw_val_store *store,
     const char *name)
 {
+    iw_value *value = iw_val_store_get(store, name);
+    if(value == NULL || value->type != IW_VALUE_TYPE_ADDRESS) {
+        return NULL;
+    }
+    return &value->v.address;
 }
 
 // --------------------------------------------------------------------------
@@ -196,12 +221,14 @@ iw_ip *iw_val_store_get_address(
 //
 // --------------------------------------------------------------------------
 
-void *iw_store_val_get_first(iw_store *store, unsigned long token) {
+void *iw_store_val_get_first(iw_val_store *store, unsigned long *token) {
+    return (iw_value *)iw_htable_get_first(&store->table, token);
 }
 
 // --------------------------------------------------------------------------
 
-void *iw_store_val_get_next(iw_store *store, unsigned long token) {
+void *iw_store_val_get_next(iw_val_store *store, unsigned long *token) {
+    return (iw_value *)iw_htable_get_next(&store->table, token);
 }
 
 // --------------------------------------------------------------------------
