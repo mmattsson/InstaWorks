@@ -26,17 +26,17 @@ static iw_val_store store;
 static void test_get_value_failure(
     test_result *result,
     char *name,
-    IW_VALUE_TYPE type)
+    IW_VAL_TYPE type)
 {
     int *num;
     char *str;
     switch(type) {
-    case IW_VALUE_TYPE_NUMBER :
+    case IW_VAL_TYPE_NUMBER :
         num = iw_val_store_get_number(&store, name);
         test(result, num == NULL,
             "Access '%s' as number, expected NULL", name);
         break;
-    case IW_VALUE_TYPE_STRING :
+    case IW_VAL_TYPE_STRING :
         str = iw_val_store_get_string(&store, name);
         test(result, str == NULL,
             "Access '%s' as string, expected NULL", name);
@@ -81,22 +81,23 @@ static void test_get_str_value(test_result *result, char *name, char *value) {
 
 static void test_insert_value(
     test_result *result,
+    const char *name,
     int value_index,
-    IW_VALUE_TYPE type)
+    IW_VAL_TYPE type,
+    bool should_succeed)
 {
-    char name_buff[16];
     char value_buff[16];
-    if(type == IW_VALUE_TYPE_NUMBER) {
-        snprintf(name_buff, sizeof(name_buff), "num_%d", value_index);
-        bool ret = iw_val_store_set_number(&store, name_buff, value_index);
-        test(result, ret, "Successfully inserted '%s'->%d",
-                name_buff, value_index);
-    } else if(type == IW_VALUE_TYPE_STRING) {
-        snprintf(name_buff, sizeof(name_buff), "str_%d", value_index);
+    if(type == IW_VAL_TYPE_NUMBER) {
+        bool ret = iw_val_store_set_number(&store, name, value_index);
+        test(result, ret == should_succeed, "%s to insert '%s'->%d",
+             should_succeed ? "Succeeded" : "Failed",
+             name, value_index);
+    } else if(type == IW_VAL_TYPE_STRING) {
         snprintf(value_buff, sizeof(value_buff), "str_%d", value_index);
-        bool ret = iw_val_store_set_string(&store, name_buff, value_buff);
-        test(result, ret, "Successfully inserted '%s'->'%s'",
-                name_buff, value_buff);
+        bool ret = iw_val_store_set_string(&store, name, value_buff);
+        test(result, ret == should_succeed, "%s to insert '%s'->'%s'",
+             should_succeed ? "Succeeded" : "Failed",
+             name, value_buff);
     }
 }
 
@@ -105,11 +106,23 @@ static void test_insert_value(
 static void test_insert_values(
     test_result *result,
     int num_values,
-    IW_VALUE_TYPE type)
+    IW_VAL_TYPE type,
+    bool should_succeed)
 {
     int cnt;
     for(cnt=0;cnt < num_values;cnt++) {
-        test_insert_value(result, cnt, type);
+        char buff[128];
+        switch(type) {
+        case IW_VAL_TYPE_NUMBER :
+            snprintf(buff, sizeof(buff), "num_%d", cnt);
+            break;
+        case IW_VAL_TYPE_STRING :
+            snprintf(buff, sizeof(buff), "str_%d", cnt);
+            break;
+        default :
+            return;
+        }
+        test_insert_value(result, buff, cnt, type, should_succeed);
     }
 }
 
@@ -118,31 +131,47 @@ static void test_insert_values(
 void test_value_store(test_result *result) {
     test_display("Initializing value store");
 
-    iw_val_store_initialize(&store);
+    iw_val_store_initialize(&store, false);
 
-    test_insert_values(result, 6, IW_VALUE_TYPE_NUMBER);
-    test_insert_values(result, 6, IW_VALUE_TYPE_STRING);
+    test_insert_values(result, 6, IW_VAL_TYPE_NUMBER, true);
+    test_insert_values(result, 6, IW_VAL_TYPE_STRING, true);
     test_get_num_value(result, "num_1", 1);
     test_get_num_value(result, "num_2", 2);
     test_get_num_value(result, "num_3", 3);
-    test_get_value_failure(result, "num_7", IW_VALUE_TYPE_NUMBER);
-    test_get_value_failure(result, "str_1", IW_VALUE_TYPE_NUMBER);
+    test_get_value_failure(result, "num_7", IW_VAL_TYPE_NUMBER);
+    test_get_value_failure(result, "str_1", IW_VAL_TYPE_NUMBER);
     test_display("Testing overwriting values");
-    test_insert_value(result, 4, IW_VALUE_TYPE_NUMBER);
-    test_insert_value(result, 5, IW_VALUE_TYPE_NUMBER);
+    test_insert_value(result, "num_4", 4, IW_VAL_TYPE_NUMBER, true);
+    test_insert_value(result, "num_5", 5, IW_VAL_TYPE_NUMBER, true);
     test_get_str_value(result, "str_1", "str_1");
     test_get_str_value(result, "str_2", "str_2");
     test_get_str_value(result, "str_3", "str_3");
-    test_get_value_failure(result, "str_7", IW_VALUE_TYPE_STRING);
-    test_get_value_failure(result, "num_3", IW_VALUE_TYPE_STRING);
-    test_insert_value(result, 4, IW_VALUE_TYPE_STRING);
-    test_insert_value(result, 5, IW_VALUE_TYPE_STRING);
+    test_get_value_failure(result, "str_7", IW_VAL_TYPE_STRING);
+    test_get_value_failure(result, "num_3", IW_VAL_TYPE_STRING);
+    test_insert_value(result, "num_4", 4, IW_VAL_TYPE_STRING, true);
+    test_insert_value(result, "num_5", 5, IW_VAL_TYPE_STRING, true);
 
-    test_display("Re-initializing value store");
+    test_display("Re-initializing value store as 'controlled'");
     iw_val_store_destroy(&store);
-    iw_val_store_initialize(&store);
-    test_get_value_failure(result, "num_1", IW_VALUE_TYPE_NUMBER);
-    test_get_value_failure(result, "str_1", IW_VALUE_TYPE_STRING);
+    iw_val_store_initialize(&store, true);
+    test_get_value_failure(result, "num_1", IW_VAL_TYPE_NUMBER);
+    test_get_value_failure(result, "str_1", IW_VAL_TYPE_STRING);
+
+    test_display("Inserting non-pre-defined values");
+    test_insert_values(result, 3, IW_VAL_TYPE_NUMBER, false);
+
+    test_display("Adding a value (num_1) that can be between 0..65535 (a port number)");
+    iw_val_store_add_name_regexp(&store, "num_1", IW_VAL_TYPE_NUMBER,
+        "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
+    test_insert_value(result, "num_1", 67000, IW_VAL_TYPE_STRING, false);
+    test_insert_value(result, "num_1", -1, IW_VAL_TYPE_NUMBER, false);
+    test_insert_value(result, "num_1", 67000, IW_VAL_TYPE_NUMBER, false);
+    test_insert_value(result, "num_1", 1234, IW_VAL_TYPE_NUMBER, true);
+    test_get_num_value(result, "num_1", 1234);
+    test_insert_value(result, "num_1", 65535, IW_VAL_TYPE_NUMBER, true);
+    test_get_num_value(result, "num_1", 65535);
+    test_insert_value(result, "num_1", 65536, IW_VAL_TYPE_NUMBER, false);
+    test_get_num_value(result, "num_1", 65535);
 }
 
 // --------------------------------------------------------------------------
