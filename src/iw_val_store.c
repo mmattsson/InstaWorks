@@ -110,7 +110,8 @@ bool iw_val_store_set(
     const char *name,
     iw_value *value)
 {
-    return iw_htable_insert(&store->table, strlen(name), name, value);
+    return iw_htable_replace(&store->table, strlen(name), name, value,
+                             iw_val_destroy_htable);
 }
 
 // --------------------------------------------------------------------------

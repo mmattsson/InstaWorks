@@ -75,7 +75,27 @@ extern bool iw_htable_init(
 
 // --------------------------------------------------------------------------
 
+/// @brief Insert or replace an element in the hash table.
+/// If the table already contains a value with the given key this function will
+/// delete the old element before inserting the new value.
+/// @param table The table to insert the element into.
+/// @param key_size The length of the key.
+/// @param key The hash key to use.
+/// @param data The data to insert.
+/// @param fn The hash data delete function to use if an element must be deleted.
+/// @return True if the element was successfully inserted.
+extern bool iw_htable_replace(
+    iw_htable *table,
+    unsigned int key_size,
+    const void *key,
+    void *data,
+    IW_HASH_DEL_FN fn);
+
+// --------------------------------------------------------------------------
+
 /// @brief Insert an element into the hash table.
+/// If the table already contains a value with the given key this function
+/// will fail to insert the new value.
 /// @param table The table to insert the element into.
 /// @param key_size The length of the key.
 /// @param key The hash key to use.
@@ -125,7 +145,7 @@ extern void *iw_htable_remove(
 extern bool iw_htable_delete(
     iw_htable *table,
     unsigned int key_len,
-    void *key,
+    const void *key,
     IW_HASH_DEL_FN fn);
 
 // --------------------------------------------------------------------------

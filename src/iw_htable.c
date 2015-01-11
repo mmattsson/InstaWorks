@@ -41,37 +41,40 @@ bool iw_htable_init(
 
 // --------------------------------------------------------------------------
 
-bool iw_htable_insert(
+bool iw_htable_replace(
     iw_htable *table,
     unsigned int key_len,
     const void *key,
-    void *data) 
+    void *data,
+    IW_HASH_DEL_FN fn)
 {
+    unsigned long hash = iw_hash_data(key_len, key);
+    unsigned int index = hash % table->size;
+    iw_hash_node *node = table->table[index];
+
+    if(fn != NULL) {
+        iw_htable_delete(table, key_len, key, fn);
+    } else {
+        // See if the bucket already contains the value
+        if(node != NULL) {
+            while(node != NULL) {
+                if(node->hash == hash) {
+                    LOG(IW_LOG_IW, "Hash table already contains the value");
+                    return false;
+                }
+                node = node->next;
+            }
+            table->collisions++;
+        }
+    }
+
+    // Bucket did not contain the value, let's add it at the start of the list
     iw_hash_node *new_node;
     INT_CALLOC(table->iw_mem_alloc, new_node, 1, iw_hash_node);
     if(new_node == NULL) {
         LOG(IW_LOG_IW, "Failed to allocate memory for node");
         return false;
     }
-
-    unsigned long hash = iw_hash_data(key_len, key);
-    unsigned int index = hash % table->size;
-    iw_hash_node *node = table->table[index];
-
-    // See if the bucket already contains the value
-    if(node != NULL) {
-        while(node != NULL) {
-            if(node->hash == hash) {
-                LOG(IW_LOG_IW, "Hash table already contains the value");
-                INT_FREE(table->iw_mem_alloc, new_node);
-                return false;
-            }
-            node = node->next;
-        }
-        table->collisions++;
-    }
-
-    // Bucket did not contain the value, let's add it at the start of the list
     new_node->next = table->table[index];
     table->table[index] = new_node;
     new_node->hash = hash;
@@ -79,6 +82,17 @@ bool iw_htable_insert(
     table->num_elems++;
 
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_htable_insert(
+    iw_htable *table,
+    unsigned int key_len,
+    const void *key,
+    void *data)
+{
+    return iw_htable_replace(table, key_len, key, data, NULL);
 }
 
 // --------------------------------------------------------------------------
@@ -130,7 +144,6 @@ void *iw_htable_remove(
 
     prev = node;
     node = node->next;
-
     while(node != NULL) {
         if(node->hash == hash) {
             prev->next = node->next;
@@ -151,7 +164,7 @@ void *iw_htable_remove(
 bool iw_htable_delete(
     iw_htable *tb,
     unsigned int key_len,
-    void *key,
+    const void *key,
     IW_HASH_DEL_FN fn)
 {
     void *data = iw_htable_remove(tb, key_len, key);

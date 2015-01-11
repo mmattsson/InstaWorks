@@ -2,7 +2,18 @@
 ///
 /// @file iw_val_store.h
 ///
-/// A module for handling values and keeping the values in a value store.
+/// A module for handling values and keeping the values in a value store. A
+/// value store is an object to keep track of name-value pairs for pre-defined
+/// types, such as numbers, strings, or IP addresses. Values can be set or
+/// accessed using the name of a value pair.
+///
+/// In its basic mode, a value store accepts any name to be inserted or
+/// accessed. In the controlled mode, a value store only accepts pre-defined
+/// names to be set or accessed. The pre-defined names must be defined by
+/// function calls adding the name (and possibly an input validation criteria)
+/// to the value store. Once the names are defined, they can be set just like
+/// the basic mode value store. If the input validation criteria is set the
+/// value must conform to the criteria in order to be set.
 ///
 /// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
@@ -48,7 +59,8 @@ typedef struct _iw_value {
 
 /// @brief A value store object.
 typedef struct _iw_val_store {
-    iw_htable table;    ///< The hash table containing the value store values.
+    iw_htable table;     ///< The hash table containing the value store values.
+    bool      controlled;///< True if the value store is controlled.
 } iw_val_store;
 
 // --------------------------------------------------------------------------

@@ -84,14 +84,20 @@ void test_hash_table(test_result *result) {
     iw_htable_delete(&table, 4, "efgh", test_hash_node_delete);
     test(result, table.num_elems == 4, "Deleted 2nd element from table (efgh)");
     data = (char *)iw_htable_get(&table, 4, "efgh");
-    test(result, data == NULL, "Accessing element 2 (efgh->1002)");
+    test(result, data == NULL, "Accessing element 2 (efgh->1002), should return NULL");
     data = (char *)iw_htable_remove(&table, 4, "mnop");
     test(result, table.num_elems == 3, "Removed 4th element from table");
     test(result, data != NULL && strcmp("1004", data) == 0, "Removed element (mnop->1004)");
     test_hash_node_delete(data);
     data = (char *)iw_htable_get(&table, 4, "mnop");
-    test(result, data == NULL, "Fail to access removed element 2 (mnop)");
+    test(result, data == NULL, "Fail to access removed element (mnop)");
     test_display("Number of collisions: %d", table.collisions);
+
+    // Replacing existing value
+    test_display("Replacing value (ijkl->1003) to (ijkl->2003)");
+    iw_htable_replace(&table, 4, "ijkl", strdup("2003"), test_hash_node_delete);
+    data = (char *)iw_htable_get(&table, 4, "ijkl");
+    test(result, data != NULL && strcmp("2003", data) == 0, "Accessing element (ijkl->2003)");
 
     test_display("Destroying hash table");
     iw_htable_destroy(&table, test_hash_node_delete);

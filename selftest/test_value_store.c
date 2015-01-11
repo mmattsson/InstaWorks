@@ -88,15 +88,13 @@ static void test_insert_value(
     char value_buff[16];
     if(type == IW_VALUE_TYPE_NUMBER) {
         snprintf(name_buff, sizeof(name_buff), "num_%d", value_index);
-        iw_value *value = iw_val_create_number(name_buff, value_index);
-        bool ret = iw_val_store_set(&store, name_buff, value);
+        bool ret = iw_val_store_set_number(&store, name_buff, value_index);
         test(result, ret, "Successfully inserted '%s'->%d",
                 name_buff, value_index);
     } else if(type == IW_VALUE_TYPE_STRING) {
         snprintf(name_buff, sizeof(name_buff), "str_%d", value_index);
         snprintf(value_buff, sizeof(value_buff), "str_%d", value_index);
-        iw_value *value = iw_val_create_string(name_buff, value_buff);
-        bool ret = iw_val_store_set(&store, name_buff, value);
+        bool ret = iw_val_store_set_string(&store, name_buff, value_buff);
         test(result, ret, "Successfully inserted '%s'->'%s'",
                 name_buff, value_buff);
     }
