@@ -341,7 +341,7 @@ bool iw_val_store_add_name(
     if(crit == NULL) {
         return false;
     }
-    return iw_val_store_add_name_internal(store, name, NULL);
+    return iw_val_store_add_name_internal(store, name, crit);
 }
 
 // --------------------------------------------------------------------------
