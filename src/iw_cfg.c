@@ -63,6 +63,8 @@ iw_callbacks iw_cb = {
 static void iw_cfg_add_number(const char *name, const char *regexp, int def) {
     if(regexp != NULL) {
         iw_val_store_add_name_regexp(&iw_cfg, name, IW_VAL_TYPE_NUMBER, regexp);
+    } else {
+        iw_val_store_add_name(&iw_cfg, name, IW_VAL_TYPE_NUMBER);
     }
     iw_val_store_set_number(&iw_cfg, name, def);
 }
@@ -72,6 +74,8 @@ static void iw_cfg_add_number(const char *name, const char *regexp, int def) {
 static void iw_cfg_add_string(const char *name, const char *regexp, const char *def) {
     if(regexp != NULL) {
         iw_val_store_add_name_regexp(&iw_cfg, name, IW_VAL_TYPE_STRING, regexp);
+    } else {
+        iw_val_store_add_name(&iw_cfg, name, IW_VAL_TYPE_STRING);
     }
     iw_val_store_set_string(&iw_cfg, name, def);
 }

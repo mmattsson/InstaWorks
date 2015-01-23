@@ -222,7 +222,9 @@ int main(int argc, char **argv) {
 
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
-    // are set before they are accessed.
+    // are set before they are accessed and to do so, iw_cfg_init() must be
+    // called.
+    iw_cfg_init();
     iw_val_store_set_number(&iw_cfg, IW_CFG_CMD_PORT, 10002);
     iw_val_store_set_string(&iw_cfg, IW_CFG_CRASHHANDLER_FILE, "/tmp/philo.txt");
 
