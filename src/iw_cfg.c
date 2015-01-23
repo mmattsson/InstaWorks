@@ -14,33 +14,21 @@
 #include <string.h>
 
 // --------------------------------------------------------------------------
+
+#define ADD_NUM(n,r) iw_cfg_add_number(IW_CFG_##n,r,IW_DEF_##n)
+#define ADD_PORT(n)  ADD_NUM(n,IW_VAL_CRIT_PORT)
+#define ADD_BOOL(n)  ADD_NUM(n,IW_VAL_CRIT_BOOL)
+#define ADD_STR(n,r) iw_cfg_add_string(IW_CFG_##n,r,IW_DEF_##n)
+#define ADD_CHAR(n)  ADD_STR(n,IW_VAL_CRIT_CHAR)
+
+// --------------------------------------------------------------------------
+
+iw_val_store iw_cfg;
+
+// --------------------------------------------------------------------------
 //
 // Data structures
 //
-// --------------------------------------------------------------------------
-
-iw_cfg_store iw_cfg = {
-    IW_DEF_COMMAND_PORT,
-    {
-        IW_DEF_OPT_FOREGROUND,
-        IW_DEF_OPT_DAEMONIZE,
-        IW_DEF_OPT_LOG_LEVEL
-    },
-    false, // Foreground?
-    false, // Daemonize?
-    false, // Allow quit?
-    IW_DEF_ENABLE_CRASH_HANDLER,
-    IW_DEF_ENABLE_MEMTRACK,
-    IW_DEF_MEMTRACK_SIZE,
-    IW_DEF_LOG_LEVEL,
-    IW_DEF_SYSLOG_SIZE,
-    IW_DEF_ENABLE_HEALTHCHECK,
-    IW_DEF_ENABLE_WEB_SERVER,
-
-    // The following parameters should only be accessed.
-    "instaworks"
-};
-
 // --------------------------------------------------------------------------
 
 iw_callbacks iw_cb = {
@@ -48,18 +36,60 @@ iw_callbacks iw_cb = {
 };
 
 // --------------------------------------------------------------------------
-
-char *s_callstack_file = NULL;
-
-// --------------------------------------------------------------------------
 //
 // Function API
 //
 // --------------------------------------------------------------------------
 
-void iw_cfg_set_callstack_file(const char *file) {
-    free(s_callstack_file);
-    s_callstack_file = strdup(file);
+static void iw_cfg_add_number(const char *name, const char *regexp, int def) {
+    if(regexp != NULL) {
+        iw_val_store_add_name_regexp(&iw_cfg, name, IW_VAL_TYPE_NUMBER, regexp);
+    }
+    iw_val_store_set_number(&iw_cfg, name, def);
+}
+
+// --------------------------------------------------------------------------
+
+static void iw_cfg_add_string(const char *name, const char *regexp, const char *def) {
+    if(regexp != NULL) {
+        iw_val_store_add_name_regexp(&iw_cfg, name, IW_VAL_TYPE_STRING, regexp);
+    }
+    iw_val_store_set_string(&iw_cfg, name, def);
+}
+
+// --------------------------------------------------------------------------
+
+void iw_cfg_init() {
+    static bool initialized = false;
+    if(initialized) {
+        return;
+    }
+    initialized = true;
+
+    iw_val_store_initialize(&iw_cfg, true);
+
+    ADD_PORT(CMD_PORT);
+    ADD_BOOL(FOREGROUND);
+    ADD_CHAR(FOREGROUND_OPT);
+    ADD_BOOL(DAEMONIZE);
+    ADD_CHAR(DAEMONIZE_OPT);
+    ADD_NUM(LOGLEVEL, NULL);
+    ADD_CHAR(LOGLEVEL_OPT);
+    ADD_BOOL(ALLOW_QUIT);
+    ADD_BOOL(CRASHHANDLER_ENABLE);
+    ADD_STR(CRASHHANDLER_FILE, NULL);
+    ADD_BOOL(MEMTRACK_ENABLE);
+    ADD_NUM(MEMTRACK_SIZE, NULL);
+    ADD_BOOL(HEALTHCHECK_ENABLE);
+    ADD_BOOL(WEBSRV_ENABLE);
+    ADD_NUM(SYSLOG_SIZE, NULL);
+    ADD_STR(PRG_NAME, NULL);
+}
+
+// --------------------------------------------------------------------------
+
+void iw_cfg_exit() {
+    iw_val_store_destroy(&iw_cfg);
 }
 
 // --------------------------------------------------------------------------

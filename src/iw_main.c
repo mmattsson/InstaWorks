@@ -40,6 +40,11 @@ static bool s_initialized = false;
 
 void iw_init() {
     if(!s_initialized) {
+        int *log_level = iw_val_store_get_number(&iw_cfg,
+                                                 IW_CFG_LOGLEVEL);
+        int *websrv_enable = iw_val_store_get_number(&iw_cfg,
+                                                     IW_CFG_WEBSRV_ENABLE);
+
         iw_memory_init();
         iw_mutex_init();
         iw_syslog_reinit(1000);
@@ -47,10 +52,10 @@ void iw_init() {
         iw_thread_init();
         iw_health_start();
         s_initialized = true;
-        if(iw_cfg.iw_log_level != 0) {
-            iw_log_set_level("stdout", iw_cfg.iw_log_level);
+        if(log_level != NULL && *log_level != 0) {
+            iw_log_set_level("stdout", *log_level);
         }
-        if(iw_cfg.iw_enable_web_server) {
+        if(websrv_enable != NULL && *websrv_enable) {
             iw_web_srv(NULL, 0);
         }
         iw_thread_register_main();
@@ -63,6 +68,7 @@ void iw_exit() {
     iw_syslog_exit();
     iw_mutex_exit();
     iw_memory_exit();
+    iw_cfg_exit();
     s_initialized = false;
 }
 
@@ -80,9 +86,12 @@ IW_MAIN_EXIT iw_main(
     if(argc > 0 && argv[0] != NULL) {
         const char *prg_name = strrchr(argv[0], '/');
         if(prg_name != NULL) {
-            iw_cfg.iw_prg_name = prg_name + 1;
+            iw_val_store_set_string(&iw_cfg, IW_CFG_PRG_NAME, prg_name + 1);
         }
     }
+
+    // Init config first of all
+    iw_cfg_init();
 
     // Must set log level before command line parsing. If parsing fails
     // we must print out program usage help and that includes log levels.
@@ -106,19 +115,25 @@ IW_MAIN_EXIT iw_main(
     // Decide whether we should run as a server or not. If the
     // 'foreground' option is given then we start the server. Otherwise
     // we start the client.
-    if(iw_cfg.iw_foreground || iw_cfg.iw_daemonize) {
-        if(iw_cfg.iw_daemonize) {
+    int *foreground = iw_val_store_get_number(&iw_cfg, IW_CFG_FOREGROUND);
+    int *daemonize  = iw_val_store_get_number(&iw_cfg, IW_CFG_DAEMONIZE);
+    int *cmd_port   = iw_val_store_get_number(&iw_cfg, IW_CFG_CMD_PORT);
+    if((foreground != NULL && *foreground) || (daemonize != NULL && *daemonize)) {
+        if(*daemonize) {
             if(daemon(0, 0) != 0) {
                 return IW_MAIN_SRV_FAILED;
             }
         }
         iw_init();
-        bool retval = iw_cmd_srv(main_fn, iw_cfg.iw_cmd_port, argc-cnt-1, argv+cnt+1);
+        bool retval = iw_cmd_srv(main_fn,
+                                 cmd_port != NULL ? *cmd_port : 0,
+                                 argc-cnt-1, argv+cnt+1);
         iw_exit();
         return retval ? IW_MAIN_SRV_OK : IW_MAIN_SRV_FAILED;
     } else {
-        return iw_cmd_clnt(iw_cfg.iw_cmd_port, argc-cnt-1, argv+cnt+1) ?
-                IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
+        return iw_cmd_clnt(cmd_port != NULL ? *cmd_port : 0,
+                           argc-cnt-1, argv+cnt+1) ?
+                                    IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
     }
 }
 

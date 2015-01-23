@@ -44,7 +44,7 @@ static void *iw_health_thread(void *param) {
 // --------------------------------------------------------------------------
 
 void iw_health_start() {
-    if(iw_cfg.iw_enable_healthcheck) {
+    if(iw_val_store_get_string(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE)) {
         if(!iw_thread_create("Health Check", iw_health_thread, NULL)) {
             LOG(IW_LOG_IW, "Failed to create health check thread");
         }

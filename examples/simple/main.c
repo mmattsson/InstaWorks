@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
-    iw_cfg.iw_allow_quit  = true;
+    iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1);
 
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.

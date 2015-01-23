@@ -287,8 +287,8 @@ static void cmd_log_help(FILE *out) {
             "or\n"
             " $ %s log lvl 8 stdout\n"
             "\n",
-            iw_cfg.iw_prg_name,
-            iw_cfg.iw_prg_name);
+            iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME),
+            iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME));
     fprintf(out, "The following log levels are available:\n");
     iw_log_list(out);
 }
@@ -335,8 +335,8 @@ static void cmd_log_thread_help(FILE *out) {
             "or\n"
             " $ %s log thread 0x1234abcd on\n"
             "\n",
-            iw_cfg.iw_prg_name,
-            iw_cfg.iw_prg_name);
+            iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME),
+            iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME));
 }
 
 // --------------------------------------------------------------------------
@@ -432,7 +432,7 @@ bool iw_cmd_init() {
     iw_cmd_add(NULL, "iwver", cmd_iwver,
             "Displays InstaWorks version", "Displays the InstaWorks version information.");
 
-    if(iw_cfg.iw_allow_quit) {
+    if(iw_val_store_get_string(&iw_cfg, IW_CFG_ALLOW_QUIT)) {
         iw_cmd_add(NULL, "quit", cmd_quit,
                 "Shut down the program", "Sends a command to the running program that causes it to shut down");
     }

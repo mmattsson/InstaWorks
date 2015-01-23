@@ -168,12 +168,17 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
             // First try to get backtrace and symbols without calling
             // other non-safe functions. These calls aren't safe either
             // but without them we have nothing.
-            int fd = open(s_callstack_file != NULL ?
-                                s_callstack_file : IW_DEF_CALLSTACK_FILE,
-                          O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
+            int fd = -1;
+            char *file = iw_val_store_get_string(&iw_cfg,
+                                                 IW_CFG_CRASHHANDLER_FILE);
+            char *prg = iw_val_store_get_string(&iw_cfg,
+                                                IW_CFG_PRG_NAME);
+            if(file != NULL) {
+                fd = open(file, O_WRONLY|O_TRUNC|O_CREAT, S_IRUSR|S_IWUSR);
+            }
             if(fd != -1) {
                 WRITE_STR(fd, "Program: ");
-                WRITE_PTR(fd, iw_cfg.iw_prg_name);
+                WRITE_PTR(fd, prg ? prg : "");
                 WRITE_STR(fd, "\r\nCaught signal: ");
                 WRITE_NUM(fd, sig)
                 WRITE_STR(fd, " (");
@@ -214,7 +219,8 @@ static void iw_thread_install_sighandler() {
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
 
-    if(iw_cfg.iw_enable_crashhandle) {
+    int *enable = iw_val_store_get_number(&iw_cfg, IW_CFG_CRASHHANDLER_ENABLE);
+    if(enable != NULL && *enable) {
         sigaction(SIGILL, &sa, NULL);
         sigaction(SIGABRT, &sa, NULL);
         sigaction(SIGFPE, &sa, NULL);

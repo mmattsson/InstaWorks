@@ -33,6 +33,8 @@ typedef enum {
 
 // --------------------------------------------------------------------------
 
+// TODO: Merge iw_opt and iw_val structures.
+
 /// The value that the option provides
 typedef struct _iw_opt {
     IW_OPT_TYPE type;           ///< The type of option.

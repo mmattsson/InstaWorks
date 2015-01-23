@@ -223,8 +223,8 @@ int main(int argc, char **argv) {
     // However, default settings should be changed before the call to
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed.
-    iw_cfg.iw_cmd_port = 10002;
-    iw_cfg_set_callstack_file("/tmp/philo.txt");
+    iw_val_store_set_number(&iw_cfg, IW_CFG_CMD_PORT, 10002);
+    iw_val_store_set_string(&iw_cfg, IW_CFG_CRASHHANDLER_FILE, "/tmp/philo.txt");
 
     if(argc == 1) {
         print_help(NULL);
@@ -233,18 +233,20 @@ int main(int argc, char **argv) {
 
     // Process command-line parameters ourselves before calling iw_main().
     while((opt = getopt(argc, argv, ":cfl:")) != -1) {
+        long long int loglevel;
         switch(opt) {
         case 'c' :
             do_correct = true;
             break;
         case 'f' :
-            iw_cfg.iw_foreground = true;
+            iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, 1);
             break;
         case 'l' :
-            if(!iw_strtoll(optarg, &iw_cfg.iw_log_level, 16)) {
+            if(!iw_strtoll(optarg, &loglevel, 16)) {
                 print_help("Invalid log level");
                 exit(-1);
             }
+            iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, loglevel);
             break;
         default :
             print_help("Invalid parameter");
@@ -253,7 +255,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    if(optind < argc && iw_cfg.iw_foreground) {
+    int *foreground = iw_val_store_get_number(&iw_cfg, IW_CFG_FOREGROUND);
+    if(optind < argc && foreground != NULL && *foreground) {
         if(!iw_strtoll(argv[optind], &num_philosophers, 10)) {
             print_help("Expected number of philosophers");
             exit(-1);

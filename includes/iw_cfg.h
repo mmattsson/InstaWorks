@@ -18,49 +18,12 @@
 extern "C" {
 #endif
 
+#include "iw_val_store.h"
+
 #include <stdbool.h>
 
-// --------------------------------------------------------------------------
-
-/// The default command control port to use for the program.
-#define IW_DEF_COMMAND_PORT         10000
-
-/// The default foreground option character.
-#define IW_DEF_OPT_FOREGROUND       'f'
-
-/// The default daemonize option character.
-#define IW_DEF_OPT_DAEMONIZE        'd'
-
-/// The default log-level option character.
-#define IW_DEF_OPT_LOG_LEVEL        'l'
-
-/// The default crash handler setting.
-#define IW_DEF_ENABLE_CRASH_HANDLER true
-
-/// The default file to use for callstacks.
-#define IW_DEF_CALLSTACK_FILE       "/tmp/callstack.txt"
-
-/// The default memory tracking enabled setting.
-#ifdef IW_NO_MEMORY_TRACKING
-#define IW_DEF_ENABLE_MEMTRACK      false
-#else
-#define IW_DEF_ENABLE_MEMTRACK      true
-#endif
-
-/// The default memory tracking hash table size.
-#define IW_DEF_MEMTRACK_SIZE        10000
-
-/// The default log level.
-#define IW_DEF_LOG_LEVEL            0
-
-/// The default syslog buffer size.
-#define IW_DEF_SYSLOG_SIZE          10000
-
-/// The default healthcheck enabled setting.
-#define IW_DEF_ENABLE_HEALTHCHECK   true
-
-/// The web server enabled setting.
-#define IW_DEF_ENABLE_WEB_SERVER    true
+// TODO: Add notification callbacks so that programs can be notified when a
+// setting changes.
 
 // --------------------------------------------------------------------------
 //
@@ -68,64 +31,50 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
-/// The InstaWorks configuration structure.
-typedef struct _iw_cfg_store {
-    /// The command control port number to use for this program.
-    unsigned short iw_cmd_port;
+#define IW_CFG                          "cfg"
+#define IW_CFG_OPT                      IW_CFG ".opt"
 
-    /// Comand line option character settings. If an options should not be
-    /// used, '\0' can be assigned to the option.
-    struct {
-        /// The option character to foreground the process. This in effect
-        /// tells the program to run as a server.
-        char foreground;
-
-        /// The option character to make the process daemonize itself.
-        char daemonize;
-
-        /// The option character to set a log level when running the process.
-        char log_level;
-    } iw_cmd_line;
-
-    /// True if the program should be run in the foreground as a server.
-    bool iw_foreground;
-
-    /// True if the process should be daemonized.
-    bool iw_daemonize;
-
-    /// True if the client control program is allowed to use the 'quit' command.
-    bool iw_allow_quit;
-
-    /// True if the crash handler should be enabled.
-    bool iw_enable_crashhandle;
-
-    /// True if the memory tracking module should be used.
-    bool iw_enable_memtrack;
-
-    /// The size of the memory tracking hash table.
-    int  iw_memtrack_hash_size;
-
-    /// The log level to use.
-    long long int iw_log_level;
-
-    /// The size of the syslog buffer.
-    int  iw_syslog_size;
-
-    /// True if health-check should be enabled.
-    bool iw_enable_healthcheck;
-
-    /// True if the web server should be enabled.
-    bool iw_enable_web_server;
-
-    /// The program name
-    const char *iw_prg_name;
-
-} iw_cfg_store;
+#define IW_CFG_CMD_PORT                 IW_CFG ".cmdport"
+#define IW_DEF_CMD_PORT                 10000
+#define IW_CFG_FOREGROUND               IW_CFG ".foreground"
+#define IW_DEF_FOREGROUND               0
+#define IW_CFG_FOREGROUND_OPT           IW_CFG_OPT ".foreground"
+#define IW_DEF_FOREGROUND_OPT           "f"
+#define IW_CFG_DAEMONIZE                IW_CFG ".daemonize"
+#define IW_DEF_DAEMONIZE                0
+#define IW_CFG_DAEMONIZE_OPT            IW_CFG ".daemonize.opt"
+#define IW_DEF_DAEMONIZE_OPT            "d"
+#define IW_CFG_LOGLEVEL                 IW_CFG ".loglvl"
+#define IW_DEF_LOGLEVEL                 0
+#define IW_CFG_LOGLEVEL_OPT             IW_CFG_OPT ".loglvl"
+#define IW_DEF_LOGLEVEL_OPT             "l"
+#define IW_CFG_ALLOW_QUIT               IW_CFG ".allowquit"
+#define IW_DEF_ALLOW_QUIT               1
+#define IW_CFG_CRASHHANDLER_ENABLE      IW_CFG ".crashhandler.enable"
+#define IW_DEF_CRASHHANDLER_ENABLE      1
+#define IW_CFG_CRASHHANDLER_FILE        IW_CFG ".crashhandler.file"
+#define IW_DEF_CRASHHANDLER_FILE        "/tmp/callstack.txt"
+#define IW_CFG_MEMTRACK_ENABLE          IW_CFG ".memtrack.enable"
+#ifdef IW_NO_MEMORY_TRACKING
+#define IW_DEF_MEMTRACK_ENABLE          0
+#else
+#define IW_DEF_MEMTRACK_ENABLE          1
+#endif
+#define IW_CFG_MEMTRACK_SIZE            IW_CFG ".memtrack.size"
+#define IW_DEF_MEMTRACK_SIZE            10000
+#define IW_CFG_HEALTHCHECK_ENABLE       IW_CFG ".healthcheck.enable"
+#define IW_DEF_HEALTHCHECK_ENABLE       1
+#define IW_CFG_WEBSRV_ENABLE            IW_CFG ".websrv.enable"
+#define IW_DEF_WEBSRV_ENABLE            1
+#define IW_CFG_SYSLOG_SIZE              IW_CFG ".syslog.size"
+#define IW_DEF_SYSLOG_SIZE              10000
+#define IW_CFG_PRG_NAME                 IW_CFG ".prgname"
+#define IW_DEF_PRG_NAME                 "instaworks"
 
 // --------------------------------------------------------------------------
 
 /// The global settings variable. All InstaWorks settings can be set from here.
-extern iw_cfg_store iw_cfg;
+extern iw_val_store iw_cfg;
 
 // --------------------------------------------------------------------------
 
@@ -152,11 +101,13 @@ extern iw_callbacks iw_cb;
 //
 // --------------------------------------------------------------------------
 
-/// @brief Set the file name of the callstack file.
-/// Set the name of the file where any callstacks should be saved in case
-/// the program crashes.
-/// @param file The name of the callstack file.
-extern void iw_cfg_set_callstack_file(const char *file);
+/// @brief Initialize the configuration store.
+extern void iw_cfg_init();
+
+// --------------------------------------------------------------------------
+
+/// @brief Destroy the configuration store.
+extern void iw_cfg_exit();
 
 // --------------------------------------------------------------------------
 

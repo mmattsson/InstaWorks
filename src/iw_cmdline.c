@@ -66,13 +66,13 @@ static iw_opt s_loglevel;
 
 void iw_cmdline_check_opts() {
     if(s_foreground.is_set) {
-        iw_cfg.iw_foreground = s_foreground.val.flag;
+        iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, s_foreground.val.flag);
     }
     if(s_daemon.is_set) {
-        iw_cfg.iw_daemonize = s_daemon.val.flag;
+        iw_val_store_set_number(&iw_cfg, IW_CFG_DAEMONIZE, s_daemon.val.flag);
     }
     if(s_loglevel.is_set) {
-        iw_cfg.iw_log_level = s_loglevel.val.num;
+        iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, s_loglevel.val.num);
     }
 }
 
@@ -90,21 +90,23 @@ static bool iw_cmdline_help_log(const char *option) {
 // --------------------------------------------------------------------------
 
 static bool iw_cmdline_add_predefined_option(
-    char ch,
+    const char *ch,
     const char *help,
     IW_OPT_TYPE type,
     iw_opt *opt,
     IW_OPT_HELP_FN help_fn)
 {
-    char opt_string[3] = { '-', ch, '\0' };
 
-    if(ch == '\0') {
+    if(ch == NULL || *ch == '\0') {
         // We won't add this option. Still return true since this isn't
         // a failure.
         return true;
     }
 
-    iw_cmdline_add_option(opt_string, help, false, type, opt, NULL, help_fn);
+    {
+        char opt_string[3] = { '-', *ch, '\0' };
+        iw_cmdline_add_option(opt_string, help, false, type, opt, NULL, help_fn);
+    }
 
     return true;
 }
@@ -113,15 +115,15 @@ static bool iw_cmdline_add_predefined_option(
 
 static bool iw_cmdline_add_predefined_options() {
     iw_cmdline_add_predefined_option(
-        iw_cfg.iw_cmd_line.foreground,
+        iw_val_store_get_string(&iw_cfg, IW_CFG_FOREGROUND_OPT),
         IW_OPT_INDENT "Run the program in the foreground.",
         IW_OPT_FLAG, &s_foreground, NULL);
     iw_cmdline_add_predefined_option(
-        iw_cfg.iw_cmd_line.daemonize,
+        iw_val_store_get_string(&iw_cfg, IW_CFG_DAEMONIZE_OPT),
         IW_OPT_INDENT "Run the process as a daemon.",
         IW_OPT_FLAG, &s_daemon, NULL);
     iw_cmdline_add_predefined_option(
-        iw_cfg.iw_cmd_line.log_level,
+        iw_val_store_get_string(&iw_cfg, IW_CFG_LOGLEVEL_OPT),
         NULL,
         IW_OPT_NUM, &s_loglevel, iw_cmdline_help_log);
 

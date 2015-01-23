@@ -162,11 +162,13 @@ static void print_help() {
 /// @param argc The argument count.
 /// @param argv The arguments.
 int main(int argc, char **argv) {
+    iw_cfg_init();
+
     int opt;
     while((opt = getopt(argc, argv, ":v")) != -1) {
         switch(opt) {
         case 'v':
-            iw_cfg.iw_log_level = 0xFF;
+            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, 0xFF);
             break;
         default :
             print_help();
@@ -189,9 +191,9 @@ int main(int argc, char **argv) {
 
     // Disable memory tracking and health check thread to avoid false
     // positives and avoid hiding real issues in valgrind.
-    iw_cfg.iw_enable_memtrack    = false;
-    iw_cfg.iw_enable_healthcheck = false;
-    iw_cfg.iw_enable_web_server  = false;
+    iw_val_store_set_number(&iw_cfg, IW_CFG_MEMTRACK_ENABLE, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_WEBSRV_ENABLE, 0);
 
     iw_init();
     printf(" == Running self-test ===============================\n");
