@@ -432,7 +432,8 @@ bool iw_cmd_init() {
     iw_cmd_add(NULL, "iwver", cmd_iwver,
             "Displays InstaWorks version", "Displays the InstaWorks version information.");
 
-    if(iw_val_store_get_string(&iw_cfg, IW_CFG_ALLOW_QUIT)) {
+    int *allow = iw_val_store_get_number(&iw_cfg, IW_CFG_ALLOW_QUIT);
+    if(allow && *allow) {
         iw_cmd_add(NULL, "quit", cmd_quit,
                 "Shut down the program", "Sends a command to the running program that causes it to shut down");
     }

@@ -15,10 +15,29 @@
 
 // --------------------------------------------------------------------------
 
+/// Add a number to the configuration settings.
+/// @param n The name of the setting.
+/// @param r The range of the number.
 #define ADD_NUM(n,r) iw_cfg_add_number(IW_CFG_##n,r,IW_DEF_##n)
+
+/// Add a port number to the configuration settings. The allowed range for the
+/// port number is 0-65535.
+/// @param n The name of the setting.
 #define ADD_PORT(n)  ADD_NUM(n,IW_VAL_CRIT_PORT)
+
+/// Add a boolean to the configuration settings. The allowed range for the
+/// number is 0 or 1.
+/// @param n The name of the setting.
 #define ADD_BOOL(n)  ADD_NUM(n,IW_VAL_CRIT_BOOL)
+
+/// Add a string to the configuration settings.
+/// @param n The name of the setting.
+/// @param r The regular expression for the string.
 #define ADD_STR(n,r) iw_cfg_add_string(IW_CFG_##n,r,IW_DEF_##n)
+
+/// Add a character to the configuration settings. The string can only be
+/// one character long.
+/// @param n The name of the setting.
 #define ADD_CHAR(n)  ADD_STR(n,IW_VAL_CRIT_CHAR)
 
 // --------------------------------------------------------------------------

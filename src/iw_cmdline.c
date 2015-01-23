@@ -96,7 +96,6 @@ static bool iw_cmdline_add_predefined_option(
     iw_opt *opt,
     IW_OPT_HELP_FN help_fn)
 {
-
     if(ch == NULL || *ch == '\0') {
         // We won't add this option. Still return true since this isn't
         // a failure.

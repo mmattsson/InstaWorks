@@ -304,7 +304,7 @@ static iw_val_criteria *iw_val_store_create_criteria(
     if(crit == NULL) {
         return NULL;
     }
-    crit->type   = IW_VAL_TYPE_NUMBER;
+    crit->type   = type;
     crit->fn     = fn;
     crit->regset = false;
     return crit;

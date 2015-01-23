@@ -91,10 +91,10 @@ void test_disp_end(const char *info, ...) {
 
 // --------------------------------------------------------------------------
 
-static void run_test(TEST_FN fn, const char *name) {
+static void run_test(TEST_FN fn, const char *name, const char *desc) {
     test_result results = { 0, 0 };
     printf("  -- Running test -------------------------------\n");
-    printf("    Running test \"%s\"\n", name);
+    printf("    Running test \"%s: %s\"\n", name, desc);
     (*fn)(&results);
     printf("  -- Summary ------------------------------------\n");
     printf("    Failed tests: %d\n", results.failed);
@@ -114,7 +114,7 @@ static void run_tests(const char *test) {
     for(cnt=0;s_tests[cnt].fn != NULL;cnt++) {
         if(test == NULL || strcmp(test, s_tests[cnt].name) == 0) {
             did_run = true;
-            run_test(s_tests[cnt].fn, s_tests[cnt].desc);
+            run_test(s_tests[cnt].fn, s_tests[cnt].name, s_tests[cnt].desc);
         }
     }
     if(test != NULL && !did_run) {
