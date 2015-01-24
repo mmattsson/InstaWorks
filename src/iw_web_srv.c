@@ -75,7 +75,6 @@ static bool iw_web_srv_construct_response(FILE *out) {
 
 // --------------------------------------------------------------------------
 
-
 /// @brief Process a client request.
 /// @param fd The client's socket file descriptor.
 static void iw_web_srv_process_request(int fd) {
