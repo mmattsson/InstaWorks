@@ -77,7 +77,9 @@ static void iw_cfg_add_string(const char *name, const char *regexp, const char *
     } else {
         iw_val_store_add_name(&iw_cfg, name, IW_VAL_TYPE_STRING);
     }
-    iw_val_store_set_string(&iw_cfg, name, def);
+    if(def != NULL) {
+        iw_val_store_set_string(&iw_cfg, name, def);
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -107,6 +109,7 @@ void iw_cfg_init() {
     ADD_BOOL(WEBSRV_ENABLE);
     ADD_NUM(SYSLOG_SIZE, NULL);
     ADD_STR(PRG_NAME, NULL);
+    ADD_STR(PRG_ABOUT, NULL);
 }
 
 // --------------------------------------------------------------------------

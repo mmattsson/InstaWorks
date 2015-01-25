@@ -97,27 +97,60 @@ static void delete_tcp_conn(iw_list_node *node) {
 
 /// @brief List all peers currently connected to the server.
 /// @param out The output file stream to display the connections on.
-/// @param cmd The command request being processed.
-/// @param info The parse info to use when parsing the request.
-static bool list_connections(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+/// @param html True if the output should be HTML formatted.
+static bool list_connections(FILE *out, bool html) {
     int cnt = 0;
     iw_mutex_lock(s_mutex);
     tcp_conn *conn = (tcp_conn *)s_list.head;
     if(conn == NULL) {
-        fprintf(out, "<no connections>\n");
+        fprintf(out, "no connections\n");
     } else {
         for(;conn != NULL;cnt++) {
             char ipbuff[IW_IP_BUFF_LEN];
-            fprintf(out, "Connection %-3d: FD=%d log=%s Client=%s, RX=%d bytes, TX=%d bytes\n",
+            if(html) {
+                fprintf(out,
+                    "<h2>Connection %-3d</h2>\n"
+                    "<b>FD:</b> %d<br>\n"
+                    "<b>Log:</b> %s<br>\n"
+                    "<b>Client:</b> %s<br>\n"
+                    "<b>RX bytes:</b> %d<br>\n"
+                    "<b>TX bytes:</b> %d<br>\n"
+                    "\n",
                     cnt, conn->fd,
                     conn->do_log ? "on " : "off",
                     iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)),
                     conn->rx, conn->tx);
+            } else {
+                fprintf(out,
+                    "Connection %-3d: FD=%d log=%s Client=%s, RX=%d bytes, TX=%d bytes\n",
+                    cnt, conn->fd,
+                    conn->do_log ? "on " : "off",
+                    iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)),
+                    conn->rx, conn->tx);
+            }
             conn = (tcp_conn *)conn->node.next;
         }
     }
     iw_mutex_unlock(s_mutex);
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief List all peers currently connected to the server.
+/// @param out The output file stream to display the connections on.
+static bool list_conn_gui(FILE *out) {
+    return list_connections(out, true);
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief List all peers currently connected to the server.
+/// @param out The output file stream to display the connections on.
+/// @param cmd The command request being processed.
+/// @param info The parse info to use when parsing the request.
+static bool list_conn_cmd(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    return list_connections(out, false);
 }
 
 // --------------------------------------------------------------------------
@@ -321,9 +354,12 @@ bool main_callback(int argc, char **argv) {
         printf("Using port number %d\n", s_port);
     }
 
+    // Set the callback for displaying run-time statistics in the Web GUI.
+    iw_cb.runtime = list_conn_gui;
+
     // Add commands to display the currently connected clients and to set
     // log level based on client connections.
-    iw_cmd_add(NULL, "connections", list_connections,
+    iw_cmd_add(NULL, "connections", list_conn_cmd,
             "List currently connected clients",
             "Displays information regarding all currently connected clients\n"
             "such as the file descriptor for the socket connection.\n");

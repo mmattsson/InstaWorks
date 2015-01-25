@@ -103,7 +103,11 @@ extern "C" {
 /// The program name.
 #define IW_CFG_PRG_NAME                 IW_CFG ".prgname"
 /// The default program name value.
-#define IW_DEF_PRG_NAME                 "instaworks"
+#define IW_DEF_PRG_NAME                 "InstaWorks"
+/// The about information for the Web GUI display
+#define IW_CFG_PRG_ABOUT                IW_CFG ".prgabout"
+/// The default about information (NULL will print InstaWorks information.
+#define IW_DEF_PRG_ABOUT                NULL
 
 // --------------------------------------------------------------------------
 
@@ -117,11 +121,21 @@ typedef bool (*IW_SHUTDOWN_CB)();
 
 // --------------------------------------------------------------------------
 
+/// The callback for Web GUI run-time statistics.
+typedef bool (*IW_RUNTIME_CB)(FILE *out);
+
+// --------------------------------------------------------------------------
+
 /// The set of callbacks to register with the library.
 typedef struct _iw_callbacks {
     /// The shutdown callback. Should be set if the program needs to do
     /// cleanup at shutdown.
     IW_SHUTDOWN_CB shutdown;
+
+    // The run-time statistics callback. Should be set if the program wants to
+    // get a callback to display the run-time statistics in the built-in
+    // Web GUI.
+    IW_RUNTIME_CB runtime;
 } iw_callbacks;
 
 // --------------------------------------------------------------------------

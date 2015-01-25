@@ -72,8 +72,8 @@ typedef enum {
 // --------------------------------------------------------------------------
 
 /// @brief The value object that can be inserted into the value store.
-typedef struct _iw_value {
-    char         *name; ///< The name of the value.
+typedef struct _iw_val {
+    char       *name; ///< The name of the value.
     IW_VAL_TYPE type; ///< The type of the value.
     union {
         int   number;   ///< The number representation.

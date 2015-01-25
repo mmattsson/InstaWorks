@@ -21,9 +21,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-// TODO: Add glue code to tie web server module to the programs configuration
-// settings to allow it to be shown through the web GUI.
-
 // --------------------------------------------------------------------------
 //
 // Defines

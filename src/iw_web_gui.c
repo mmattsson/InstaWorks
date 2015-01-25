@@ -11,6 +11,7 @@
 #include "iw_web_gui.h"
 
 #include "iw_cfg.h"
+#include "iw_ip.h"
 #include "iw_log.h"
 #include "iw_util.h"
 
@@ -22,7 +23,21 @@
 //
 // --------------------------------------------------------------------------
 
-static iw_web_srv *s_web_gui;  /// The web GUI server instance.
+/// The web GUI server instance.
+static iw_web_srv *s_web_gui;
+
+/// The menu structure.
+static char *s_menu[] = {
+    "/About", "/Run-time", "/Configuration"
+};
+
+/// The page to display
+typedef enum {
+    PG_NONE    = -1,
+    PG_ABOUT   = 0,
+    PG_RUNTIME = 1,
+    PG_CONFIG  = 2
+} PAGE;
 
 // --------------------------------------------------------------------------
 //
@@ -36,14 +51,11 @@ static iw_web_srv *s_web_gui;  /// The web GUI server instance.
 /// @return True if the response was successfully written.
 static bool iw_web_gui_construct_menu(iw_web_req *req, FILE *out) {
     int cnt = 0;
-    char *menu[] = {
-        "About", "Run-time", "Configuration"
-    };
 
     fprintf(out, "<ul id='menu'>\n");
-    for(cnt=0;cnt < IW_ARR_LEN(menu);cnt++) {
+    for(cnt=0;cnt < IW_ARR_LEN(s_menu);cnt++) {
         fprintf(out,
-            "  <li><a href='%s'>%s</a></li>\n", menu[cnt], menu[cnt]);
+            "  <li><a href='%s'>%s</a></li>\n", s_menu[cnt]+1, s_menu[cnt]+1);
     }
     fprintf(out, "</ul>\n");
 
@@ -97,11 +109,163 @@ static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
 
 // --------------------------------------------------------------------------
 
-/// @brief Create a web page and send it.
+/// @brief Create the about page.
 /// @param req The request that was made.
 /// @param out The file stream to write the response to.
-/// @return True if the response was successfully written.
+/// @return True if the response was successfully created.
+static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
+    char *prg = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME);
+    char *about = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_ABOUT);
+
+    // The main header
+    fprintf(out, "<h1>About '%s'</h1>\n", prg);
+
+    if(about == NULL) {
+        fprintf(out,
+            "<p>The program '%s' uses a debug framework called "INSTAWORKS" which\n"
+            "provides extensive debug support for this program.</p>\n"
+            "\n", prg);
+
+        fprintf(out,
+            "<p>"INSTAWORKS" is a support library for adding a debug framework to programs or\n"
+            "daemons. A debug framework is usually not the first thing being considered\n"
+            "when creating a new program. When creating a new program, the first priority\n"
+            "is to quickly get a proof of concept working. This may be due to general\n"
+            "excitement of trying out something new, or because a dead-line is imposed\n"
+            "by the manager of the project. Once the proof of concept is done, the next\n"
+            "priority is usually to extend the functionality to a usable first version.\n"
+            "Again, dead-lines have to be met.</p>\n"
+            "\n"
+            "<p>Because of this, it isn't until after the first version has shipped\n"
+            "that the matter of debugging the program is considered. At this point it\n"
+            "may be hard to graft a debug framework onto the program in question. Also,\n"
+            "since there are always more features to add, there is never a good time to\n"
+            "take the time out of the schedule to add the debug facilities.</p>\n"
+            "\n"
+            "<p>Therefore, "INSTAWORKS" was created to provide an instant debug framework\n"
+            "support library that can be used when creating new programs. By simply\n"
+            "linking "INSTAWORKS" and use the provided API, a number of services are\n"
+            "provided that helps provide debug facilities to any new program with a\n"
+            "minimal amount of time needed. The time savings from not having to create\n"
+            "debug facilities can be spent on adding more features to the new program\n"
+            "instead.</p>\n"
+        );
+    } else {
+        fprintf(out, "<p>%s</p>\n", about);
+    }
+
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Print a value of type number.
+/// @param value The value to print.
+/// @param out The file output stream to print the number on.
+static bool iw_web_gui_print_number(iw_val *value, FILE *out) {
+    fprintf(out,
+        "<p>%s: %d</p>\n",
+        value->name, value->v.number);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Print a value of type string.
+/// @param value The value to print.
+/// @param out The file output stream to print the string on.
+static bool iw_web_gui_print_string(iw_val *value, FILE *out) {
+    fprintf(out,
+        "<p>%s: %s</p>\n",
+        value->name, value->v.string);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Print a value of type address.
+/// @param value The value to print.
+/// @param out The file output stream to print the address on.
+static bool iw_web_gui_print_address(iw_val *value, FILE *out) {
+    char buff[IW_IP_BUFF_LEN];
+    iw_ip_addr_to_str(&value->v.address, true, buff, sizeof(buff));
+    fprintf(out,
+        "<p>%s: %s</p>\n",
+        value->name, buff);
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Create the run-time page.
+/// @param req The request that was made.
+/// @param out The file stream to write the response to.
+/// @return True if the response was successfully created.
+static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
+    fprintf(out, "<h1>Configuration Settings</h1>\n");
+
+    unsigned long token;
+    iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
+    while(value != NULL) {
+        switch(value->type) {
+        case IW_VAL_TYPE_NUMBER  :
+            iw_web_gui_print_number(value, out);
+            break;
+        case IW_VAL_TYPE_STRING  :
+            iw_web_gui_print_string(value, out);
+            break;
+        case IW_VAL_TYPE_ADDRESS :
+            iw_web_gui_print_address(value, out);
+            break;
+        default :
+            break;
+        }
+        value = iw_val_store_get_next(&iw_cfg, &token);
+    }
+
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Create the configuration page.
+/// @param req The request that was made.
+/// @param out The file stream to write the response to.
+/// @return True if the response was successfully created.
+static bool iw_web_gui_construct_runtime_page(iw_web_req *req, FILE *out) {
+    fprintf(out, "<h1>Run-time Statistics</h1>\n");
+
+    if(iw_cb.runtime != NULL) {
+        iw_cb.runtime(out);
+    }
+
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Create a web page.
+/// @param req The request that was made.
+/// @param out The file stream to write the response to.
+/// @return True if the response was successfully created.
 static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
+    PAGE pg = PG_NONE;
+    if(req->uri.len > 0 && *(req->buff + req->uri.start) == '/') {
+        int cnt;
+        for(cnt=0;cnt < IW_ARR_LEN(s_menu);cnt++) {
+            if(iw_parse_cmp(s_menu[cnt], req->buff, &req->uri)) {
+                pg = cnt;
+            }
+        }
+    }
+    // Special case, no path means the default about page
+    if(iw_parse_cmp("/", req->buff, &req->uri)) {
+        pg = PG_ABOUT;
+    }
+    if(pg == PG_NONE) {
+        return false;
+    }
+
     // Print HTML header
     fprintf(out,
         "<!doctype html>\n"
@@ -122,16 +286,20 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
 
     iw_web_gui_construct_menu(req, out);
 
-    // The main header
-    fprintf(out,
-        "<h1>Response</h1>\n");
-
-    // Input form
-    fprintf(out,
-        "<form action='/submit'>\n"
-        "Name: <input type='text' name='name'>\n"
-        "<input type='submit' value='Submit'>\n"
-        "</form>\n");
+    switch(pg) {
+    case PG_ABOUT :
+        iw_web_gui_construct_about_page(req, out);
+        break;
+    case PG_RUNTIME :
+        iw_web_gui_construct_runtime_page(req, out);
+        break;
+    case PG_CONFIG :
+        iw_web_gui_construct_config_page(req, out);
+        break;
+    default :
+        return false;
+        break;
+    }
 
     // End of body
     fprintf(out,
@@ -154,16 +322,11 @@ static bool iw_web_gui_construct_response(iw_web_req *req, FILE *out) {
         req->uri.len, req->buff + req->uri.start);
     if(iw_parse_cmp("/style.css", req->buff, &req->uri)) {
         LOG(IW_LOG_GUI, "Sending style sheet");
-        iw_web_gui_construct_style_sheet(req, out);
-    } else if(iw_parse_cmp("/", req->buff, &req->uri)) {
-        LOG(IW_LOG_GUI, "Sending web page");
-        iw_web_gui_construct_web_page(req, out);
+        return iw_web_gui_construct_style_sheet(req, out);
     } else {
-        return false;
+        LOG(IW_LOG_GUI, "Sending web page");
+        return iw_web_gui_construct_web_page(req, out);
     }
-
-
-    return true;
 }
 
 // --------------------------------------------------------------------------

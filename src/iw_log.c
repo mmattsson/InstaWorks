@@ -11,6 +11,7 @@
 #include "iw_log.h"
 
 #include "iw_thread_int.h"
+#include "iw_util.h"
 
 #include <pthread.h>
 #include <stdarg.h>
@@ -74,7 +75,7 @@ static void iw_vlog(
 void iw_log_init() {
     static bool initialized = false;
     if(!initialized) {
-        iw_log_add_level(IW_LOG_IW,     "General InstaWorks logs");
+        iw_log_add_level(IW_LOG_IW,     "General "INSTAWORKS" logs");
         iw_log_add_level(IW_LOG_SYSLOG, "Syslog messages");
         iw_log_add_level(IW_LOG_MEM,    "Memory allocation");
         iw_log_add_level(IW_LOG_WEB,    "Web server related logs");

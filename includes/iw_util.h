@@ -24,6 +24,9 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
+/// The name of the debug library.
+#define INSTAWORKS  "InstaWorks"
+
 /// Helper macro to stringify tokens
 #define _STR(x) #x
 

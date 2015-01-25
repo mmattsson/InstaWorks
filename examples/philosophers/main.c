@@ -148,7 +148,7 @@ bool main_callback(int argc, char **argv) {
     // Add a command to display the currently connected clients.
     iw_cmd_add(NULL, "crash", crash,
             "Causes a de-reference of an invalid pointer.",
-            "Used to show the InstaWorks crash-handler functionality.\n"
+            "Used to show the "INSTAWORKS" crash-handler functionality.\n"
             );
 
     s_mutexes = (IW_MUTEX *)IW_CALLOC(num_philosophers, sizeof(IW_MUTEX));
