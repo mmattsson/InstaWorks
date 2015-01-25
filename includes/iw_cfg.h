@@ -132,9 +132,9 @@ typedef struct _iw_callbacks {
     /// cleanup at shutdown.
     IW_SHUTDOWN_CB shutdown;
 
-    // The run-time statistics callback. Should be set if the program wants to
-    // get a callback to display the run-time statistics in the built-in
-    // Web GUI.
+    /// The run-time statistics callback. Should be set if the program wants to
+    /// get a callback to display the run-time statistics in the built-in
+    /// Web GUI.
     IW_RUNTIME_CB runtime;
 } iw_callbacks;
 
