@@ -57,7 +57,6 @@ static void iw_vlog(
         // If we can get the thread specific info and logging is disabled
         // in the thread info, then just return rather than print the
         // debug log.
-printf("thread_getlog=false\n");
         return;
     }
 
@@ -102,7 +101,6 @@ void iw_log_list(FILE *out) {
 // --------------------------------------------------------------------------
 
 void iw_log_set_level(const char *dev, unsigned int level) {
-printf("** iw_log_set_level(dev=%s, level=%d)\n", dev, level);
     bool dev_change = (dev == NULL && s_dev == NULL) ||
                       (dev != NULL && s_dev == NULL) ||
                       (dev == NULL && s_dev != NULL) ||

@@ -40,25 +40,42 @@ static bool s_initialized = false;
 
 void iw_init() {
     if(!s_initialized) {
+        // The order of initialization is important.
+
+        // Configuration should be initialized by the caller before this
+        // point so that configuration settings can be set by the program.
+        // We read the following variables:
         int *log_level = iw_val_store_get_number(&iw_cfg,
                                                  IW_CFG_LOGLEVEL);
         int *websrv_enable = iw_val_store_get_number(&iw_cfg,
                                                      IW_CFG_WEBSRV_ENABLE);
 
-        iw_memory_init();
-        iw_mutex_init();
-        iw_syslog_reinit(1000);
-        iw_cmd_init();
-        iw_thread_init();
-        iw_health_start();
-        s_initialized = true;
+        // We start the log module first so that we can log all startup.
         if(log_level != NULL && *log_level != 0) {
             iw_log_set_level("stdout", *log_level);
         }
+
+        // We must initialize the thread module and register the main thread.
+        // This is so that all other threads that are created can register
+        // their thread-info.
+        iw_thread_init();
+        iw_thread_register_main();
+
+        // After that we initialize the mutex and memory modules.
+        iw_mutex_init();
+        iw_memory_init();
+
+        // Then syslog, command server, and health check.
+        iw_syslog_reinit(1000);
+        iw_cmd_init();
+        iw_health_start();
+
+        // Finally set up the web server if enabled.
         if(websrv_enable != NULL && *websrv_enable) {
             iw_web_gui_init(NULL, 0);
         }
-        iw_thread_register_main();
+
+        s_initialized = true;
     }
 }
 
