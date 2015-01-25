@@ -77,6 +77,14 @@ allocation can be tracked and the current memory usage can be queried at
 run-time. This allows for easier debugging of memory leaks in target
 environments.
 
+Web GUI
+-------------------
+The user can connect in to a web-based GUI and display information about the
+program. By default, the web GUI displays an about page with some information
+about the program, a run-time statistics page where the program can display
+run-time information such as connected clients or other data. There is also
+a configuration page that displays all the program configuration settings.
+
 
 Building InstaWorks
 =============================================================================
@@ -109,7 +117,7 @@ self-test directory that contains test code for various code modules. These
 self-tests are compiled into a selftest binary that can be run under valgrind.
 There is a 'run_selftest.sh' shell script that does this. This can be run
 by issuing the command:
- InstaWorks $ selftest/run_selftest.sh
+ InstaWorks $ bin/run_selftest.sh all
 
 If any of the tests fails, this will be noted. If there are memory access
 errors or memory leaks, valgrind will note that.

@@ -1,6 +1,16 @@
 InstaWorks debug framework
 =============================================================================
 
+Release version 0.20 - 2015-01-25
+-----------------------------------------------------------------------------
+Added
++ Added programatical value store where values can be added and iterated through
++ Added configuration settings based on value store with pre-defined settings
++ Added basic web server module
++ Added web GUI based on web server module for access to the program via
+  HTTP. A user can connect in to the program and display an 'About' page,
+  a 'Configuration' page, and a 'Run-time' page.
+
 Release version 0.12 - 2014-07-08
 -----------------------------------------------------------------------------
 Added
