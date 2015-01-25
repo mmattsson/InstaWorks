@@ -72,6 +72,7 @@ static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
     fprintf(out,
         "body {\n"
         "  background-color: #E8E8E8;\n"
+        "  font-family: Arial, sans-serif;\n"
         "}\n"
         "#menu {\n"
         "  min-width: 700px;\n"
@@ -95,12 +96,15 @@ static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
         "}\n"
         "#menu a {\n"
         "  text-decoration: none;\n"
-        "  color: #6666C4;\n"
+        "  color: #4FDE1F;\n"
         "  padding: 8px 8px 8px 8px;\n"
         "}\n"
         "#menu a:hover {\n"
-        "  color: #A9A9F5;\n"
+        "  color: #57FF1F;\n"
         "  background-color: #5C5C5C;\n"
+        "}\n"
+        ".data tbody tr:nth-of-type(even) {\n"
+        "  background-color: rgba(0,0,0,.05);\n"
         "}\n"
         "\n");
 
@@ -164,7 +168,7 @@ static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
 /// @param out The file output stream to print the number on.
 static bool iw_web_gui_print_number(iw_val *value, FILE *out) {
     fprintf(out,
-        "<p>%s: %d</p>\n",
+        "<tr><td>%s</td><td>%d</td></tr>\n",
         value->name, value->v.number);
     return true;
 }
@@ -176,7 +180,7 @@ static bool iw_web_gui_print_number(iw_val *value, FILE *out) {
 /// @param out The file output stream to print the string on.
 static bool iw_web_gui_print_string(iw_val *value, FILE *out) {
     fprintf(out,
-        "<p>%s: %s</p>\n",
+        "<tr><td>%s</td><td>%s</td></tr>\n",
         value->name, value->v.string);
     return true;
 }
@@ -190,7 +194,7 @@ static bool iw_web_gui_print_address(iw_val *value, FILE *out) {
     char buff[IW_IP_BUFF_LEN];
     iw_ip_addr_to_str(&value->v.address, true, buff, sizeof(buff));
     fprintf(out,
-        "<p>%s: %s</p>\n",
+        "<tr><td>%s</td><td>%s</td></tr>\n",
         value->name, buff);
     return true;
 }
@@ -205,6 +209,8 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
     fprintf(out, "<h1>Configuration Settings</h1>\n");
 
     unsigned long token;
+    fprintf(out, "<table class='data'>\n");
+    fprintf(out, "<tr><th>Name</th><th>Value</th></tr>\n");
     iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
     while(value != NULL) {
         switch(value->type) {
@@ -222,6 +228,7 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
         }
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
+    fprintf(out, "</table>\n");
 
     return true;
 }
@@ -249,6 +256,7 @@ static bool iw_web_gui_construct_runtime_page(iw_web_req *req, FILE *out) {
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully created.
 static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
+    char *prg = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME);
     PAGE pg = PG_NONE;
     if(req->uri.len > 0 && *(req->buff + req->uri.start) == '/') {
         int cnt;
@@ -279,10 +287,13 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
         "5CYII=' rel='icon' type='image/x-icon' />\n"
         "</head>\n"
         "\n",
-        iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME));
+        prg);
 
     // Start of body
-    fprintf(out, "<body>\n");
+    fprintf(out,
+        "<body>\n"
+        "<center><h1>%s</h1></center>\n",
+        prg);
 
     iw_web_gui_construct_menu(req, out);
 
