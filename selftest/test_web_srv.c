@@ -54,14 +54,13 @@ static void test_value(
 
 static void test_hdr(
     test_result *result,
-    const char *buff,
     iw_web_req *req,
     bool present,
     const char *name,
     const char *value)
 {
     iw_web_req_header *hdr;
-    hdr = iw_web_req_get_header(buff, req, name);
+    hdr = iw_web_req_get_header(req, name);
     if(hdr == NULL) {
         if(present) {
             // The header should be present, the fact that we didn't find it
@@ -76,29 +75,28 @@ static void test_hdr(
         return;
     }
     test(result,
-         iw_parse_casecmp(name, buff, &hdr->name),
+         iw_parse_casecmp(name, req->buff, &hdr->name),
          "Getting header \"%.*s\", expected \"%s\"",
-         hdr->name.len, buff + hdr->name.start, name);
+         hdr->name.len, req->buff + hdr->name.start, name);
     test(result,
-         iw_parse_casecmp(value, buff, &hdr->value),
+         iw_parse_casecmp(value, req->buff, &hdr->value),
          "Getting value \"%.*s\", expected \"%s\"",
-         hdr->value.len, buff + hdr->value.start, value);
+         hdr->value.len, req->buff + hdr->value.start, value);
 }
 
 // --------------------------------------------------------------------------
 
 static void test_req(
     test_result *result,
-    const char *buff,
     const char *uri,
     iw_web_req *req)
 {
-    test_value(result, buff, &req->version, "HTTP/1.1");
-    test_value(result, buff, &req->uri, uri);
+    test_value(result, req->buff, &req->version, "HTTP/1.1");
+    test_value(result, req->buff, &req->uri, uri);
     test(result, iw_web_req_get_method(req)==IW_WEB_METHOD_GET, "GET method");
-    test_hdr(result, buff, req, true, "Host", "127.0.0.1:8080");
-    test_hdr(result, buff, req, true, "hOsT", "127.0.0.1:8080");
-    test_hdr(result, buff, req, false, "hXsT", NULL);
+    test_hdr(result, req, true, "Host", "127.0.0.1:8080");
+    test_hdr(result, req, true, "hOsT", "127.0.0.1:8080");
+    test_hdr(result, req, false, "hXsT", NULL);
 }
 
 // --------------------------------------------------------------------------
@@ -134,7 +132,7 @@ static void test_req_buff(
 static void test_partial_req_buff(
     test_result *result,
     const char *name,
-    const char *buff,
+    char *buff,
     const char *uri)
 {
     iw_web_req req;
@@ -147,7 +145,9 @@ static void test_partial_req_buff(
     unsigned int tot_len = strlen(buff);
     // Do a parse call with one byte extra each time.
     for(cnt=1;cnt < tot_len;cnt++) {
-        retval = iw_web_req_parse(buff, cnt, &req);
+        req.buff = buff;
+        req.len  = cnt;
+        retval = iw_web_req_parse(&req);
         if(retval != IW_WEB_PARSE_INCOMPLETE) {
             test(result, false, "Failed partial parsing at %d bytes", cnt);
             iw_web_req_free(&req);
@@ -158,10 +158,12 @@ static void test_partial_req_buff(
          tot_len - 1);
 
     // Do final step with the whole length.
-    retval = iw_web_req_parse(buff, tot_len, &req);
+    req.buff = buff;
+    req.len  = tot_len;
+    retval = iw_web_req_parse(&req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Complete parse successful");
     test(result, req.parse_point == tot_len, "Parsing read %d bytes", tot_len);
-    test_req(result, buff, uri, &req);
+    test_req(result, uri, &req);
     iw_web_req_free(&req);
 }
 

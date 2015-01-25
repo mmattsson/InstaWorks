@@ -13,7 +13,6 @@
 #include "iw_log.h"
 #include "iw_memory.h"
 #include "iw_thread.h"
-#include "iw_web_req.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -37,38 +36,43 @@
 
 // --------------------------------------------------------------------------
 //
-// Variables and structures
-//
-// --------------------------------------------------------------------------
-
-static int s_web_sock = -1;
-
-// --------------------------------------------------------------------------
-//
 // Helper functions
 //
 // --------------------------------------------------------------------------
 
-/// @brief Create a response and send it.
-/// @param out The file stream to write the response to.
-/// @return True if the response was successfully written.
-static bool iw_web_srv_construct_response(FILE *out) {
-    char *content =
-        "<html><head><title>Response2</title></head>\n"
-        "<body>\n"
-        "<h1>Response</h1>\n"
-        "<form action='/submit'>\n"
-        "Name: <input type='text' name='name'></input>\n"
-        "<input type='submit' value='Submit'></input>\n"
-        "</form>\n"
-        "</body>\n"
-        "</html>";
+static bool iw_web_srv_respond(iw_web_srv *srv, iw_web_req *req, FILE *out) {
+    char *ptr = NULL;
+    size_t size = 0;
+    FILE *mem_buf = open_memstream(&ptr, &size);
+    if(mem_buf == NULL) {
+        return NULL;
+    }
+
+    // Let the callback function create the HTML page to send back
+    if(!srv->callback(req, mem_buf)) {
+        fclose(mem_buf);
+        free(ptr);
+        return false;
+    }
+    fclose(mem_buf);
+
+    LOG(IW_LOG_WEB, "Sending a response:\n"
+            "HTTP/1.1 200 Ok\r\n"
+            "Content-Length: %ld\r\n"
+            "\r\n"
+            "%s\r\n",
+            (long int)strlen(ptr),
+            ptr);
+
+    // Create an HTTP response with the HTML content.
     fprintf(out, "HTTP/1.1 200 Ok\r\n"
-                    "Content-Length: %ld\r\n"
-                    "\r\n"
-                    "%s\r\n",
-                    (long int)strlen(content),
-                    content);
+            "Content-Length: %ld\r\n"
+            "\r\n"
+            "%s\r\n",
+            (long int)strlen(ptr),
+            ptr);
+
+    free(ptr);
 
     return true;
 }
@@ -76,13 +80,14 @@ static bool iw_web_srv_construct_response(FILE *out) {
 // --------------------------------------------------------------------------
 
 /// @brief Process a client request.
+/// @param srv The web server object.
 /// @param fd The client's socket file descriptor.
-static void iw_web_srv_process_request(int fd) {
+static void iw_web_srv_process_request(iw_web_srv *srv, int fd) {
     iw_web_req req;
     iw_buff buff;
     memset(&req, 0, sizeof(req));
     if(!iw_buff_create(&buff, BUFF_SIZE, 10 * BUFF_SIZE)) {
-        LOG(IW_LOG_IW, "Failed to create command server request buffer");
+        LOG(IW_LOG_WEB, "Failed to create command server request buffer");
         goto done;
     }
     FILE *out = fdopen(fd, "r+w+");
@@ -91,21 +96,23 @@ static void iw_web_srv_process_request(int fd) {
     do {
         char *ptr;
         if(!iw_buff_reserve_data(&buff, &ptr, BUFF_SIZE)) {
-            LOG(IW_LOG_IW, "Failed to allocate command server request buffer");
+            LOG(IW_LOG_WEB, "Failed to allocate command server request buffer");
             goto done;
         }
         bytes = recv(fd, ptr, BUFF_SIZE, 0);
         if(bytes == -1) {
-            LOG(IW_LOG_IW, "Request failed (%d:%s)", errno, strerror(errno));
+            LOG(IW_LOG_WEB, "Request failed (%d:%s)", errno, strerror(errno));
             goto done;
         } else if(bytes == 0) {
             goto done;
         }
 
         iw_buff_commit_data(&buff, bytes);
-        IW_WEB_PARSE parse = iw_web_req_parse(buff.buff, buff.size, &req);
+        req.buff = buff.buff;
+        req.len  = buff.size;
+        IW_WEB_PARSE parse = iw_web_req_parse(&req);
         if(parse == IW_WEB_PARSE_ERROR) {
-            LOG(IW_LOG_IW, "Failed to parse request");
+            LOG(IW_LOG_WEB, "Failed to parse request");
             goto done;
         } if(parse == IW_WEB_PARSE_COMPLETE) {
             // Successfully parsed a request. Return from this function.
@@ -115,7 +122,7 @@ static void iw_web_srv_process_request(int fd) {
     } while(bytes > 0);
 
 done:
-    iw_web_srv_construct_response(out);
+    iw_web_srv_respond(srv, &req, out);
 
     iw_web_req_free(&req);
 
@@ -124,7 +131,7 @@ done:
     usleep(100000);
     fclose(out);
     iw_buff_destroy(&buff);
-    LOG(IW_LOG_IW, "Closed a client connection, fd=%d", fd);
+    LOG(IW_LOG_WEB, "Closed a client connection, fd=%d", fd);
 }
 
 // --------------------------------------------------------------------------
@@ -134,13 +141,21 @@ done:
 /// @return Nothing.
 static void *iw_web_srv_thread(void *param) {
     int retval;
+    iw_web_srv *srv = (iw_web_srv *)param;
+
+    if(srv == NULL) {
+        return NULL;
+    }
 
     // Entering web server loop.
-    LOG(IW_LOG_IW, "Entering web server loop");
-    while((retval = accept(s_web_sock, NULL, 0)) != -1) {
-        LOG(IW_LOG_IW, "Accepted a client connection, fd=%d", retval);
-        iw_web_srv_process_request(retval);
+    LOG(IW_LOG_WEB, "Entering web server loop");
+    while((retval = accept(srv->fd, NULL, 0)) != -1) {
+        LOG(IW_LOG_WEB, "Accepted a client connection, fd=%d", retval);
+        iw_web_srv_process_request(srv, retval);
     }
+
+    close(srv->fd);
+    IW_FREE(srv);
 
     return NULL;
 }
@@ -151,17 +166,24 @@ static void *iw_web_srv_thread(void *param) {
 //
 // --------------------------------------------------------------------------
 
-bool iw_web_srv(
+iw_web_srv *iw_web_srv_init(
     iw_ip *address,
-    unsigned short port)
+    unsigned short port,
+    IW_WEB_REQ_FN callback)
 {
+    iw_web_srv *srv = (iw_web_srv *)IW_CALLOC(1, sizeof(iw_web_srv));
+    if(srv == NULL) {
+        return NULL;
+    }
+    srv->callback = callback;
+
     // Open server socket
     iw_ip tmp;
     if(address == NULL) {
         address = &tmp;
         if(!iw_ip_ipv4_to_addr(INADDR_LOOPBACK, address)) {
-            LOG(IW_LOG_IW, "Failed to open web server socket.");
-            return false;
+            LOG(IW_LOG_WEB, "Failed to open web server socket.");
+            return NULL;
         }
     }
 
@@ -170,20 +192,20 @@ bool iw_web_srv(
     }
 
     if(!iw_ip_set_port(address, port)  ||
-       (s_web_sock = iw_ip_open_server_socket(SOCK_STREAM, address, true)) == -1)
+       (srv->fd = iw_ip_open_server_socket(SOCK_STREAM, address, true)) == -1)
     {
-        LOG(IW_LOG_IW, "Failed to open web server socket.");
-        return false;
+        LOG(IW_LOG_WEB, "Failed to open web server socket.");
+        return NULL;
     }
 
     // Create thread to serve the command socket.
-    if(!iw_thread_create("Web Server", iw_web_srv_thread, NULL)) {
-        LOG(IW_LOG_IW, "Failed to create web server thread");
-        close(s_web_sock);
-        return false;
+    if(!iw_thread_create("Web Server", iw_web_srv_thread, srv)) {
+        LOG(IW_LOG_WEB, "Failed to create web server thread");
+        close(srv->fd);
+        return NULL;
     }
 
-    return true;
+    return srv;
 }
 
 // --------------------------------------------------------------------------

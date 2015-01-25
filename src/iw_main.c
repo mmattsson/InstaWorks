@@ -24,7 +24,7 @@
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
-#include "iw_web_srv.h"
+#include "iw_web_gui.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -56,7 +56,7 @@ void iw_init() {
             iw_log_set_level("stdout", *log_level);
         }
         if(websrv_enable != NULL && *websrv_enable) {
-            iw_web_srv(NULL, 0);
+            iw_web_gui_init(NULL, 0);
         }
         iw_thread_register_main();
     }

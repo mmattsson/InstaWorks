@@ -239,6 +239,7 @@ static void *iw_thread_callback(void *param) {
     iw_thread_info *tinfo = (iw_thread_info *)param;
 
     // Point the thread local storage to the tinfo object
+printf("[%X] pthread_setspecific(tinfo=%p)\n", (unsigned int)pthread_self(), tinfo);
     pthread_setspecific(s_thread_key, tinfo);
 
     // Insert tinfo object into thread hash table
@@ -313,6 +314,8 @@ bool iw_thread_get_log(pthread_t threadid) {
                                             sizeof(threadid),
                                             &threadid);
     }
+
+printf("[%X] pthread_getspecific() tinfo=%p, log=%d\n",(unsigned int)pthread_self(), tinfo, tinfo!=NULL?tinfo->log:0);
     retval = tinfo != NULL && tinfo->log;
     pthread_rwlock_unlock(&s_thread_lock);
 

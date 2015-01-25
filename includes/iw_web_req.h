@@ -68,6 +68,13 @@ typedef struct _iw_web_req {
     /// The point of parsing, used for sub-sequent calls to the parse function.
     unsigned int parse_point;
 
+    /// The request buffer. This buffer pointer should not be relied upon to
+    /// stay the same between function calls.
+    char *buff;
+
+    /// The length of the request buffer.
+    int len;
+
     // ----------------------------------------------------------------------
     //
     // Information about the parsed request, used to process the request.
@@ -140,14 +147,9 @@ extern void iw_web_req_delete_header(iw_list_node *node);
 
 /// @brief Attempt to parse a client request.
 /// The string being parsed does not have to be NUL-terminated.
-/// @param str The string to parse.
-/// @param len The length of the string.
 /// @param req The request parse information.
 /// @return The parsing result.
-extern IW_WEB_PARSE iw_web_req_parse(
-    const char *str,
-    unsigned int len,
-    iw_web_req *req);
+extern IW_WEB_PARSE iw_web_req_parse(iw_web_req *req);
 
 // --------------------------------------------------------------------------
 
@@ -181,12 +183,10 @@ extern IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req);
 /// If no header matches the given name, NULL is returned. If several headers
 /// match, the first header matching the name is returned. If no name is given,
 /// The first header in the request is returned.
-/// @param buff The buffer of the request.
 /// @param req The request to find the header in.
 /// @param name The name of the header to return or NULL for the first header.
 /// @return The request header or NULL for no match.
 extern iw_web_req_header *iw_web_req_get_header(
-    const char *buff,
     iw_web_req *req,
     const char *name);
 
@@ -195,13 +195,11 @@ extern iw_web_req_header *iw_web_req_get_header(
 /// @brief Get the next header with the given name.
 /// Returns the next header with the given name or NULL if no more matches
 /// were found.
-/// @param buff The buffer of the request.
 /// @param req The request to find the header in.
 /// @param name The name of the header to return or NULL for all headers.
 /// @param hdr The previously found header.
 /// @return The next matching header or NULL for no more matches.
 extern iw_web_req_header *iw_web_req_get_next_header(
-    const char *buff,
     iw_web_req *req,
     const char *name,
     const iw_web_req_header *hdr);

@@ -20,9 +20,11 @@ extern "C" {
 // --------------------------------------------------------------------------
 
 // Pre-defined log levels
-#define IW_LOG_IW      0x1  ///< The basic informational log level
-#define IW_LOG_SYSLOG  0x2  ///< Show syslogs
-#define IW_LOG_MEM     0x4  ///< Show memory tracking logs
+#define IW_LOG_IW      0x1   ///< The basic informational log level
+#define IW_LOG_SYSLOG  0x2   ///< Show syslogs
+#define IW_LOG_MEM     0x4   ///< Show memory tracking logs
+#define IW_LOG_WEB     0x8   ///< Web-related logs
+#define IW_LOG_GUI     0x10  ///< Web-GUI related logs
 
 // --------------------------------------------------------------------------
 

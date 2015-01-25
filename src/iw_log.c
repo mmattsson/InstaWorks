@@ -57,6 +57,7 @@ static void iw_vlog(
         // If we can get the thread specific info and logging is disabled
         // in the thread info, then just return rather than print the
         // debug log.
+printf("thread_getlog=false\n");
         return;
     }
 
@@ -77,6 +78,8 @@ void iw_log_init() {
         iw_log_add_level(IW_LOG_IW,     "General InstaWorks logs");
         iw_log_add_level(IW_LOG_SYSLOG, "Syslog messages");
         iw_log_add_level(IW_LOG_MEM,    "Memory allocation");
+        iw_log_add_level(IW_LOG_WEB,    "Web server related logs");
+        iw_log_add_level(IW_LOG_GUI,    "Web GUI logs");
         initialized = true;
     }
 }
@@ -99,6 +102,7 @@ void iw_log_list(FILE *out) {
 // --------------------------------------------------------------------------
 
 void iw_log_set_level(const char *dev, unsigned int level) {
+printf("** iw_log_set_level(dev=%s, level=%d)\n", dev, level);
     bool dev_change = (dev == NULL && s_dev == NULL) ||
                       (dev != NULL && s_dev == NULL) ||
                       (dev == NULL && s_dev != NULL) ||
