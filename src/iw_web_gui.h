@@ -41,6 +41,11 @@ extern bool iw_web_gui_init(
 
 // --------------------------------------------------------------------------
 
+/// @brief Called to terminate the web GUI.
+extern void iw_web_gui_exit();
+
+// --------------------------------------------------------------------------
+
 #ifdef _cplusplus
 }
 #endif

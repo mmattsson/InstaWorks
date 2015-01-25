@@ -82,10 +82,17 @@ void iw_init() {
 // --------------------------------------------------------------------------
 
 void iw_exit() {
+    iw_web_gui_exit();
     iw_syslog_exit();
     iw_mutex_exit();
     iw_memory_exit();
     iw_cfg_exit();
+
+    // Wait a while to allow threads to exit. We should really do an ordered
+    // shutdown and wait for a semaphore but we also shouldn't block
+    // indefinitely just because a sub-system doesn't shut down properly.
+    usleep(100000);
+
     s_initialized = false;
 }
 

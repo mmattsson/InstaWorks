@@ -62,6 +62,13 @@ extern iw_web_srv *iw_web_srv_init(
 
 // --------------------------------------------------------------------------
 
+/// @brief Called to terminate a web server.
+/// All allocated memory for the server will be freed.
+/// @param srv The server to terminate.
+extern void iw_web_srv_exit(iw_web_srv *srv);
+
+// --------------------------------------------------------------------------
+
 #ifdef _cplusplus
 }
 #endif

@@ -22,11 +22,11 @@
 // --------------------------------------------------------------------------
 
 iw_val *iw_val_create_number(const char *name, int num) {
-    iw_val *value = IW_CALLOC(1, sizeof(iw_val));
+    iw_val *value = calloc(1, sizeof(iw_val));
     if(value == NULL) {
         return NULL;
     }
-    value->name = IW_STRDUP(name);
+    value->name = strdup(name);
     value->type = IW_VAL_TYPE_NUMBER;
     value->v.number = num;
     if(value->name == NULL) {
@@ -38,13 +38,13 @@ iw_val *iw_val_create_number(const char *name, int num) {
 // --------------------------------------------------------------------------
 
 iw_val *iw_val_create_string(const char *name, const char *str) {
-    iw_val *value = IW_CALLOC(1, sizeof(iw_val));
+    iw_val *value = calloc(1, sizeof(iw_val));
     if(value == NULL) {
         return NULL;
     }
-    value->name = IW_STRDUP(name);
+    value->name = strdup(name);
     value->type = IW_VAL_TYPE_STRING;
-    value->v.string = IW_STRDUP(str);
+    value->v.string = strdup(str);
     if(value->name == NULL || value->v.string == NULL) {
         iw_val_destroy(value);
     }
@@ -54,11 +54,11 @@ iw_val *iw_val_create_string(const char *name, const char *str) {
 // --------------------------------------------------------------------------
 
 iw_val *iw_val_create_address(const char *name, const iw_ip *address) {
-    iw_val *value = IW_CALLOC(1, sizeof(iw_val));
+    iw_val *value = calloc(1, sizeof(iw_val));
     if(value == NULL) {
         return NULL;
     }
-    value->name = IW_STRDUP(name);
+    value->name = strdup(name);
     value->type = IW_VAL_TYPE_ADDRESS;
     memcpy(&value->v.address, address, sizeof(iw_ip));
     if(value->name == NULL || value->v.string == NULL) {
@@ -70,11 +70,11 @@ iw_val *iw_val_create_address(const char *name, const iw_ip *address) {
 // --------------------------------------------------------------------------
 
 void iw_val_destroy(iw_val *value) {
-    IW_FREE(value->name);
+    free(value->name);
     if(value->type == IW_VAL_TYPE_STRING) {
-        IW_FREE(value->v.string);
+        free(value->v.string);
     }
-    IW_FREE(value);
+    free(value);
 }
 
 // --------------------------------------------------------------------------
@@ -300,7 +300,7 @@ static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_CRITERIA_FN fn,
     const char *regexp)
 {
-    iw_val_criteria *crit = IW_CALLOC(1, sizeof(iw_val_criteria));
+    iw_val_criteria *crit = calloc(1, sizeof(iw_val_criteria));
     if(crit == NULL) {
         return NULL;
     }
@@ -317,7 +317,7 @@ static void iw_val_store_destroy_criteria(void *node) {
     if(crit->regset) {
         regfree(&crit->regexp);
     }
-    IW_FREE(crit);
+    free(crit);
 }
 
 // --------------------------------------------------------------------------

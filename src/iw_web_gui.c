@@ -24,7 +24,7 @@
 // --------------------------------------------------------------------------
 
 /// The web GUI server instance.
-static iw_web_srv *s_web_gui;
+static iw_web_srv *s_web_gui = NULL;
 
 /// The menu structure.
 static char *s_menu[] = {
@@ -337,6 +337,14 @@ bool iw_web_gui_init(
 {
     s_web_gui = iw_web_srv_init(address, port, iw_web_gui_construct_response);
     return s_web_gui != NULL;
+}
+
+// --------------------------------------------------------------------------
+
+void iw_web_gui_exit() {
+    if(s_web_gui != NULL) {
+        iw_web_srv_exit(s_web_gui);
+    }
 }
 
 // --------------------------------------------------------------------------
