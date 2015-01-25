@@ -50,6 +50,14 @@ static bool iw_web_srv_respond(iw_web_srv *srv, iw_web_req *req, FILE *out) {
 
     // Let the callback function create the HTML page to send back
     if(!srv->callback(req, mem_buf)) {
+        LOG(IW_LOG_WEB, "Sending a response:\n"
+                "HTTP/1.1 404 Not found\r\n"
+                "\r\n");
+
+        // Create an HTTP response with the HTML content.
+        fprintf(out, "HTTP/1.1 404 Not found\r\n"
+                "\r\n");
+
         fclose(mem_buf);
         free(ptr);
         return false;
