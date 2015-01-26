@@ -12,7 +12,6 @@
 #include "iw_thread_int.h"
 
 #include "iw_cfg.h"
-#include "iw_cfg_int.h"
 #include "iw_log.h"
 #include "iw_memory.h"
 #include "iw_mutex_int.h"

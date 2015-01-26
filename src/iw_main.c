@@ -48,7 +48,7 @@ void iw_init() {
         int *log_level = iw_val_store_get_number(&iw_cfg,
                                                  IW_CFG_LOGLEVEL);
         int *websrv_enable = iw_val_store_get_number(&iw_cfg,
-                                                     IW_CFG_WEBSRV_ENABLE);
+                                                     IW_CFG_WEBGUI_ENABLE);
 
         // We start the log module first so that we can log all startup.
         if(log_level != NULL && *log_level != 0) {

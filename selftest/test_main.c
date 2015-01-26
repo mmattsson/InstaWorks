@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
     // positives and avoid hiding real issues in valgrind.
     iw_val_store_set_number(&iw_cfg, IW_CFG_MEMTRACK_ENABLE, 0);
     iw_val_store_set_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE, 0);
-    iw_val_store_set_number(&iw_cfg, IW_CFG_WEBSRV_ENABLE, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_WEBGUI_ENABLE, 0);
 
     iw_init();
     printf(" == Running self-test ===============================\n");

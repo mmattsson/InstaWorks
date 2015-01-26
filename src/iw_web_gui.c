@@ -69,44 +69,67 @@ static bool iw_web_gui_construct_menu(iw_web_req *req, FILE *out) {
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully written.
 static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
-    fprintf(out,
-        "body {\n"
-        "  background-color: #E8E8E8;\n"
-        "  font-family: Arial, sans-serif;\n"
-        "}\n"
-        "#menu {\n"
-        "  min-width: 700px;\n"
-        "  height: 70px;\n"
-        "  line-height: 70px;\n"
-        "  font-size: 36px;\n"
-        "  font-family: Arial, sans-serif;\n"
-        "  font-weight: bold;\n"
-        "  text-align: center;\n"
-        "  background-color: #5C5C5C;\n"
-        "  border-radius: 8px;\n"
-        "}\n"
-        "#menu ul {\n"
-        "  height: auto;\n"
-        "  padding: 8px 0px;\n"
-        "  margin: 0px;\n"
-        "}\n"
-        "#menu li {\n"
-        "  display: inline;\n"
-        "  padding: 10px;\n"
-        "}\n"
-        "#menu a {\n"
-        "  text-decoration: none;\n"
-        "  color: #4FDE1F;\n"
-        "  padding: 8px 8px 8px 8px;\n"
-        "}\n"
-        "#menu a:hover {\n"
-        "  color: #57FF1F;\n"
-        "  background-color: #5C5C5C;\n"
-        "}\n"
-        ".data tbody tr:nth-of-type(even) {\n"
-        "  background-color: rgba(0,0,0,.05);\n"
-        "}\n"
-        "\n");
+    char *file = iw_val_store_get_string(&iw_cfg, IW_CFG_WEBGUI_CSS_FILE);
+    FILE *fptr = NULL;
+    if(file != NULL && strlen(file) > 0) {
+        fptr = fopen(file, "r");
+    }
+    if(fptr != NULL) {
+        char buffer[1024];
+        while(!feof(fptr)) {
+            if(fgets(buffer, sizeof(buffer), fptr) == NULL) {
+                break;
+            }
+            fputs(buffer, out);
+        }
+    } else {
+        fprintf(out,
+            "body {\n"
+            "  background-color: #E8E8E8;\n"
+            "  font-family: Arial, sans-serif;\n"
+            "}\n"
+            "#menu {\n"
+            "  min-width: 700px;\n"
+            "  height: 70px;\n"
+            "  line-height: 70px;\n"
+            "  font-size: 36px;\n"
+            "  font-family: Arial, sans-serif;\n"
+            "  font-weight: bold;\n"
+            "  text-align: center;\n"
+            "  background-color: #5C5C5C;\n"
+            "  border-radius: 8px;\n"
+            "}\n"
+            "#menu ul {\n"
+            "  height: auto;\n"
+            "  padding: 8px 0px;\n"
+            "  margin: 0px;\n"
+            "}\n"
+            "#menu li {\n"
+            "  display: inline;\n"
+            "  padding: 10px;\n"
+            "}\n"
+            "#menu a {\n"
+            "  text-decoration: none;\n"
+            "  color: #4FDE1F;\n"
+            "  padding: 8px 8px 8px 8px;\n"
+            "}\n"
+            "#menu a:hover {\n"
+            "  color: #57FF1F;\n"
+            "  background-color: #5C5C5C;\n"
+            "}\n"
+            ".data {\n"
+            "  border-collapse: collapse;\n"
+            "  width: 80%%;\n"
+            "}\n"
+            ".data td, th {\n"
+            "  padding: 10px;\n"
+            "  border-bottom: solid 1px black;\n"
+            "}\n"
+            ".data tbody tr:nth-of-type(even) {\n"
+            "  background-color: rgba(0,0,0,.05);\n"
+            "}\n"
+            "\n");
+    }
 
     return true;
 }

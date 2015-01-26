@@ -92,10 +92,14 @@ extern "C" {
 #define IW_CFG_HEALTHCHECK_ENABLE       IW_CFG ".healthcheck.enable"
 /// The default health check enable flag value.
 #define IW_DEF_HEALTHCHECK_ENABLE       1
-/// The web server enable flag.
-#define IW_CFG_WEBSRV_ENABLE            IW_CFG ".websrv.enable"
-/// The default web server enable flag value.
-#define IW_DEF_WEBSRV_ENABLE            1
+/// The web GUI server enable flag.
+#define IW_CFG_WEBGUI_ENABLE            IW_CFG ".webgui.enable"
+/// The default web GUI server enable flag value.
+#define IW_DEF_WEBGUI_ENABLE            1
+/// The web GUI CSS style sheet file to use (if any)
+#define IW_CFG_WEBGUI_CSS_FILE          IW_CFG ".webgui.css"
+/// No CSS style sheet file by default
+#define IW_DEF_WEBGUI_CSS_FILE          ""
 /// The syslog backlog size.
 #define IW_CFG_SYSLOG_SIZE              IW_CFG ".syslog.size"
 /// The default syslog backlog size value.

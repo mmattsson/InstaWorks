@@ -411,6 +411,8 @@ int main(int argc, char **argv) {
     iw_cfg_init();
     iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1);
 
+iw_val_store_set_string(&iw_cfg, IW_CFG_WEBGUI_CSS_FILE, "/tmp/simple.css");
+
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.
     iw_log_add_level(SIMPLE_LOG, "The simple application general log level");
