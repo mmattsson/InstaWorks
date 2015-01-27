@@ -110,12 +110,13 @@ static bool list_connections(FILE *out, bool html) {
             if(html) {
                 fprintf(out,
                     "<h2>Connection %-3d</h2>\n"
-                    "<b>FD:</b> %d<br>\n"
-                    "<b>Log:</b> %s<br>\n"
-                    "<b>Client:</b> %s<br>\n"
-                    "<b>RX bytes:</b> %d<br>\n"
-                    "<b>TX bytes:</b> %d<br>\n"
-                    "\n",
+                    "<table class='data'>\n"
+                    "<tr><td>File Descriptor</td><td>%d</td></tr>\n"
+                    "<tr><td>Logging Enabled</td><td>%s</td></tr>\n"
+                    "<tr><td>Client Address</td><td>%s</td></tr>\n"
+                    "<tr><td>Received bytes</td><td>%d</td></tr>\n"
+                    "<tr><td>Sent bytes</td><td>%d</td></tr>\n"
+                    "</table>\n",
                     cnt, conn->fd,
                     conn->do_log ? "on " : "off",
                     iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)),
