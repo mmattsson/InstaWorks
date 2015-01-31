@@ -186,44 +186,6 @@ static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
 
 // --------------------------------------------------------------------------
 
-/// @brief Print a value of type number.
-/// @param value The value to print.
-/// @param out The file output stream to print the number on.
-static bool iw_web_gui_print_number(iw_val *value, FILE *out) {
-    fprintf(out,
-        "<tr><td>%s</td><td>%d</td></tr>\n",
-        value->name, value->v.number);
-    return true;
-}
-
-// --------------------------------------------------------------------------
-
-/// @brief Print a value of type string.
-/// @param value The value to print.
-/// @param out The file output stream to print the string on.
-static bool iw_web_gui_print_string(iw_val *value, FILE *out) {
-    fprintf(out,
-        "<tr><td>%s</td><td>%s</td></tr>\n",
-        value->name, value->v.string);
-    return true;
-}
-
-// --------------------------------------------------------------------------
-
-/// @brief Print a value of type address.
-/// @param value The value to print.
-/// @param out The file output stream to print the address on.
-static bool iw_web_gui_print_address(iw_val *value, FILE *out) {
-    char buff[IW_IP_BUFF_LEN];
-    iw_ip_addr_to_str(&value->v.address, true, buff, sizeof(buff));
-    fprintf(out,
-        "<tr><td>%s</td><td>%s</td></tr>\n",
-        value->name, buff);
-    return true;
-}
-
-// --------------------------------------------------------------------------
-
 /// @brief Create the run-time page.
 /// @param req The request that was made.
 /// @param out The file stream to write the response to.
@@ -232,26 +194,24 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
     fprintf(out, "<h1>Configuration Settings</h1>\n");
 
     unsigned long token;
+    fprintf(out, "<form>\n");
     fprintf(out, "<table class='data'>\n");
     fprintf(out, "<tr><th>Name</th><th>Value</th></tr>\n");
     iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
     while(value != NULL) {
-        switch(value->type) {
-        case IW_VAL_TYPE_NUMBER  :
-            iw_web_gui_print_number(value, out);
-            break;
-        case IW_VAL_TYPE_STRING  :
-            iw_web_gui_print_string(value, out);
-            break;
-        case IW_VAL_TYPE_ADDRESS :
-            iw_web_gui_print_address(value, out);
-            break;
-        default :
-            break;
-        }
+        char buff[128];
+        iw_val_to_str(value, buff, sizeof(buff));
+        fprintf(out,
+            "<tr>\n"
+            "  <td>%s</td>\n"
+            "  <td><input type='text' name='%s' value='%s'></td>\n"
+            "</tr>\n",
+            value->name, value->name, buff);
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
     fprintf(out, "</table>\n");
+    fprintf(out, "<input type='submit' name='Apply'>\n");
+    fprintf(out, "</form>\n");
 
     return true;
 }
@@ -315,7 +275,7 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
     // Start of body
     fprintf(out,
         "<body>\n"
-        "<center><h1>%s</h1></center>\n",
+        "<h1 style='text-align:center'>%s</h1>\n",
         prg);
 
     iw_web_gui_construct_menu(req, out);

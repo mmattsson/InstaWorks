@@ -137,6 +137,15 @@ extern iw_val *iw_val_create_address(const char *name, const iw_ip *address);
 
 // --------------------------------------------------------------------------
 
+/// @brief Convert a value to a string representation.
+/// @param value The value to convert.
+/// @param buff [out] The buffer to save the string in.
+/// @param buff_len The length of the buffer.
+/// @return True if the value was successfully converted.
+extern bool iw_val_to_str(iw_val *value, char *buff, int buff_len);
+
+// --------------------------------------------------------------------------
+
 /// @brief Destroy a value.
 /// @param val The value to destroy.
 extern void iw_val_destroy(iw_val *val);

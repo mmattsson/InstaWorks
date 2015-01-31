@@ -78,6 +78,24 @@ void iw_val_destroy(iw_val *value) {
 }
 
 // --------------------------------------------------------------------------
+
+bool iw_val_to_str(iw_val *value, char *buff, int buff_len) {
+    switch(value->type) {
+    case IW_VAL_TYPE_NUMBER :
+        snprintf(buff, buff_len, "%d", value->v.number);
+        return true;
+    case IW_VAL_TYPE_STRING :
+        snprintf(buff, buff_len, "%s", value->v.string);
+        return true;
+    case IW_VAL_TYPE_ADDRESS :
+        return iw_ip_addr_to_str(&value->v.address, true,
+                                 buff, buff_len) != NULL;
+    default :
+        return false;
+    }
+}
+
+// --------------------------------------------------------------------------
 //
 // Value store creation/destruction
 //
