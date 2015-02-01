@@ -2,7 +2,7 @@
 ///
 /// @file test_web_srv.c
 ///
-/// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
+/// Copyright (c) 2014-2015 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
 /// InstaWorks directory.
 ///
@@ -14,6 +14,12 @@
 #include "tests.h"
 
 #include <string.h>
+
+// --------------------------------------------------------------------------
+//
+// Sample HTTP requests for testing.
+//
+// --------------------------------------------------------------------------
 
 static char *basic_req =
     "GET / HTTP/1.1\r\n"
@@ -35,6 +41,38 @@ static char *favicon =
     "Accept-Encoding: gzip, deflate, sdch\r\n"
     "Accept-Language: en-US,en;q=0.8,sv;q=0.6\r\n"
     "\r\n";
+
+static char *get_form =
+    "GET /Configuration?cfg.crashhandler.file=%2Ftmp%2Fcallstack.txt&cfg.opt.loglvl=l&cfg.loglvl=16&cfg.memtrack.enable=1&cfg.syslog.size=10000&cfg.allowquit=1&cfg.webgui.enable=1&cfg.cmdport=10000&cfg.daemonize=0&cfg.daemonize.opt=d&cfg.memtrack.size=10000&cfg.foreground=1&cfg.crashhandler.enable=1&cfg.prgname=simple&cfg.healthcheck.enable=1&cfg.webgui.css=%2Ftmp%2Fsimple.css&cfg.opt.foreground=f&Apply=Submit HTTP/1.1\r\n"
+    "Host: localhost:8080\r\n"
+    "Connection: keep-alive\r\n"
+    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n"
+    "User-Agent: Mozilla/5.0 (X11; Linux i686 (x86_64)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.91 Safari/537.36\r\n"
+    "Referer: http://localhost:8080/Configuration\r\n"
+    "Accept-Encoding: gzip, deflate, sdch\r\n"
+    "Accept-Language: en-US,en;q=0.8,sv;q=0.6,pt;q=0.4\r\n"
+    "\r\n";
+
+static char *get_form_params = {
+    "cfg.crashhandler.file", "%2Ftmp%2Fcallstack.txt",
+    "cfg.opt.loglvl", "l",
+    "cfg.loglvl", "16",
+    "cfg.memtrack.enable", "1",
+    "cfg.syslog.size", "10000",
+    "cfg.allowquit", "1",
+    "cfg.webgui.enable", "1",
+    "cfg.cmdport", "10000",
+    "cfg.daemonize", "0",
+    "cfg.daemonize.opt", "d",
+    "cfg.memtrack.size", "10000",
+    "cfg.foreground", "1",
+    "cfg.crashhandler.enable", "1",
+    "cfg.prgname", "simple",
+    "cfg.healthcheck.enable", "1",
+    "cfg.webgui.css", "%2Ftmp%2Fsimple.css",
+    "cfg.opt.foreground", "f",
+    "Apply", "Submit"
+};
 
 // --------------------------------------------------------------------------
 
@@ -89,35 +127,21 @@ static void test_hdr(
 static void test_req(
     test_result *result,
     const char *uri,
+    const char *host,
     iw_web_req *req)
 {
     test_value(result, req->buff, &req->version, "HTTP/1.1");
-    test_value(result, req->buff, &req->uri, uri);
+    if(uri != NULL) {
+        test_value(result, req->buff, &req->uri, uri);
+    }
     test(result, iw_web_req_get_method(req)==IW_WEB_METHOD_GET, "GET method");
-    test_hdr(result, req, true, "Host", "127.0.0.1:8080");
-    test_hdr(result, req, true, "hOsT", "127.0.0.1:8080");
+    if(host != NULL) {
+        test_hdr(result, req, true, "Host", host);
+        test_hdr(result, req, true, "hOsT", host);
+    }
     test_hdr(result, req, false, "hXsT", NULL);
 }
 
-// --------------------------------------------------------------------------
-/*
-static void test_req_buff(
-    test_result *result,
-    const char *name,
-    const char *buff,
-    const char *uri)
-{
-    iw_web_req req;
-    IW_WEB_PARSE retval;
-
-    iw_web_req_init(&req);
-    test_display(name);
-    retval = iw_web_req_parse(buff, strlen(buff), &req);
-    test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
-    test_req(result, buff, uri, &req);
-    iw_web_req_free(&req);
-}
-*/
 // --------------------------------------------------------------------------
 
 /// @brief Testing partial parsing of request.
@@ -129,11 +153,13 @@ static void test_req_buff(
 /// @param name The name of the test.
 /// @param buff The buffer to parse.
 /// @param uri The URI that is expected in this request.
+/// @param host The host to expect in this request.
 static void test_partial_req_buff(
     test_result *result,
     const char *name,
-    char *buff,
-    const char *uri)
+    const char *buff,
+    const char *uri,
+    const char *host)
 {
     iw_web_req req;
     IW_WEB_PARSE retval;
@@ -145,7 +171,7 @@ static void test_partial_req_buff(
     unsigned int tot_len = strlen(buff);
     // Do a parse call with one byte extra each time.
     for(cnt=1;cnt < tot_len;cnt++) {
-        req.buff = buff;
+        req.buff = (char *)buff;
         req.len  = cnt;
         retval = iw_web_req_parse(&req);
         if(retval != IW_WEB_PARSE_INCOMPLETE) {
@@ -158,23 +184,65 @@ static void test_partial_req_buff(
          tot_len - 1);
 
     // Do final step with the whole length.
-    req.buff = buff;
+    req.buff = (char *)buff;
     req.len  = tot_len;
     retval = iw_web_req_parse(&req);
     test(result, retval == IW_WEB_PARSE_COMPLETE, "Complete parse successful");
     test(result, req.parse_point == tot_len, "Parsing read %d bytes", tot_len);
-    test_req(result, uri, &req);
+    test_req(result, uri, host, &req);
+    iw_web_req_free(&req);
+}
+
+// --------------------------------------------------------------------------
+
+/// @brief Test a complete request buffer.
+/// Used for debugging and adding new tests. Testing the complete buffer at
+/// once simplifies the testing of a new request. Once the new request parses
+/// successfully, the test_partial_req_buff() should be used to ensure that
+/// the buffer can be parsed if a request is received partially.
+/// @param result The test result structure.
+/// @param name The name of the test.
+/// @param buff The buffer to parse.
+/// @param uri The URI that is expected in this request.
+/// @param host The host to expect in this request.
+static void test_complete_req_buff(
+    test_result *result,
+    const char *name,
+    const char *buff,
+    const char *uri,
+    const char *host)
+{
+    IW_WEB_PARSE retval;
+
+    iw_web_req_init(&req);
+    test_display(name);
+    req.buff = (char *)buff;
+    req.len  = strlen(buff);
+    retval = iw_web_req_parse(&req);
+    test(result, retval == IW_WEB_PARSE_COMPLETE, "Parse successful");
+    test_req(result, uri, host, &req);
     iw_web_req_free(&req);
 }
 
 // --------------------------------------------------------------------------
 
 void test_web_srv(test_result *result) {
-    test_partial_req_buff(result,
-                      "Parsing basic request incrementally", basic_req, "/");
-    test_partial_req_buff(result,
-                      "Parsing favicon request incrementally", favicon,
-                      "/favicon.ico");
+    iw_web_req req;
+    test_complete_req_buff(result, &req,
+        "Parsing get form request", get_form,
+        NULL, "localhost:8080");
+    test_uri_path(&req, "/Configuration");
+
+
+return;
+    test_partial_req_buff(result, &req,
+        "Parsing basic request incrementally", basic_req,
+        "/", "127.0.0.1:8080");
+    iw_web_req_free(&req);
+    test_partial_req_buff(result, &req,
+        "Parsing favicon request incrementally", favicon,
+        "/favicon.ico", "127.0.0.1:8080");
+    iw_web_req_free(&req);
 }
 
 // --------------------------------------------------------------------------

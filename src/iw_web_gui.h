@@ -5,7 +5,7 @@
 /// A web based GUI for the InstaWorks framework. Used to access and display
 /// run-time statistics as well as configuration.
 ///
-/// Copyright (c) 2014 Mattias Mattsson. All rights reserved.
+/// Copyright (c) 2014-2015 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
 /// InstaWorks directory.
 ///
