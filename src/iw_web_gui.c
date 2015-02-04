@@ -241,16 +241,16 @@ static bool iw_web_gui_construct_runtime_page(iw_web_req *req, FILE *out) {
 static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
     char *prg = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME);
     PAGE pg = PG_NONE;
-    if(req->uri.len > 0 && *(req->buff + req->uri.start) == '/') {
+    if(req->path.len > 0 && *(req->buff + req->path.start) == '/') {
         int cnt;
         for(cnt=0;cnt < IW_ARR_LEN(s_menu);cnt++) {
-            if(iw_parse_cmp(s_menu[cnt], req->buff, &req->uri)) {
+            if(iw_parse_cmp(s_menu[cnt], req->buff, &req->path)) {
                 pg = cnt;
             }
         }
     }
     // Special case, no path means the default about page
-    if(iw_parse_cmp("/", req->buff, &req->uri)) {
+    if(iw_parse_cmp("/", req->buff, &req->path)) {
         pg = PG_ABOUT;
     }
     if(pg == PG_NONE) {
@@ -313,8 +313,8 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
 /// @return True if the response was successfully written.
 static bool iw_web_gui_construct_response(iw_web_req *req, FILE *out) {
     LOG(IW_LOG_GUI, "Received request for \"%.*s\"",
-        req->uri.len, req->buff + req->uri.start);
-    if(iw_parse_cmp("/style.css", req->buff, &req->uri)) {
+        req->path.len, req->buff + req->path.start);
+    if(iw_parse_cmp("/style.css", req->buff, &req->path)) {
         LOG(IW_LOG_GUI, "Sending style sheet");
         return iw_web_gui_construct_style_sheet(req, out);
     } else {
