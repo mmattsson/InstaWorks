@@ -10,7 +10,7 @@
 
 .PHONY: clean selftest examples
 
-all: instaworks selftest examples dox
+all: instaworks selftest examples
 
 instaworks:
 	$(MAKE) -f Makefile.instaworks
