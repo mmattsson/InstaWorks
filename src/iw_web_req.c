@@ -129,8 +129,18 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         }
         if(iw_parse_cmp("GET", req->buff, &idx)) {
             req->method = IW_WEB_METHOD_GET;
-        } else if(iw_parse_cmp("POST", req->buff, &idx) == 0) {
+        } else if(iw_parse_cmp("HEAD", req->buff, &idx)) {
+            req->method = IW_WEB_METHOD_HEAD;
+        } else if(iw_parse_cmp("POST", req->buff, &idx)) {
             req->method = IW_WEB_METHOD_POST;
+        } else if(iw_parse_cmp("PUT", req->buff, &idx)) {
+            req->method = IW_WEB_METHOD_PUT;
+        } else if(iw_parse_cmp("DELETE", req->buff, &idx)) {
+            req->method = IW_WEB_METHOD_DELETE;
+        } else if(iw_parse_cmp("TRACE", req->buff, &idx)) {
+            req->method = IW_WEB_METHOD_TRACE;
+        } else if(iw_parse_cmp("CONNECT", req->buff, &idx)) {
+            req->method = IW_WEB_METHOD_CONNECT;
         } else {
             // Unsupported method
             return IW_WEB_PARSE_ERROR;
@@ -280,11 +290,16 @@ IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req) {
 
 char *iw_web_req_method_str(IW_WEB_METHOD method) {
     switch(method) {
-    case IW_WEB_METHOD_GET  : return "GET";
-    case IW_WEB_METHOD_POST : return "POST";
-    case IW_WEB_METHOD_NONE : return "Not Set";
-    default : return "UNSUPPORTED";
+    case IW_WEB_METHOD_NONE   : return "Not Set";
+    case IW_WEB_METHOD_GET    : return "GET";
+    case IW_WEB_METHOD_HEAD   : return "HEAD";
+    case IW_WEB_METHOD_POST   : return "POST";
+    case IW_WEB_METHOD_PUT    : return "PUT";
+    case IW_WEB_METHOD_DELETE : return "DELETE";
+    case IW_WEB_METHOD_TRACE  : return "TRACE";
+    case IW_WEB_METHOD_CONNECT: return "CONNECT";
     }
+    return "Unsupported";
 }
 
 // --------------------------------------------------------------------------

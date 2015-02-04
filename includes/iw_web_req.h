@@ -34,7 +34,12 @@ extern "C" {
 typedef enum {
     IW_WEB_METHOD_NONE,
     IW_WEB_METHOD_GET,
-    IW_WEB_METHOD_POST
+    IW_WEB_METHOD_HEAD,
+    IW_WEB_METHOD_POST,
+    IW_WEB_METHOD_PUT,
+    IW_WEB_METHOD_DELETE,
+    IW_WEB_METHOD_TRACE,
+    IW_WEB_METHOD_CONNECT
 } IW_WEB_METHOD;
 
 // --------------------------------------------------------------------------
