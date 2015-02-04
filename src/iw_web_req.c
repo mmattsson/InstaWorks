@@ -36,34 +36,71 @@ void iw_web_req_init(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
-iw_web_req_header *iw_web_req_add_header(
+static iw_web_req_value *iw_web_req_add_value(
+    iw_web_req *req,
+    iw_list *list,
+    iw_parse_index *name,
+    iw_parse_index *value)
+{
+    iw_web_req_value *val =
+            (iw_web_req_value *)IW_CALLOC(1, sizeof(iw_web_req_value));
+    if(val == NULL) {
+        return NULL;
+    }
+    val->name  = *name;
+    if(value != NULL) {
+        val->value = *value;
+    } else {
+        memset(&val->value, 0, sizeof(val->value));
+    }
+    iw_list_add(list, (iw_list_node *)val);
+    return val;
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_add_header(
     iw_web_req *req,
     iw_parse_index *name,
     iw_parse_index *value)
 {
-    iw_web_req_header *hdr =
-            (iw_web_req_header *)IW_CALLOC(1, sizeof(iw_web_req_header));
-    if(hdr == NULL) {
-        return NULL;
-    }
-    hdr->name  = *name;
-    hdr->value = *value;
-    iw_list_add(&req->headers, (iw_list_node *)hdr);
+    return iw_web_req_add_value(req, &req->headers, name, value);
+}
 
-    return hdr;
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_add_parameter(
+    iw_web_req *req,
+    iw_parse_index *name,
+    iw_parse_index *value)
+{
+    return iw_web_req_add_value(req, &req->params, name, value);
+}
+
+// --------------------------------------------------------------------------
+
+static void iw_web_req_delete_value(iw_list_node *node) {
+    iw_web_req_value *val = (iw_web_req_value *)node;
+    IW_FREE(val);
 }
 
 // --------------------------------------------------------------------------
 
 void iw_web_req_delete_header(iw_list_node *node) {
-    iw_web_req_header *hdr = (iw_web_req_header *)node;
-    IW_FREE(hdr);
+    iw_web_req_delete_value(node);
+}
+
+// --------------------------------------------------------------------------
+
+void iw_web_req_delete_parameter(iw_list_node *node) {
+    iw_web_req_delete_value(node);
 }
 
 // --------------------------------------------------------------------------
 
 void iw_web_req_free(iw_web_req *req) {
-    iw_list_destroy(&req->headers, iw_web_req_delete_header);
+    iw_list_destroy(&req->headers, iw_web_req_delete_value);
+    iw_list_destroy(&req->params, iw_web_req_delete_value);
 }
 
 // --------------------------------------------------------------------------
@@ -100,11 +137,55 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         }
 
         // Parse the request URI
+        offset = req->parse_point;
         parse = iw_parse_read_to_token(req->buff, req->len, &req->parse_point,
                                        IW_PARSE_SPACE, true, &req->uri);
         if(parse != IW_PARSE_MATCH) {
             // We received a line so we should have a separator.
             return IW_WEB_PARSE_ERROR;
+        }
+
+        // Now go back and break down the URI into the path and the parameters.
+        // Note that we use the req->uri end as the end of the data for parsing
+        // of the URI.
+        int end = req->uri.start + req->uri.len;
+        parse = iw_parse_read_to_token(req->buff, end, &offset,
+                                       IW_PARSE_QUERY, false, &req->path);
+        if(parse != IW_PARSE_MATCH) {
+            // We received a line so if the '?' is not present, there are no
+            // parameters in the request URI. In this case, we set the path to
+            // the whole URI.
+            req->path = req->uri;
+        } else {
+            // There is a '?' present. Loop and collect each parameter.
+            iw_parse_index name;
+            iw_parse_index value;
+            parse = iw_parse_read_to_token(req->buff, end, &offset,
+                                           IW_PARSE_EQUAL, false, &name);
+            while(parse == IW_PARSE_MATCH) {
+                parse = iw_parse_read_to_token(req->buff, end,
+                                               &offset, IW_PARSE_AMPERSAND,
+                                               false, &value);
+                if(parse == IW_PARSE_MATCH) {
+                    // We found a name/value pair, let's add that
+                    // Create a header index for this header
+                    iw_web_req_add_parameter(req, &name, &value);
+                } else if(offset < req->parse_point) {
+                    // We couldn't find another parameter but there are more
+                    // characters after this equal sign. This means that this
+                    // is the last parameter and we take the remaining data.
+                    value.start = offset;
+                    value.len   = end - offset;
+                    iw_web_req_add_parameter(req, &name, &value);
+                } else {
+                    // We found a name without a value, let's add that
+                    // Create a header index for this header
+                    iw_web_req_add_parameter(req, &name, NULL);
+                }
+                parse = iw_parse_read_to_token(req->buff, end,
+                                               &offset, IW_PARSE_EQUAL,
+                                               false, &name);
+            }
         }
 
         // Parse the protocol version
@@ -173,7 +254,7 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         req->buff);
     iw_list_node *node = req->headers.head;
     while(node != NULL) {
-        iw_web_req_header *hdr = (iw_web_req_header *)node;
+        iw_web_req_value *hdr = (iw_web_req_value *)node;
         node = node->next;
         LOG(IW_LOG_WEB, "HDR: \"%.*s\" -> \"%.*s\"",
             hdr->name.len, req->buff + hdr->name.start,
@@ -208,13 +289,14 @@ char *iw_web_req_method_str(IW_WEB_METHOD method) {
 
 // --------------------------------------------------------------------------
 
-iw_web_req_header *iw_web_req_get_header(
+static iw_web_req_value *iw_web_req_get_value(
     iw_web_req *req,
+    iw_list *list,
     const char *name)
 {
-    iw_list_node *node = req->headers.head;
+    iw_list_node *node = list->head;
     while(node != NULL) {
-        iw_web_req_header *hdr = (iw_web_req_header *)node;
+        iw_web_req_value *hdr = (iw_web_req_value *)node;
         if(iw_parse_casecmp(name, req->buff, &hdr->name)) {
             return hdr;
         }
@@ -225,20 +307,58 @@ iw_web_req_header *iw_web_req_get_header(
 
 // --------------------------------------------------------------------------
 
-iw_web_req_header *iw_web_req_get_next_header(
+static iw_web_req_value *iw_web_req_get_next_value(
     iw_web_req *req,
     const char *name,
-    const iw_web_req_header *hdr)
+    const iw_web_req_value *hdr)
 {
     iw_list_node *node = (iw_list_node *)hdr;
     while(node != NULL) {
-        iw_web_req_header *hdr = (iw_web_req_header *)node;
+        iw_web_req_value *hdr = (iw_web_req_value *)node;
         if(iw_parse_casecmp(name, req->buff, &hdr->name)) {
             return hdr;
         }
         node = node->next;
     }
     return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_get_header(
+    iw_web_req *req,
+    const char *name)
+{
+    return iw_web_req_get_value(req, &req->headers, name);
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_get_next_header(
+    iw_web_req *req,
+    const char *name,
+    const iw_web_req_value *hdr)
+{
+    return iw_web_req_get_next_value(req, name, hdr);
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_get_parameter(
+    iw_web_req *req,
+    const char *name)
+{
+    return iw_web_req_get_value(req, &req->params, name);
+}
+
+// --------------------------------------------------------------------------
+
+iw_web_req_value *iw_web_req_get_next_parameter(
+    iw_web_req *req,
+    const char *name,
+    const iw_web_req_value *hdr)
+{
+    return iw_web_req_get_next_value(req, name, hdr);
 }
 
 // --------------------------------------------------------------------------

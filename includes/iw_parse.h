@@ -24,14 +24,12 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
-/// Define for carriage-return and line-feed
-#define IW_PARSE_CRLF   "\r\n"
-
-/// Define for space
-#define IW_PARSE_SPACE  " "
-
-/// Define for colon
-#define IW_PARSE_COLON    ":"
+#define IW_PARSE_CRLF       "\r\n" ///< CR + LF
+#define IW_PARSE_SPACE      " " ///< Space
+#define IW_PARSE_COLON      ":" ///< Colon
+#define IW_PARSE_QUERY      "?" ///< Question mark
+#define IW_PARSE_EQUAL      "=" ///< Equal sign
+#define IW_PARSE_AMPERSAND  "&" ///< Ampersand
 
 /// The parse return value
 typedef enum _IW_PARSE {

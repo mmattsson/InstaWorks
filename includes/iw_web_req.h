@@ -49,11 +49,11 @@ typedef enum _IW_WEB_PARSE {
 // --------------------------------------------------------------------------
 
 /// An HTTP request header.
-typedef struct _iw_web_req_header {
+typedef struct _iw_web_req_value {
     iw_list_node   node;  ///< The list node.
     iw_parse_index name;  ///< The name of the header.
     iw_parse_index value; ///< The value of the header.
-} iw_web_req_header;
+} iw_web_req_value;
 
 // --------------------------------------------------------------------------
 
@@ -93,6 +93,12 @@ typedef struct _iw_web_req {
     /// The URI being requested.
     iw_parse_index uri;
 
+    /// The URI path component.
+    iw_parse_index path;
+
+    /// The list of parameters for the request.
+    iw_list params;
+
     /// The headers of the request.
     iw_list  headers;
 
@@ -130,7 +136,7 @@ extern void iw_web_req_init(iw_web_req *req);
 /// @param req The request to add the header to.
 /// @param name The name of the header.
 /// @param value The value of the header.
-extern iw_web_req_header *iw_web_req_add_header(
+extern iw_web_req_value *iw_web_req_add_header(
     iw_web_req *req,
     iw_parse_index *name,
     iw_parse_index *value);
@@ -138,10 +144,36 @@ extern iw_web_req_header *iw_web_req_add_header(
 // --------------------------------------------------------------------------
 
 /// @brief Delete a header object.
-/// This deletes the header object memory allocatedd to represent the header.
+/// This deletes the header object memory allocated to represent the header.
 /// It does not delete the memory pointed to by the header object.
 /// @param node The header node to delete.
 extern void iw_web_req_delete_header(iw_list_node *node);
+
+// --------------------------------------------------------------------------
+
+/// @brief Create an URI parameter object.
+/// Adds an URI parameter to the request object. The header object points into
+/// the HTTP request memory to track where the header name and value is. It
+/// does not allocate new memory to represent the parameter and the values pointed
+/// to by the header object should therefore not be free'd. Also, since the
+/// memory pointed to by the parameter object is part of the original HTTP request
+/// and will not be altered, the values pointed to are not NUL terminated and
+/// only the given length bytes for the name or the value should be used.
+/// @param req The request to add the parameter to.
+/// @param name The name of the parameter.
+/// @param value The value of the parameter.
+extern iw_web_req_value *iw_web_req_add_parameter(
+    iw_web_req *req,
+    iw_parse_index *name,
+    iw_parse_index *value);
+
+// --------------------------------------------------------------------------
+
+/// @brief Delete a parameter object.
+/// This deletes the parameter object memory allocated to represent the parameter.
+/// It does not delete the memory pointed to by the parameter object.
+/// @param node The parameter node to delete.
+extern void iw_web_req_delete_parameter(iw_list_node *node);
 
 // --------------------------------------------------------------------------
 
@@ -165,17 +197,17 @@ extern void iw_web_req_free(iw_web_req *req);
 //
 // --------------------------------------------------------------------------
 
-/// @brief Get the method string for the given method.
-/// @param method The method to return the string for.
-/// @return The string representing this method.
-extern char *iw_web_req_method_str(IW_WEB_METHOD method);
-
-// --------------------------------------------------------------------------
-
 /// @brief Get the method of a request.
 /// @param req The request to get the method for.
 /// @return The method for the request.
 extern IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the method string for the given method.
+/// @param method The method to return the string for.
+/// @return The string representing this method.
+extern char *iw_web_req_method_str(IW_WEB_METHOD method);
 
 // --------------------------------------------------------------------------
 
@@ -186,7 +218,7 @@ extern IW_WEB_METHOD iw_web_req_get_method(const iw_web_req *req);
 /// @param req The request to find the header in.
 /// @param name The name of the header to return or NULL for the first header.
 /// @return The request header or NULL for no match.
-extern iw_web_req_header *iw_web_req_get_header(
+extern iw_web_req_value *iw_web_req_get_header(
     iw_web_req *req,
     const char *name);
 
@@ -199,10 +231,37 @@ extern iw_web_req_header *iw_web_req_get_header(
 /// @param name The name of the header to return or NULL for all headers.
 /// @param hdr The previously found header.
 /// @return The next matching header or NULL for no more matches.
-extern iw_web_req_header *iw_web_req_get_next_header(
+extern iw_web_req_value *iw_web_req_get_next_header(
     iw_web_req *req,
     const char *name,
-    const iw_web_req_header *hdr);
+    const iw_web_req_value *hdr);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the first parameter with the given name.
+/// If no parameter matches the given name, NULL is returned. If several
+/// parameters match, the first parameter matching the name is returned. If no
+/// name is given, the first header in the request is returned.
+/// @param req The request to find the parameter in.
+/// @param name The name of the parameter to return or NULL for the first parameter.
+/// @return The request header or NULL for no match.
+extern iw_web_req_value *iw_web_req_get_parameter(
+    iw_web_req *req,
+    const char *name);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the next parameter with the given name.
+/// Returns the next parameter with the given name or NULL if no more matches
+/// were found.
+/// @param req The request to find the parameter in.
+/// @param name The name of the parameter to return or NULL for all parameters.
+/// @param hdr The previously found parameter.
+/// @return The next matching parameter or NULL for no more matches.
+extern iw_web_req_value *iw_web_req_get_next_parameter(
+    iw_web_req *req,
+    const char *name,
+    const iw_web_req_value *hdr);
 
 // --------------------------------------------------------------------------
 
