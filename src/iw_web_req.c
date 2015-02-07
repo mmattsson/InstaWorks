@@ -258,6 +258,11 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         }
     }
 
+    // If this was a POST request and the Content-Type is
+    // 'application/x-www-form-urlencoded' then we should try to parse the
+    // Content as a query-string.
+//    if(req->method == IW_WEB_METHOD_POST &&
+
     // Debug log the request we just received
     if(DO_LOG(IW_LOG_WEB)) {
         LOG(IW_LOG_WEB, "Received %s method, data=\n\"%s\"",
