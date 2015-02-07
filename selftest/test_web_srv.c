@@ -153,6 +153,85 @@ static req_test req_get_form = {
 };
 
 // --------------------------------------------------------------------------
+static req_test req_post_form = {
+    "POST /Configuration HTTP/1.1\r\n"
+    "Host: localhost:8080\r\n"
+    "Connection: keep-alive\r\n"
+    "Content-Length: 389\r\n"
+    "Cache-Control: max-age=0\r\n"
+    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n"
+    "Origin: http://localhost:8080\r\n"
+    "User-Agent: Mozilla/5.0 (X11; Linux i686 (x86_64)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36\r\n"
+    "Content-Type: application/x-www-form-urlencoded\r\n"
+    "Referer: http://localhost:8080/Configuration\r\n"
+    "Accept-Encoding: gzip, deflate\r\n"
+    "Accept-Language: en-US,en;q=0.8,sv;q=0.6\r\n"
+    "\r\n"
+    "cfg.crashhandler.file=%2Ftmp%2Fcallstack.txt&cfg.opt.loglvl=l&cfg.loglvl=31&cfg.memtrack.enable=1&cfg.syslog.size=10000&cfg.allowquit=1&cfg.webgui.enable=1&cfg.cmdport=10000&cfg.daemonize=0&cfg.daemonize.opt=d&cfg.memtrack.size=10000&cfg.foreground=1&cfg.crashhandler.enable=1&cfg.prgname=simple&cfg.healthcheck.enable=1&cfg.webgui.css=%2Ftmp%2Fsimple.css&cfg.opt.foreground=f&Apply=Submit",
+    IW_WEB_METHOD_POST,
+    "/Configuration",
+    {
+    "Host", "localhost:8080",
+    "hOst", "localhost:8080",
+    "hxst", NULL, // The header is not present
+    "Connection", "keep-alive",
+    "Content-Length", "389",
+    "Cache-Control", "max-age=0",
+    "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Origin", "http://localhost:8080",
+    "User-agent", "Mozilla/5.0 (X11; Linux i686 (x86_64)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36",
+    "Content-Type", "application/x-www-form-urlencoded",
+    "Referer", "http://localhost:8080/Configuration",
+    "Accept-Encoding", "gzip, deflate",
+    "Accept-Language", "en-US,en;q=0.8,sv;q=0.6",
+    NULL, NULL,
+    "cfg.crashhandler.file", "%2Ftmp%2Fcallstack.txt",
+    "cfg.opt.loglvl", "l",
+    "cfg.loglvl", "31",
+    "cfg.memtrack.enable", "1",
+    "cfg.syslog.size", "10000",
+    "cfg.allowquit", "1",
+    "cfg.webgui.enable", "1",
+    "cfg.cmdport", "10000",
+    "cfg.daemonize", "0",
+    "cfg.daemonize.opt", "d",
+    "cfg.memtrack.size", "10000",
+    "cfg.foreground", "1",
+    "cfg.crashhandler.enable", "1",
+    "cfg.prgname", "simple",
+    "cfg.healthcheck.enable", "1",
+    "cfg.webgui.css", "%2Ftmp%2Fsimple.css",
+    "cfg.opt.foreground", "f",
+    "Apply", "Submit",
+    NULL, NULL
+    }
+};
+
+// --------------------------------------------------------------------------
+
+static req_test req_post_mix = {
+    "POST /?uri1=123&uri2=456&uri3=abc HTTP/1.1\r\n"
+    "Content-Length: 29\r\n"
+    "Content-Type: application/x-www-form-urlencoded\r\n"
+    "\r\n"
+    "body1=abc&body2=def&body3=123",
+    IW_WEB_METHOD_POST,
+    "/",
+    {
+    "Content-Length", "29",
+    "Content-Type", "application/x-www-form-urlencoded",
+    NULL, NULL,
+    "uri1", "123",
+    "uri2", "456",
+    "uri3", "abc",
+    "body1", "abc",
+    "body2", "def",
+    "body3", "123",
+    NULL, NULL
+    }
+};
+
+// --------------------------------------------------------------------------
 
 static void test_index(
     test_result *result,
@@ -301,7 +380,6 @@ static void test_req_buff(
 /// the buffer can be parsed if a request is received partially.
 /// @param result The test result structure.
 /// @param name The name of the test.
-/// @param buff The buffer to parse.
 /// @param rtest The test to perform.
 void test_complete_req_buff(
     test_result *result,
@@ -324,10 +402,12 @@ void test_complete_req_buff(
 // --------------------------------------------------------------------------
 
 void test_web_srv(test_result *result) {
+    test_req_buff(result, "Parsing mixed post request", &req_post_mix);
     test_req_buff(result, "Parsing URI 1", &req_uri_1);
     test_req_buff(result, "Parsing basic request", &req_basic);
     test_req_buff(result, "Parsing favicon request", &req_favicon);
     test_req_buff(result, "Parsing get form request", &req_get_form);
+    test_req_buff(result, "Parsing post form request", &req_post_form);
 }
 
 // --------------------------------------------------------------------------

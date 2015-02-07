@@ -15,6 +15,7 @@
 #include "iw_log.h"
 #include "iw_memory.h"
 #include "iw_thread.h"
+#include "iw_util.h"
 #include "iw_web_srv.h"
 
 #include <arpa/inet.h>
@@ -105,14 +106,59 @@ void iw_web_req_free(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
+/// @brief Parse an HTTP query.
+/// This function will parse the query and add parameters to the request object.
+/// @param req The HTTP request to parse.
+/// @param start The start of the query to parse.
+/// @param end The end of the query to parse.
+static void iw_web_req_parse_query(
+    iw_web_req *req,
+    unsigned int start,
+    unsigned int end)
+{
+    unsigned int offset = start;
+    iw_parse_index name;
+    iw_parse_index value;
+    IW_PARSE parse = iw_parse_read_to_token(req->buff, end, &offset,
+                                            IW_PARSE_EQUAL, false, &name);
+    while(parse == IW_PARSE_MATCH) {
+        parse = iw_parse_read_to_token(req->buff, end,
+                                        &offset, IW_PARSE_AMPERSAND,
+                                        false, &value);
+        if(parse == IW_PARSE_MATCH) {
+            // We found a name/value pair, let's add that
+            // Create a header index for this header
+            iw_web_req_add_parameter(req, &name, &value);
+        } else if(offset < req->parse_point) {
+            // We couldn't find another parameter but there are more
+            // characters after this equal sign. This means that this
+            // is the last parameter and we take the remaining data.
+            value.start = offset;
+            value.len   = end - offset;
+            iw_web_req_add_parameter(req, &name, &value);
+        } else {
+            // We found a name without a value, let's add that
+            // Create a header index for this header
+            iw_web_req_add_parameter(req, &name, NULL);
+        }
+        parse = iw_parse_read_to_token(req->buff, end,
+                                        &offset, IW_PARSE_EQUAL,
+                                        false, &name);
+    }
+}
+
+// --------------------------------------------------------------------------
+
 IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
     IW_PARSE parse;
     unsigned int offset;
 
     if(req->method == IW_WEB_METHOD_NONE) {
-        // Search for the newline signifying the end of the request URI or header.
+        // Search for the newline signifying the end of the request
+        // URI or header.
         offset = 0;
-        parse = iw_parse_find_token(req->buff, req->len, &offset, IW_PARSE_CRLF);
+        parse = iw_parse_find_token(req->buff, req->len, &offset,
+                                    IW_PARSE_CRLF);
         if(parse != IW_PARSE_MATCH) {
             // Didn't find another line, just return.
             return IW_WEB_PARSE_INCOMPLETE;
@@ -160,42 +206,15 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         // of the URI.
         int end = req->uri.start + req->uri.len;
         parse = iw_parse_read_to_token(req->buff, end, &offset,
-                                       IW_PARSE_QUERY, false, &req->path);
+                                        IW_PARSE_QUERY, false, &req->path);
         if(parse != IW_PARSE_MATCH) {
             // We received a line so if the '?' is not present, there are no
             // parameters in the request URI. In this case, we set the path to
             // the whole URI.
             req->path = req->uri;
         } else {
-            // There is a '?' present. Loop and collect each parameter.
-            iw_parse_index name;
-            iw_parse_index value;
-            parse = iw_parse_read_to_token(req->buff, end, &offset,
-                                           IW_PARSE_EQUAL, false, &name);
-            while(parse == IW_PARSE_MATCH) {
-                parse = iw_parse_read_to_token(req->buff, end,
-                                               &offset, IW_PARSE_AMPERSAND,
-                                               false, &value);
-                if(parse == IW_PARSE_MATCH) {
-                    // We found a name/value pair, let's add that
-                    // Create a header index for this header
-                    iw_web_req_add_parameter(req, &name, &value);
-                } else if(offset < req->parse_point) {
-                    // We couldn't find another parameter but there are more
-                    // characters after this equal sign. This means that this
-                    // is the last parameter and we take the remaining data.
-                    value.start = offset;
-                    value.len   = end - offset;
-                    iw_web_req_add_parameter(req, &name, &value);
-                } else {
-                    // We found a name without a value, let's add that
-                    // Create a header index for this header
-                    iw_web_req_add_parameter(req, &name, NULL);
-                }
-                parse = iw_parse_read_to_token(req->buff, end,
-                                               &offset, IW_PARSE_EQUAL,
-                                               false, &name);
-            }
+            // There is a '?' present. Collect each parameter.
+            iw_web_req_parse_query(req, offset, end);
         }
 
         // Parse the protocol version
@@ -209,7 +228,8 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
 
     // Now try to find headers until we have an empty line.
     while(!req->headers_complete) {
-        parse = iw_parse_is_token(req->buff, req->len, &req->parse_point, IW_PARSE_CRLF);
+        parse = iw_parse_is_token(req->buff, req->len, &req->parse_point,
+                                  IW_PARSE_CRLF);
         if(parse == IW_PARSE_MATCH) {
             // An empty line, we've completed parsing the headers.
             req->headers_complete = true;
@@ -219,7 +239,8 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         // Find a new-line to make sure we have enough data to parse a header.
         // However, don't update the parse point until we've read the header.
         offset = req->parse_point;
-        parse = iw_parse_find_token(req->buff, req->len, &offset, IW_PARSE_CRLF);
+        parse = iw_parse_find_token(req->buff, req->len, &offset,
+                                    IW_PARSE_CRLF);
         if(parse != IW_PARSE_MATCH) {
             // Didn't find another line, just return.
             return IW_WEB_PARSE_INCOMPLETE;
@@ -243,6 +264,14 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
             return IW_WEB_PARSE_ERROR;
         }
 
+        // If this is the Content-Length header, then set the content-length.
+        if(iw_parse_casecmp("Content-Length", req->buff, &name)) {
+            long long int content_length;
+            if(iw_strtoll(req->buff + value.start, &content_length, 10)) {
+                req->content_length = content_length;
+            }
+        }
+
         // Create a header index for this header
         iw_web_req_add_header(req, &name, &value);
     }
@@ -256,12 +285,24 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
             // We do not have enough data to complete the request
             return IW_WEB_PARSE_INCOMPLETE;
         }
+        req->content.start = req->parse_point;
+        req->content.len   = req->content_length;
+        req->parse_point += req->content_length;
     }
 
     // If this was a POST request and the Content-Type is
     // 'application/x-www-form-urlencoded' then we should try to parse the
     // Content as a query-string.
-//    if(req->method == IW_WEB_METHOD_POST &&
+    iw_web_req_value *hdr = iw_web_req_get_header(req, "Content-Type");
+    if(req->method == IW_WEB_METHOD_POST &&
+       hdr != NULL &&
+       iw_parse_casecmp("application/x-www-form-urlencoded",
+                        req->buff, &hdr->value))
+    {
+        // Parse the body
+        iw_web_req_parse_query(req, req->content.start,
+                               req->content.start + req->content.len);
+    }
 
     // Debug log the request we just received
     if(DO_LOG(IW_LOG_WEB)) {
@@ -288,6 +329,8 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
                 param->name.len, req->buff + param->name.start,
                 param->value.len, req->buff + param->value.start);
         }
+        LOG(IW_LOG_WEB, "Content (%d bytes):\n\"%.*s\"",
+            req->content.len, req->content.len, req->buff + req->content.start);
     }
 
     req->complete = true;
