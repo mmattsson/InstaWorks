@@ -194,7 +194,7 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
     fprintf(out, "<h1>Configuration Settings</h1>\n");
 
     unsigned long token;
-    fprintf(out, "<form>\n");
+    fprintf(out, "<form method='post'>\n");
     fprintf(out, "<table class='data'>\n");
     fprintf(out, "<tr><th>Name</th><th>Value</th></tr>\n");
     iw_val *value = iw_val_store_get_first(&iw_cfg, &token);

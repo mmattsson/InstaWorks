@@ -121,14 +121,13 @@ static void iw_web_srv_process_request(iw_web_srv *srv, int fd) {
             goto done;
         } if(parse == IW_WEB_PARSE_COMPLETE) {
             // Successfully parsed a request. Return from this function.
-            iw_buff_remove_data(&buff, req.parse_point);
             goto done;
         }
     } while(bytes > 0);
 
 done:
     iw_web_srv_respond(srv, &req, out);
-
+    iw_buff_remove_data(&buff, req.parse_point);
     iw_web_req_free(&req);
 
     // Give the client time to close the connection to avoid having the server

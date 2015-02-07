@@ -259,16 +259,30 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
     }
 
     // Debug log the request we just received
-    LOG(IW_LOG_WEB, "Received %s method, data=\"%s\"",
-        iw_web_req_method_str(req->method),
-        req->buff);
-    iw_list_node *node = req->headers.head;
-    while(node != NULL) {
-        iw_web_req_value *hdr = (iw_web_req_value *)node;
-        node = node->next;
-        LOG(IW_LOG_WEB, "HDR: \"%.*s\" -> \"%.*s\"",
-            hdr->name.len, req->buff + hdr->name.start,
-            hdr->value.len, req->buff + hdr->value.start);
+    if(DO_LOG(IW_LOG_WEB)) {
+        LOG(IW_LOG_WEB, "Received %s method, data=\n\"%s\"",
+            iw_web_req_method_str(req->method),
+            req->buff);
+        LOG(IW_LOG_WEB, "URI=\"%.*s\"",
+            req->uri.len, req->buff + req->uri.start);
+        LOG(IW_LOG_WEB, "PATH=\"%.*s\"",
+            req->path.len, req->buff + req->path.start);
+        iw_list_node *node = req->headers.head;
+        while(node != NULL) {
+            iw_web_req_value *hdr = (iw_web_req_value *)node;
+            node = node->next;
+            LOG(IW_LOG_WEB, "HDR: \"%.*s\" -> \"%.*s\"",
+                hdr->name.len, req->buff + hdr->name.start,
+                hdr->value.len, req->buff + hdr->value.start);
+        }
+        node = req->params.head;
+        while(node != NULL) {
+            iw_web_req_value *param = (iw_web_req_value *)node;
+            node = node->next;
+            LOG(IW_LOG_WEB, "PRM: \"%.*s\" -> \"%.*s\"",
+                param->name.len, req->buff + param->name.start,
+                param->value.len, req->buff + param->value.start);
+        }
     }
 
     req->complete = true;
