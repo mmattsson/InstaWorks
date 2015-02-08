@@ -111,6 +111,13 @@ static bool iw_web_req_urldecode(const char *str, unsigned int len) {
     while(idx < len && *(str + idx) != '%' && *(str + idx) != '+') {
         idx++;
     }
+    if(idx >= len) {
+        // No decoding needed.
+        return false;
+    }
+
+    // Decoding needed
+    char *str = IW_STRNDUP(str, len);
 }
 
 // --------------------------------------------------------------------------
