@@ -106,6 +106,15 @@ void iw_web_req_free(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
+static bool iw_web_req_urldecode(const char *str, unsigned int len) {
+    int idx = 0;
+    while(idx < len && *(str + idx) != '%' && *(str + idx) != '+') {
+        idx++;
+    }
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief Parse an HTTP query.
 /// This function will parse the query and add parameters to the request object.
 /// @param req The HTTP request to parse.
