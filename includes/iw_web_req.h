@@ -53,26 +53,26 @@ typedef enum _IW_WEB_PARSE {
 
 // --------------------------------------------------------------------------
 
-/// An HTTP request value.
+/// An HTTP request header.
 /// This value structure points into the request for all data thereby not
 /// needing to make a copy or the data. Both the name and the value are
 /// indexes into the request buffer.
-typedef struct _iw_web_req_value {
+typedef struct _iw_web_req_header {
     iw_list_node   node;  ///< The list node.
     iw_parse_index name;  ///< The name of the header.
     iw_parse_index value; ///< The actual value.
-} iw_web_req_value;
+} iw_web_req_header;
 
 // --------------------------------------------------------------------------
 
-/// An HTTP request value.
+/// An HTTP request parameter.
 /// This value structure has a copy of the name and the value and is therefore
 /// not depending on the request buffer itself.
-typedef struct _iw_web_req_copy {
+typedef struct _iw_web_req_parameter {
     iw_list_node node;    ///< The list node.
     char *name;           ///< The name of the value.
     char *value;          ///< The actual value.
-} iw_web_req_copy;
+} iw_web_req_parameter;
 
 // --------------------------------------------------------------------------
 
@@ -117,12 +117,12 @@ typedef struct _iw_web_req {
 
     /// The list of parameters for the request.
     /// This is a list of copies of the the names and values of the parameters
-    /// and is therefore a list of \a iw_web_req_copy structures.
-    iw_list params;
+    /// and is therefore a list of \a iw_web_req_parameter structures.
+    iw_list parameters;
 
     /// The headers of the request.
     /// This is a list of indexes into the request buffer and is therefore
-    /// using the \a iw_web_req_value structure.
+    /// using the \a iw_web_req_header structure.
     iw_list  headers;
 
     /// True if all request headers have been parsed.
@@ -142,6 +142,18 @@ typedef struct _iw_web_req {
 //
 // --------------------------------------------------------------------------
 
+/// @brief URL decodes a given string.
+/// This function creates a copy of the string and returns the URL decoded
+/// copy. It is the responsibility of the caller to free the allocated string.
+/// It is not assumed that the string is NUL-terminated but the returned string
+/// is guaranteed to be NUL-terminted.
+/// @param str The string to URL decode.
+/// @param len The length of the string.
+/// @return A NUL-terminated URL decoded copy of the given string.
+extern char *iw_web_req_urldecode(const char *str, unsigned int len);
+
+// --------------------------------------------------------------------------
+
 /// @brief Initialize a web request object.
 /// @param req The request to initialize.
 extern void iw_web_req_init(iw_web_req *req);
@@ -159,7 +171,7 @@ extern void iw_web_req_init(iw_web_req *req);
 /// @param req The request to add the header to.
 /// @param name The name of the header.
 /// @param value The value of the header.
-extern iw_web_req_value *iw_web_req_add_header(
+extern iw_web_req_header *iw_web_req_add_header(
     iw_web_req *req,
     iw_parse_index *name,
     iw_parse_index *value);
@@ -185,7 +197,7 @@ extern void iw_web_req_delete_header(iw_list_node *node);
 /// @param req The request to add the parameter to.
 /// @param name The name of the parameter.
 /// @param value The value of the parameter.
-extern iw_web_req_value *iw_web_req_add_parameter(
+extern iw_web_req_parameter *iw_web_req_add_parameter(
     iw_web_req *req,
     iw_parse_index *name,
     iw_parse_index *value);
@@ -241,7 +253,7 @@ extern char *iw_web_req_method_str(IW_WEB_METHOD method);
 /// @param req The request to find the header in.
 /// @param name The name of the header to return or NULL for the first header.
 /// @return The request header or NULL for no match.
-extern iw_web_req_value *iw_web_req_get_header(
+extern iw_web_req_header *iw_web_req_get_header(
     iw_web_req *req,
     const char *name);
 
@@ -254,10 +266,10 @@ extern iw_web_req_value *iw_web_req_get_header(
 /// @param name The name of the header to return or NULL for all headers.
 /// @param hdr The previously found header.
 /// @return The next matching header or NULL for no more matches.
-extern iw_web_req_value *iw_web_req_get_next_header(
+extern iw_web_req_header *iw_web_req_get_next_header(
     iw_web_req *req,
     const char *name,
-    const iw_web_req_value *hdr);
+    const iw_web_req_header *hdr);
 
 // --------------------------------------------------------------------------
 
@@ -268,7 +280,7 @@ extern iw_web_req_value *iw_web_req_get_next_header(
 /// @param req The request to find the parameter in.
 /// @param name The name of the parameter to return or NULL for the first parameter.
 /// @return The request header or NULL for no match.
-extern iw_web_req_value *iw_web_req_get_parameter(
+extern iw_web_req_parameter *iw_web_req_get_parameter(
     iw_web_req *req,
     const char *name);
 
@@ -279,12 +291,12 @@ extern iw_web_req_value *iw_web_req_get_parameter(
 /// were found.
 /// @param req The request to find the parameter in.
 /// @param name The name of the parameter to return or NULL for all parameters.
-/// @param hdr The previously found parameter.
+/// @param param The previously found parameter.
 /// @return The next matching parameter or NULL for no more matches.
-extern iw_web_req_value *iw_web_req_get_next_parameter(
+extern iw_web_req_parameter *iw_web_req_get_next_parameter(
     iw_web_req *req,
     const char *name,
-    const iw_web_req_value *hdr);
+    const iw_web_req_parameter *param);
 
 // --------------------------------------------------------------------------
 

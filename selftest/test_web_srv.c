@@ -38,14 +38,14 @@ typedef struct _req_test {
 // --------------------------------------------------------------------------
 
 static req_test req_uri_1 = {
-    "POST /?a=1&b=2 HTTP/1.1\r\n"
+    "POST /?%24a=1&%24b=2 HTTP/1.1\r\n"
     "\r\n",
     IW_WEB_METHOD_POST,
     "/",
     {
     NULL, NULL,
-    "a", "1",
-    "b", "2",
+    "$a", "1",
+    "$b", "2",
     NULL, NULL,
     }
 };
@@ -130,7 +130,7 @@ static req_test req_get_form = {
 
     NULL, NULL,
     "noval", "", // The param is present, it just has no value (empty string)
-    "cfg.crashhandler.file", "%2Ftmp%2Fcallstack.txt",
+    "cfg.crashhandler.file", "/tmp/callstack.txt",
     "cfg.opt.loglvl", "l",
     "cfg.loglvl", "16",
     "cfg.memtrack.enable", "1",
@@ -145,7 +145,7 @@ static req_test req_get_form = {
     "cfg.crashhandler.enable", "1",
     "cfg.prgname", "simple",
     "cfg.healthcheck.enable", "1",
-    "cfg.webgui.css", "%2Ftmp%2Fsimple.css",
+    "cfg.webgui.css", "/tmp/simple.css",
     "cfg.opt.foreground", "f",
     "Apply", "Submit",
     NULL, NULL
@@ -185,7 +185,7 @@ static req_test req_post_form = {
     "Accept-Encoding", "gzip, deflate",
     "Accept-Language", "en-US,en;q=0.8,sv;q=0.6",
     NULL, NULL,
-    "cfg.crashhandler.file", "%2Ftmp%2Fcallstack.txt",
+    "cfg.crashhandler.file", "/tmp/callstack.txt",
     "cfg.opt.loglvl", "l",
     "cfg.loglvl", "31",
     "cfg.memtrack.enable", "1",
@@ -200,7 +200,7 @@ static req_test req_post_form = {
     "cfg.crashhandler.enable", "1",
     "cfg.prgname", "simple",
     "cfg.healthcheck.enable", "1",
-    "cfg.webgui.css", "%2Ftmp%2Fsimple.css",
+    "cfg.webgui.css", "/tmp/simple.css",
     "cfg.opt.foreground", "f",
     "Apply", "Submit",
     NULL, NULL
@@ -247,46 +247,66 @@ static void test_index(
 
 // --------------------------------------------------------------------------
 
-static void test_value(
+static void test_header(
     test_result *result,
     iw_web_req *req,
-    bool header,
     const char *name,
     const char *value)
 {
-    iw_web_req_value *val;
-    if(header) {
-        val = iw_web_req_get_header(req, name);
-    } else {
-        val = iw_web_req_get_parameter(req, name);
-    }
-    if(val == NULL) {
+    iw_web_req_header *hdr = iw_web_req_get_header(req, name);
+    if(hdr == NULL) {
         if(value != NULL) {
             // The header should be present, the fact that we didn't find it
             // means this test failed.
-            test(result, false, "Failed to get %s \"%s\"",
-                 header ? "header" : "param",
-                 name);
+            test(result, false, "Failed to get header \"%s\"", name);
         } else {
             // The header should not be present. The fact that we didn't find it
             // means that this test passed.
-            test(result, true,
-                 "Could not get non-existent %s \"%s\"",
-                 header ? "header" : "param",
+            test(result, true, "Could not get non-existent header \"%s\"",
                  name);
         }
         return;
     }
     test(result,
-         iw_parse_casecmp(name, req->buff, &val->name),
-         "%s name=\"%.*s\" expect=\"%s\"",
-         header ? "HDR" : "PRM",
-         val->name.len, req->buff + val->name.start, name);
+         iw_parse_casecmp(name, req->buff, &hdr->name),
+         "HDR name=\"%.*s\" expect=\"%s\"",
+         hdr->name.len, req->buff + hdr->name.start, name);
     test(result,
-         iw_parse_casecmp(value, req->buff, &val->value),
-         "%s value=\"%.*s\" expect=\"%s\"",
-         header ? "HDR" : "PRM",
-         val->value.len, req->buff + val->value.start, value);
+         iw_parse_casecmp(value, req->buff, &hdr->value),
+         "HDR value=\"%.*s\" expect=\"%s\"",
+         hdr->value.len, req->buff + hdr->value.start, value);
+}
+
+// --------------------------------------------------------------------------
+
+static void test_param(
+    test_result *result,
+    iw_web_req *req,
+    const char *name,
+    const char *value)
+{
+    iw_web_req_parameter *param = iw_web_req_get_parameter(req, name);
+    if(param == NULL) {
+        if(value != NULL) {
+            // The header should be present, the fact that we didn't find it
+            // means this test failed.
+            test(result, false, "Failed to get parameter \"%s\"", name);
+        } else {
+            // The header should not be present. The fact that we didn't find it
+            // means that this test passed.
+            test(result, true, "Could not get non-existent parameter \"%s\"",
+                 name);
+        }
+        return;
+    }
+    test(result,
+         strcasecmp(name, param->name) == 0,
+         "PRM name=\"%s\" expect=\"%s\"",
+         param->name, name);
+    test(result,
+         strcasecmp(value, param->value) == 0,
+         "PRM value=\"%s\" expect=\"%s\"",
+         param->value, value);
 }
 
 // --------------------------------------------------------------------------
@@ -305,11 +325,11 @@ static void test_req(
          iw_web_req_method_str(iw_web_req_get_method(req)),
          iw_web_req_method_str(rtest->method));
 
-    // Go through the values in the test. All values up to the first NULL
+    // Go through the headers in the test. All headers up to the first NULL
     // name will be headers
     int cnt;
     for(cnt=0;rtest->values[cnt] != NULL;cnt+=2) {
-        test_value(result, req, true,
+        test_header(result, req,
                    rtest->values[cnt],
                    rtest->values[cnt+1]);
     }
@@ -318,7 +338,7 @@ static void test_req(
     // We continue from the point of cnt where we stopped with the header
     // testing (plus one to account for the NULL name).
     for(cnt+=2;rtest->values[cnt] != NULL;cnt+=2) {
-        test_value(result, req, false,
+        test_param(result, req,
                    rtest->values[cnt],
                    rtest->values[cnt+1]);
     }
@@ -402,12 +422,12 @@ void test_complete_req_buff(
 // --------------------------------------------------------------------------
 
 void test_web_srv(test_result *result) {
-    test_req_buff(result, "Parsing mixed post request", &req_post_mix);
     test_req_buff(result, "Parsing URI 1", &req_uri_1);
     test_req_buff(result, "Parsing basic request", &req_basic);
     test_req_buff(result, "Parsing favicon request", &req_favicon);
     test_req_buff(result, "Parsing get form request", &req_get_form);
     test_req_buff(result, "Parsing post form request", &req_post_form);
+    test_req_buff(result, "Parsing mixed post request", &req_post_mix);
 }
 
 // --------------------------------------------------------------------------
