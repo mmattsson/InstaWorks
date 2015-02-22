@@ -53,12 +53,26 @@ typedef enum _IW_WEB_PARSE {
 
 // --------------------------------------------------------------------------
 
-/// An HTTP request header.
+/// An HTTP request value.
+/// This value structure points into the request for all data thereby not
+/// needing to make a copy or the data. Both the name and the value are
+/// indexes into the request buffer.
 typedef struct _iw_web_req_value {
     iw_list_node   node;  ///< The list node.
     iw_parse_index name;  ///< The name of the header.
-    iw_parse_index value; ///< The value of the header.
+    iw_parse_index value; ///< The actual value.
 } iw_web_req_value;
+
+// --------------------------------------------------------------------------
+
+/// An HTTP request value.
+/// This value structure has a copy of the name and the value and is therefore
+/// not depending on the request buffer itself.
+typedef struct _iw_web_req_copy {
+    iw_list_node node;    ///< The list node.
+    char *name;           ///< The name of the value.
+    char *value;          ///< The actual value.
+} iw_web_req_copy;
 
 // --------------------------------------------------------------------------
 
@@ -102,9 +116,13 @@ typedef struct _iw_web_req {
     iw_parse_index path;
 
     /// The list of parameters for the request.
+    /// This is a list of copies of the the names and values of the parameters
+    /// and is therefore a list of \a iw_web_req_copy structures.
     iw_list params;
 
     /// The headers of the request.
+    /// This is a list of indexes into the request buffer and is therefore
+    /// using the \a iw_web_req_value structure.
     iw_list  headers;
 
     /// True if all request headers have been parsed.

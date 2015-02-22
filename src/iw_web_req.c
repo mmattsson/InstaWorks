@@ -37,7 +37,7 @@ void iw_web_req_init(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
-static iw_web_req_value *iw_web_req_add_value(
+iw_web_req_value *iw_web_req_add_value(
     iw_web_req *req,
     iw_list *list,
     iw_parse_index *name,
@@ -60,41 +60,37 @@ static iw_web_req_value *iw_web_req_add_value(
 
 // --------------------------------------------------------------------------
 
-iw_web_req_value *iw_web_req_add_header(
+iw_web_req_copy *iw_web_req_add_copy(
     iw_web_req *req,
-    iw_parse_index *name,
-    iw_parse_index *value)
+    iw_list *list,
+    char *name,
+    char *value)
 {
-    return iw_web_req_add_value(req, &req->headers, name, value);
+    iw_web_req_copy *copy =
+            (iw_web_req_copy *)IW_CALLOC(1, sizeof(iw_web_req_value));
+    if(copy == NULL) {
+        return NULL;
+    }
+    copy->name  = name;
+    copy->value = value;
+    iw_list_add(list, (iw_list_node *)copy);
+    return copy;
 }
 
 // --------------------------------------------------------------------------
 
-iw_web_req_value *iw_web_req_add_parameter(
-    iw_web_req *req,
-    iw_parse_index *name,
-    iw_parse_index *value)
-{
-    return iw_web_req_add_value(req, &req->params, name, value);
-}
-
-// --------------------------------------------------------------------------
-
-static void iw_web_req_delete_value(iw_list_node *node) {
+void iw_web_req_delete_value(iw_list_node *node) {
     iw_web_req_value *val = (iw_web_req_value *)node;
     IW_FREE(val);
 }
 
 // --------------------------------------------------------------------------
 
-void iw_web_req_delete_header(iw_list_node *node) {
-    iw_web_req_delete_value(node);
-}
-
-// --------------------------------------------------------------------------
-
-void iw_web_req_delete_parameter(iw_list_node *node) {
-    iw_web_req_delete_value(node);
+void iw_web_req_delete_copy(iw_list_node *node) {
+    iw_web_req_copy *copy = (iw_web_req_copy *)node;
+    IW_FREE(copy->name);
+    IW_FREE(copy->value);
+    IW_FREE(copy);
 }
 
 // --------------------------------------------------------------------------
@@ -106,18 +102,34 @@ void iw_web_req_free(iw_web_req *req) {
 
 // --------------------------------------------------------------------------
 
-static bool iw_web_req_urldecode(const char *str, unsigned int len) {
-    int idx = 0;
-    while(idx < len && *(str + idx) != '%' && *(str + idx) != '+') {
-        idx++;
-    }
-    if(idx >= len) {
-        // No decoding needed.
-        return false;
+char *iw_web_req_urldecode(const char *str, unsigned int len) {
+    int str_idx, copy_idx;
+    char buff[3] = { 0 };
+    char *copy = IW_MALLOC(len + 1);
+    if(copy == NULL) {
+        return NULL;
     }
 
-    // Decoding needed
-    char *str = IW_STRNDUP(str, len);
+    for(str_idx=0, copy_idx=0;str_idx < len;copy_idx++) {
+        if(*(str + str_idx) == '%') {
+            buff[0] = *(str + str_idx + 1);
+            buff[1] = *(str + str_idx + 2);
+            long long int ascii;
+            if(!iw_strtoll(buff, &ascii, 16)) {
+                return NULL;
+            }
+            *(copy + copy_idx) = ascii;
+            str_idx += 3;
+        } else if(*(str + str_idx) != '+') {
+            *(copy + copy_idx) = ' ';
+            str_idx++;
+        } else {
+            *(copy + copy_idx) = *(str + str_idx);
+            str_idx++;
+        }
+    }
+    *(copy + copy_idx) = '\0';
+    return copy;
 }
 
 // --------------------------------------------------------------------------
@@ -144,18 +156,18 @@ static void iw_web_req_parse_query(
         if(parse == IW_PARSE_MATCH) {
             // We found a name/value pair, let's add that
             // Create a header index for this header
-            iw_web_req_add_parameter(req, &name, &value);
+            iw_web_req_add_copy(&req->params, &name, &value);
         } else if(offset < req->parse_point) {
             // We couldn't find another parameter but there are more
             // characters after this equal sign. This means that this
             // is the last parameter and we take the remaining data.
             value.start = offset;
             value.len   = end - offset;
-            iw_web_req_add_parameter(req, &name, &value);
+            iw_web_req_add_copy(&req->params, &name, &value);
         } else {
             // We found a name without a value, let's add that
             // Create a header index for this header
-            iw_web_req_add_parameter(req, &name, NULL);
+            iw_web_req_add_copy(&req->params, &name, NULL);
         }
         parse = iw_parse_read_to_token(req->buff, end,
                                         &offset, IW_PARSE_EQUAL,

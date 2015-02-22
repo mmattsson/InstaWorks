@@ -210,6 +210,7 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
     fprintf(out, "</table>\n");
+fprintf(out, "<input type='text' name='test name{}' value='test value{}'>\n");
     fprintf(out, "<input type='submit' name='Apply'>\n");
     fprintf(out, "</form>\n");
 
