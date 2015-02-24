@@ -44,7 +44,7 @@ typedef struct sockaddr_storage iw_ip;
 /// @param port [out] A pointer to the variable to receive the port number.
 /// @return True if the port number was successfully converted.
 extern bool iw_ip_str_to_port(
-    char *str,
+    const char *str,
     unsigned short *port);
 
 // --------------------------------------------------------------------------
@@ -61,7 +61,7 @@ extern bool iw_ip_str_to_port(
 /// @param address [out] A pointer to the address to receive the result.
 /// @return True if the address was successfully converted.
 extern bool iw_ip_str_to_addr(
-    char *str,
+    const char *str,
     bool allow_port,
     iw_ip *address);
 

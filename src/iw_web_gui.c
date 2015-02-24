@@ -186,6 +186,20 @@ static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
 
 // --------------------------------------------------------------------------
 
+/// @brief Assign values set from the config page.
+/// @param req The request that was made.
+/// @return True if the values were successfully set.
+static bool iw_web_gui_assign_config_values(iw_web_req *req) {
+    iw_web_req_parameter *param = iw_web_req_get_parameter(req, NULL);
+    while(param != NULL) {
+        iw_val_store_set_existing_value(&iw_cfg, param->name, param->value);
+        param = iw_web_req_get_next_parameter(req, NULL, param);
+    }
+    return true;
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief Create the run-time page.
 /// @param req The request that was made.
 /// @param out The file stream to write the response to.
@@ -210,7 +224,6 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
     fprintf(out, "</table>\n");
-fprintf(out, "<input type='text' name='test name{}' value='test value{}'>\n");
     fprintf(out, "<input type='submit' name='Apply'>\n");
     fprintf(out, "</form>\n");
 
@@ -250,6 +263,7 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
             }
         }
     }
+
     // Special case, no path means the default about page
     if(iw_parse_cmp("/", req->buff, &req->path)) {
         pg = PG_ABOUT;
@@ -289,6 +303,11 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
         iw_web_gui_construct_runtime_page(req, out);
         break;
     case PG_CONFIG :
+        if(req->method == IW_WEB_METHOD_POST) {
+            // A POST for the configuration page, let's set the assigned
+            // values.
+            iw_web_gui_assign_config_values(req);
+        }
         iw_web_gui_construct_config_page(req, out);
         break;
     default :

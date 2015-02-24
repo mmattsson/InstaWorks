@@ -399,7 +399,7 @@ iw_web_req_header *iw_web_req_get_header(
     iw_list_node *node = (iw_list_node *)req->headers.head;
     while(node != NULL) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
-        if(iw_parse_casecmp(name, req->buff, &hdr->name)) {
+        if(name == NULL || iw_parse_casecmp(name, req->buff, &hdr->name)) {
             return hdr;
         }
         node = node->next;
@@ -414,10 +414,13 @@ iw_web_req_header *iw_web_req_get_next_header(
     const char *name,
     const iw_web_req_header *hdr)
 {
-    iw_list_node *node = (iw_list_node *)hdr;
+    if(hdr == NULL) {
+        return NULL;
+    }
+    iw_list_node *node = ((iw_list_node *)hdr)->next;
     while(node != NULL) {
         iw_web_req_header *hdr = (iw_web_req_header *)node;
-        if(iw_parse_casecmp(name, req->buff, &hdr->name)) {
+        if(name == NULL || iw_parse_casecmp(name, req->buff, &hdr->name)) {
             return hdr;
         }
         node = node->next;
@@ -434,7 +437,7 @@ iw_web_req_parameter *iw_web_req_get_parameter(
     iw_list_node *node = (iw_list_node *)req->parameters.head;
     while(node != NULL) {
         iw_web_req_parameter *param = (iw_web_req_parameter *)node;
-        if(strcasecmp(name, param->name) == 0) {
+        if(name == NULL || strcasecmp(name, param->name) == 0) {
             return param;
         }
         node = node->next;
@@ -449,10 +452,13 @@ iw_web_req_parameter *iw_web_req_get_next_parameter(
     const char *name,
     const iw_web_req_parameter *param)
 {
-    iw_list_node *node = (iw_list_node *)param;
+    if(param == NULL) {
+        return NULL;
+    }
+    iw_list_node *node = ((iw_list_node *)param)->next;
     while(node != NULL) {
         iw_web_req_parameter *param = (iw_web_req_parameter *)node;
-        if(strcasecmp(name, param->name) == 0) {
+        if(name == NULL || strcasecmp(name, param->name) == 0) {
             return param;
         }
         node = node->next;

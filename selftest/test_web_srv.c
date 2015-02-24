@@ -65,11 +65,11 @@ static req_test req_basic = {
     IW_WEB_METHOD_GET,
     "/",
     {
-    "Host", "127.0.0.1:8080",
-    "hOsT", "127.0.0.1:8080",
-    "hxst", NULL,
+    "hOsT", "127.0.0.1:8080", // Testing different capitalization
+    "hxst", NULL, // The header is not present
     "Connection", "keep-alive",
     "Cache-Control", "max-age=0",
+    "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "User-agent", "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36",
     "Accept-Encoding", "gzip, deflate, sdch",
     "Accept-Language", "en-US,en;q=0.8,sv;q=0.6",
@@ -92,10 +92,10 @@ static req_test req_favicon = {
     IW_WEB_METHOD_GET,
     "/favicon.ico",
     {
-    "Host", "127.0.0.1:8080",
-    "hOsT", "127.0.0.1:8080",
-    "hxst", NULL,
+    "hOsT", "127.0.0.1:8080", // Testing different capitalization
+    "hxst", NULL, // The header is not present
     "Connection", "keep-alive",
+    "Accept", "*/*",
     "User-agent", "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36",
     "Accept-Encoding", "gzip, deflate, sdch",
     "Accept-Language", "en-US,en;q=0.8,sv;q=0.6",
@@ -119,12 +119,12 @@ static req_test req_get_form = {
     IW_WEB_METHOD_GET,
     "/Configuration",
     {
-    "Host", "localhost:8080",
-    "hOst", "localhost:8080",
+    "hOst", "localhost:8080", // Testing different capitalization
     "hxst", NULL, // The header is not present
     "Connection", "keep-alive",
     "Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "User-agent", "Mozilla/5.0 (X11; Linux i686 (x86_64)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.91 Safari/537.36",
+    "Referer", "http://localhost:8080/Configuration",
     "Accept-Encoding", "gzip, deflate, sdch",
     "Accept-Language", "en-US,en;q=0.8,sv;q=0.6",
 
@@ -171,8 +171,7 @@ static req_test req_post_form = {
     IW_WEB_METHOD_POST,
     "/Configuration",
     {
-    "Host", "localhost:8080",
-    "hOst", "localhost:8080",
+    "hOst", "localhost:8080", // Testing different capitalization
     "hxst", NULL, // The header is not present
     "Connection", "keep-alive",
     "Content-Length", "389",
@@ -250,22 +249,26 @@ static void test_index(
 static void test_header(
     test_result *result,
     iw_web_req *req,
+    iw_web_req_header *hdr,
     const char *name,
     const char *value)
 {
-    iw_web_req_header *hdr = iw_web_req_get_header(req, name);
     if(hdr == NULL) {
-        if(value != NULL) {
-            // The header should be present, the fact that we didn't find it
-            // means this test failed.
-            test(result, false, "Failed to get header \"%s\"", name);
-        } else {
-            // The header should not be present. The fact that we didn't find it
-            // means that this test passed.
-            test(result, true, "Could not get non-existent header \"%s\"",
-                 name);
+        // No header given, we should try to get it here.
+        hdr = iw_web_req_get_header(req, name);
+        if(hdr == NULL) {
+            if(value != NULL) {
+                // The header should be present, the fact that we didn't find it
+                // means this test failed.
+                test(result, false, "Failed to get header \"%s\"", name);
+            } else {
+                // The header should not be present. The fact that we didn't find it
+                // means that this test passed.
+                test(result, true, "Could not get non-existent header \"%s\"",
+                    name);
+            }
+            return;
         }
-        return;
     }
     test(result,
          iw_parse_casecmp(name, req->buff, &hdr->name),
@@ -282,22 +285,26 @@ static void test_header(
 static void test_param(
     test_result *result,
     iw_web_req *req,
+    iw_web_req_parameter *param,
     const char *name,
     const char *value)
 {
-    iw_web_req_parameter *param = iw_web_req_get_parameter(req, name);
     if(param == NULL) {
-        if(value != NULL) {
-            // The header should be present, the fact that we didn't find it
-            // means this test failed.
-            test(result, false, "Failed to get parameter \"%s\"", name);
-        } else {
-            // The header should not be present. The fact that we didn't find it
-            // means that this test passed.
-            test(result, true, "Could not get non-existent parameter \"%s\"",
-                 name);
+        // No parameter given, we should try to get it here.
+        param = iw_web_req_get_parameter(req, name);
+        if(param == NULL) {
+            if(value != NULL) {
+                // The header should be present, the fact that we didn't find it
+                // means this test failed.
+                test(result, false, "Failed to get parameter \"%s\"", name);
+            } else {
+                // The header should not be present. The fact that we didn't find it
+                // means that this test passed.
+                test(result, true, "Could not get non-existent parameter \"%s\"",
+                    name);
+            }
+            return;
         }
-        return;
     }
     test(result,
          strcasecmp(name, param->name) == 0,
@@ -327,20 +334,49 @@ static void test_req(
 
     // Go through the headers in the test. All headers up to the first NULL
     // name will be headers
+    test_display("Test headers by name");
     int cnt;
     for(cnt=0;rtest->values[cnt] != NULL;cnt+=2) {
-        test_header(result, req,
+        test_header(result, req, NULL,
                    rtest->values[cnt],
                    rtest->values[cnt+1]);
+    }
+
+    // Test again, but iterate through all headers rather than getting the
+    // headers by name
+    test_display("Test headers by iteration");
+    int cnt2;
+    iw_web_req_header *hdr = iw_web_req_get_header(req, NULL);
+    for(cnt2=0;hdr != NULL && rtest->values[cnt2] != NULL;cnt2+=2) {
+        // We need to skip tests for non-existent headers when iterating
+        // through headers.
+        if(rtest->values[cnt2+1] != NULL) {
+            test_header(result, req, hdr,
+                        rtest->values[cnt2],
+                        rtest->values[cnt2+1]);
+            hdr = iw_web_req_get_next_header(req, NULL, hdr);
+        }
     }
 
     // All values after the first NULL name will be parameters.
     // We continue from the point of cnt where we stopped with the header
     // testing (plus one to account for the NULL name).
+    test_display("Test parameters by name");
     for(cnt+=2;rtest->values[cnt] != NULL;cnt+=2) {
-        test_param(result, req,
+        test_param(result, req, NULL,
                    rtest->values[cnt],
                    rtest->values[cnt+1]);
+    }
+
+    // Test again, but iterate through all parameters rather than getting the
+    // parameters by name
+    test_display("Test parameters by iteration");
+    iw_web_req_parameter *param = iw_web_req_get_parameter(req, NULL);
+    for(cnt2+=2;param != NULL && rtest->values[cnt2] != NULL;cnt2+=2) {
+        test_param(result, req, param,
+                   rtest->values[cnt2],
+                   rtest->values[cnt2+1]);
+        param = iw_web_req_get_next_parameter(req, NULL, param);
     }
 }
 

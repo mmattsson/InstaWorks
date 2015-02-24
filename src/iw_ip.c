@@ -28,7 +28,7 @@
 // --------------------------------------------------------------------------
 
 bool iw_ip_str_to_port(
-    char *str,
+    const char *str,
     unsigned short *port)
 {
     long long int tmp;
@@ -44,7 +44,7 @@ bool iw_ip_str_to_port(
 // --------------------------------------------------------------------------
 
 bool iw_ip_str_to_addr(
-    char *str,
+    const char *str,
     bool allow_port,
     iw_ip *address)
 {

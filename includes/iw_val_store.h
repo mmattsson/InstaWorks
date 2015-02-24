@@ -222,6 +222,22 @@ extern bool iw_val_store_set_address(
 
 // --------------------------------------------------------------------------
 
+/// @brief Set the value of an existing value name.
+/// The value string will be converted to the value type of the existing value.
+/// If no existing value is found, the function call will fail. If the value
+/// string could not be converted into the value type of the existing value the
+/// function call will fail.
+/// @param store The store to set the value for.
+/// @param name The name of the value to set.
+/// @param value The value to set.
+/// @return True if the value was successfully set.
+extern bool iw_val_store_set_existing_value(
+    iw_val_store *store,
+    const char *name,
+    const char *value);
+
+// --------------------------------------------------------------------------
+
 /// @brief Get the value of the given value name.
 /// @param store The store to get the value from.
 /// @param name The name of the value to get.

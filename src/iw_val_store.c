@@ -11,6 +11,7 @@
 #include "iw_val_store.h"
 
 #include "iw_memory.h"
+#include "iw_util.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -241,6 +242,40 @@ bool iw_val_store_set_address(
         return false;
     }
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_val_store_set_existing_value(
+    iw_val_store *store,
+    const char *name,
+    const char *value)
+{
+    iw_val *val = iw_val_store_get(store, name);
+    if(val == NULL) {
+        return false;
+    }
+    switch(val->type) {
+    case IW_VAL_TYPE_STRING :
+        return iw_val_store_set_string(store, name, value);
+    case IW_VAL_TYPE_NUMBER : {
+        long long num;
+        if(!iw_strtoll(value, &num, 0)) {
+            return false;
+        }
+        return iw_val_store_set_number(store, name, num);
+        }
+    case IW_VAL_TYPE_ADDRESS : {
+        iw_ip address;
+        if(!iw_ip_str_to_addr(value, true, &address)) {
+            return false;
+        }
+        return iw_val_store_set_address(store, name, &address);
+        }
+    case IW_VAL_TYPE_NONE :
+        return false;
+    }
+    return false;
 }
 
 // --------------------------------------------------------------------------
