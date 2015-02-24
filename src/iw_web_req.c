@@ -64,6 +64,27 @@ char *iw_web_req_urldecode(const char *str, unsigned int len) {
 
 // --------------------------------------------------------------------------
 
+bool iw_web_req_sanitize(const char *value, char *buff, int buff_len) {
+    int idx1;
+    int idx2 = 0;
+    int len  = strlen(value);
+    for(idx1=0;idx1 < len;idx1++) {
+        switch(value[idx1]) {
+        case '<'  : idx2 += snprintf(buff+idx2, buff_len-idx2, "&lt;"); break;
+        case '>'  : idx2 += snprintf(buff+idx2, buff_len-idx2, "&gt;"); break;
+        case '\'' : idx2 += snprintf(buff+idx2, buff_len-idx2, "&#39;"); break;
+        case '\"' : idx2 += snprintf(buff+idx2, buff_len-idx2, "&quot;"); break;
+        case '&'  : idx2 += snprintf(buff+idx2, buff_len-idx2, "&amp;"); break;
+        default   :
+            idx2 += snprintf(buff+idx2, buff_len-idx2, "%c", value[idx1]);
+            break;
+        }
+    }
+    return idx2 < buff_len;
+}
+
+// --------------------------------------------------------------------------
+
 void iw_web_req_init(iw_web_req *req) {
     memset(req, 0, sizeof(*req));
 }

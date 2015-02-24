@@ -213,14 +213,16 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
     fprintf(out, "<tr><th>Name</th><th>Value</th></tr>\n");
     iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
     while(value != NULL) {
-        char buff[128];
-        iw_val_to_str(value, buff, sizeof(buff));
+        char value_buff[128];
+        char output_buff[128];
+        iw_val_to_str(value, value_buff, sizeof(value_buff));
+        iw_web_req_sanitize(value_buff, output_buff, sizeof(output_buff));
         fprintf(out,
             "<tr>\n"
             "  <td>%s</td>\n"
             "  <td><input type='text' name='%s' value='%s'></td>\n"
             "</tr>\n",
-            value->name, value->name, buff);
+            value->name, value->name, output_buff);
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
     fprintf(out, "</table>\n");

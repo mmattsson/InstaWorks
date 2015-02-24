@@ -154,6 +154,18 @@ extern char *iw_web_req_urldecode(const char *str, unsigned int len);
 
 // --------------------------------------------------------------------------
 
+/// @brief Sanitizes output for display in an HTML page.
+/// This function translates the string in \a value and replaces the following
+/// characters with HTML entities: <, >, ', ", &.
+/// The resulting buffer is guaranteed to be NUL-terminated.
+/// @param value The string to sanitize.
+/// @param buff The resulting buffer to put the sanitized string in.
+/// @param buff_len The length of the provided buffer.
+/// @return True if the buffer was large enough to contain the sanitized output.
+extern bool iw_web_req_sanitize(const char *value, char *buff, int buff_len);
+
+// --------------------------------------------------------------------------
+
 /// @brief Initialize a web request object.
 /// @param req The request to initialize.
 extern void iw_web_req_init(iw_web_req *req);
