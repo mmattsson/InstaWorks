@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
                 print_help("Invalid log level");
                 exit(-1);
             }
-            iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, loglevel);
+            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, loglevel);
             break;
         default :
             print_help("Invalid parameter");
