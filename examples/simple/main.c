@@ -243,7 +243,7 @@ static bool serve_data() {
     FD_ZERO(&readfds);
     FD_SET(s_sock, &readfds);
     while((retval = select(maxfd + 1,
-                           &readfds, NULL, NULL, &timeout) >= 0)) 
+                           &readfds, NULL, NULL, &timeout) >= 0))
     {
         // Check the server socket for events
         if(FD_ISSET(s_sock, &readfds)) {
@@ -297,7 +297,7 @@ static bool serve_data() {
                     IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Socket FD=%d, client %s, is closed",
                             conn->fd, iw_ip_addr_to_str(&conn->address, true, ipbuff, sizeof(ipbuff)));
                     close(conn->fd);
-                    conn = (tcp_conn *)iw_list_delete(&s_list, 
+                    conn = (tcp_conn *)iw_list_delete(&s_list,
                                                       (iw_list_node *)conn,
                                                       delete_tcp_conn);
                     continue;
@@ -410,9 +410,7 @@ int main(int argc, char **argv) {
     // are set before they are accessed and to do so, iw_cfg_init() must be
     // called.
     iw_cfg_init();
-    iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1);
-
-iw_val_store_set_string(&iw_cfg, IW_CFG_WEBGUI_CSS_FILE, "/tmp/simple.css");
+    iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1, NULL, 0);
 
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.

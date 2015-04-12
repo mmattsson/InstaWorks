@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
     while((opt = getopt(argc, argv, ":v")) != -1) {
         switch(opt) {
         case 'v':
-            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, 0xFF);
+            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, 0xFF, NULL, 0);
             break;
         default :
             print_help();
@@ -191,9 +191,9 @@ int main(int argc, char **argv) {
 
     // Disable memory tracking and health check thread to avoid false
     // positives and avoid hiding real issues in valgrind.
-    iw_val_store_set_number(&iw_cfg, IW_CFG_MEMTRACK_ENABLE, 0);
-    iw_val_store_set_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE, 0);
-    iw_val_store_set_number(&iw_cfg, IW_CFG_WEBGUI_ENABLE, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_MEMTRACK_ENABLE, 0, NULL, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE, 0, NULL, 0);
+    iw_val_store_set_number(&iw_cfg, IW_CFG_WEBGUI_ENABLE, 0, NULL, 0);
 
     iw_init();
     printf(" == Running self-test ===============================\n");

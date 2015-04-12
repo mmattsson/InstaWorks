@@ -137,7 +137,9 @@ void iw_val_store_destroy(iw_val_store *store) {
 bool iw_val_store_set(
     iw_val_store *store,
     const char *name,
-    iw_val *value)
+    iw_val *value,
+    char *err_buff,
+    int buff_size)
 {
     if(store->controlled) {
         // We must check whether the name is allowed to be set and if the
@@ -147,10 +149,16 @@ bool iw_val_store_set(
                                                                  name);
         if(crit == NULL) {
             // No pre-defined name, cannot set this value.
+            if(err_buff != NULL) {
+                snprintf(err_buff, buff_size, "No such value");
+            }
             return false;
         }
         if(crit->type != value->type) {
             // The value is of the wrong type, cannot set this value.
+            if(err_buff != NULL) {
+                snprintf(err_buff, buff_size, "Incorrect type for value");
+            }
             return false;
         }
         if(crit->fn != NULL) {
@@ -195,13 +203,18 @@ bool iw_val_store_set(
 bool iw_val_store_set_number(
     iw_val_store *store,
     const char *name,
-    int num)
+    int num,
+    char *err_buff,
+    int buff_size)
 {
     iw_val *value = iw_val_create_number(name, num);
     if(value == NULL) {
+        if(err_buff != NULL) {
+            snprintf(err_buff, buff_size, "Failed to create number");
+        }
         return false;
     }
-    if(!iw_val_store_set(store, name, value)) {
+    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
         iw_val_destroy(value);
         return false;
     }
@@ -213,13 +226,18 @@ bool iw_val_store_set_number(
 bool iw_val_store_set_string(
     iw_val_store *store,
     const char *name,
-    const char *str)
+    const char *str,
+    char *err_buff,
+    int buff_size)
 {
     iw_val *value = iw_val_create_string(name, str);
     if(value == NULL) {
+        if(err_buff != NULL) {
+            snprintf(err_buff, buff_size, "Failed to create string");
+        }
         return false;
     }
-    if(!iw_val_store_set(store, name, value)) {
+    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
         iw_val_destroy(value);
         return false;
     }
@@ -231,13 +249,18 @@ bool iw_val_store_set_string(
 bool iw_val_store_set_address(
     iw_val_store *store,
     const char *name,
-    const iw_ip *address)
+    const iw_ip *address,
+    char *err_buff,
+    int buff_size)
 {
     iw_val *value = iw_val_create_address(name, address);
     if(value == NULL) {
+        if(err_buff != NULL) {
+            snprintf(err_buff, buff_size, "Failed to create address");
+        }
         return false;
     }
-    if(!iw_val_store_set(store, name, value)) {
+    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
         iw_val_destroy(value);
         return false;
     }
@@ -249,7 +272,9 @@ bool iw_val_store_set_address(
 bool iw_val_store_set_existing_value(
     iw_val_store *store,
     const char *name,
-    const char *value)
+    const char *value,
+    char *err_buff,
+    int buff_size)
 {
     iw_val *val = iw_val_store_get(store, name);
     if(val == NULL) {
@@ -257,23 +282,33 @@ bool iw_val_store_set_existing_value(
     }
     switch(val->type) {
     case IW_VAL_TYPE_STRING :
-        return iw_val_store_set_string(store, name, value);
+        return iw_val_store_set_string(store, name, value, err_buff, buff_size);
     case IW_VAL_TYPE_NUMBER : {
         long long num;
         if(!iw_strtoll(value, &num, 0)) {
+            snprintf(err_buff, buff_size, "Invalid number");
             return false;
         }
-        return iw_val_store_set_number(store, name, num);
+        return iw_val_store_set_number(store, name, num, err_buff, buff_size);
         }
     case IW_VAL_TYPE_ADDRESS : {
         iw_ip address;
         if(!iw_ip_str_to_addr(value, true, &address)) {
+            if(err_buff != NULL) {
+                snprintf(err_buff, buff_size, "Invalid IP address format");
+            }
             return false;
         }
-        return iw_val_store_set_address(store, name, &address);
+        return iw_val_store_set_address(store, name, &address, err_buff, buff_size);
         }
     case IW_VAL_TYPE_NONE :
+        if(err_buff != NULL) {
+            snprintf(err_buff, buff_size, "No value type set");
+        }
         return false;
+    }
+    if(err_buff != NULL) {
+        snprintf(err_buff, buff_size, "Invalid value type");
     }
     return false;
 }
@@ -350,6 +385,7 @@ void *iw_val_store_get_next(iw_val_store *store, unsigned long *token) {
 
 static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_TYPE type,
+    const char *msg,
     IW_VAL_CRITERIA_FN fn,
     const char *regexp)
 {
@@ -360,6 +396,9 @@ static iw_val_criteria *iw_val_store_create_criteria(
     crit->type   = type;
     crit->fn     = fn;
     crit->regset = false;
+    if(msg != NULL) {
+        crit->msg    = strdup(msg);
+    }
     return crit;
 }
 
@@ -370,6 +409,7 @@ static void iw_val_store_destroy_criteria(void *node) {
     if(crit->regset) {
         regfree(&crit->regexp);
     }
+    free(crit->msg);
     free(crit);
 }
 
@@ -388,9 +428,10 @@ static bool iw_val_store_add_name_internal(
 bool iw_val_store_add_name(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, NULL, NULL);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, NULL, NULL);
     if(crit == NULL) {
         return false;
     }
@@ -402,10 +443,11 @@ bool iw_val_store_add_name(
 bool iw_val_store_add_name_callback(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type,
     IW_VAL_CRITERIA_FN fn)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, fn, NULL);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, fn, NULL);
     if(crit == NULL) {
         return false;
     }
@@ -417,10 +459,11 @@ bool iw_val_store_add_name_callback(
 bool iw_val_store_add_name_regexp(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type,
     const char *regexp)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, NULL, regexp);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, NULL, regexp);
     if(crit == NULL) {
         return false;
     }

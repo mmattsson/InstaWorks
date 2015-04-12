@@ -58,7 +58,7 @@ extern "C" {
 
 /// The regular expression to use to specify one character.
 #define IW_VAL_CRIT_CHAR "^.$"
-    
+
 // --------------------------------------------------------------------------
 
 /// @brief The value types that can be inserted into the value store.
@@ -96,6 +96,7 @@ typedef struct _iw_val_criteria {
     regex_t            regexp; ///< A regexp defining the criteria for the value.
     bool               regset; ///< True if the regexp is set.
     IW_VAL_CRITERIA_FN fn;     ///< A callback function defining the criteria.
+    char              *msg;    ///< The message to display regarding valid range.
 } iw_val_criteria;
 
 // --------------------------------------------------------------------------
@@ -178,11 +179,15 @@ extern void iw_val_store_destroy(iw_val_store *store);
 /// @param store The store to set the value for.
 /// @param name The name of the value to set.
 /// @param value The value to set.
+/// @param err_buff The error buffer to store any error messages in or NULL.
+/// @param buff_size The size of the error buffer.
 /// @return True if the value was successfully set.
 extern bool iw_val_store_set(
     iw_val_store *store,
     const char *name,
-    iw_val *value);
+    iw_val *value,
+    char *err_buff,
+    int buff_size);
 
 // --------------------------------------------------------------------------
 
@@ -190,11 +195,15 @@ extern bool iw_val_store_set(
 /// @param store The store to set the value for.
 /// @param name The name of the value to set.
 /// @param num The number value to set.
+/// @param err_buff The error buffer to store any error messages in or NULL.
+/// @param buff_size The size of the error buffer.
 /// @return True if the value was successfully set.
 extern bool iw_val_store_set_number(
     iw_val_store *store,
     const char *name,
-    int num);
+    int num,
+    char *err_buff,
+    int buff_size);
 
 // --------------------------------------------------------------------------
 
@@ -202,11 +211,15 @@ extern bool iw_val_store_set_number(
 /// @param store The store to set the value for.
 /// @param name The name of the value to set.
 /// @param str The string value to set.
+/// @param err_buff The error buffer to store any error messages in or NULL.
+/// @param buff_size The size of the error buffer.
 /// @return True if the value was successfully set.
 extern bool iw_val_store_set_string(
     iw_val_store *store,
     const char *name,
-    const char *str);
+    const char *str,
+    char *err_buff,
+    int buff_size);
 
 // --------------------------------------------------------------------------
 
@@ -214,11 +227,15 @@ extern bool iw_val_store_set_string(
 /// @param store The store to set the value for.
 /// @param name The name of the value to set.
 /// @param address The IP address value to set.
+/// @param err_buff The error buffer to store any error messages in or NULL.
+/// @param buff_size The size of the error buffer.
 /// @return True if the value was successfully set.
 extern bool iw_val_store_set_address(
     iw_val_store *store,
     const char *name,
-    const iw_ip *address);
+    const iw_ip *address,
+    char *err_buff,
+    int buff_size);
 
 // --------------------------------------------------------------------------
 
@@ -230,11 +247,15 @@ extern bool iw_val_store_set_address(
 /// @param store The store to set the value for.
 /// @param name The name of the value to set.
 /// @param value The value to set.
+/// @param err_buff The error buffer to store any error messages in or NULL.
+/// @param buff_size The size of the error buffer.
 /// @return True if the value was successfully set.
 extern bool iw_val_store_set_existing_value(
     iw_val_store *store,
     const char *name,
-    const char *value);
+    const char *value,
+    char *err_buff,
+    int buff_size);
 
 // --------------------------------------------------------------------------
 
@@ -310,10 +331,14 @@ extern void *iw_val_store_get_next(iw_val_store *store, unsigned long *token);
 /// @param store The controlled value store to add the name for.
 /// @param type The type of the value that can be added.
 /// @param name The name to add.
+/// @param msg The error message to show for the variable. If the variable
+///        cannot be set, an error message can be shown to explain the valid
+///        format of the variable.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type);
 
 // --------------------------------------------------------------------------
@@ -321,12 +346,16 @@ extern bool iw_val_store_add_name(
 /// @brief Add a name to the controlled list of names that can be set.
 /// @param store The controlled value store to add the name for.
 /// @param name The name to add.
+/// @param msg The error message to show for the variable. If the variable
+///        cannot be set, an error message can be shown to explain the valid
+///        format of the variable.
 /// @param type The type of the value that can be added.
 /// @param fn The callback function for validation of values.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name_callback(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type,
     IW_VAL_CRITERIA_FN fn);
 
@@ -338,12 +367,16 @@ extern bool iw_val_store_add_name_callback(
 /// to a string before the regular expression is applied.
 /// @param store The controlled value store to add the name for.
 /// @param name The name to add.
+/// @param msg The error message to show for the variable. If the variable
+///        cannot be set, an error message can be shown to explain the valid
+///        format of the variable.
 /// @param type The type of the value that can be added.
 /// @param regexp The regular expression to use for validation for this value.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name_regexp(
     iw_val_store *store,
     const char *name,
+    const char *msg,
     IW_VAL_TYPE type,
     const char *regexp);
 

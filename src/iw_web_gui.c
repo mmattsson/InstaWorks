@@ -188,11 +188,17 @@ static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
 
 /// @brief Assign values set from the config page.
 /// @param req The request that was made.
+/// @param out The file stream to write the response to.
 /// @return True if the values were successfully set.
-static bool iw_web_gui_assign_config_values(iw_web_req *req) {
+static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
+    char buff[256];
     iw_web_req_parameter *param = iw_web_req_get_parameter(req, NULL);
     while(param != NULL) {
-        iw_val_store_set_existing_value(&iw_cfg, param->name, param->value);
+        if(!iw_val_store_set_existing_value(&iw_cfg, param->name, param->value,
+                                        buff, sizeof(buff)))
+        {
+            fprintf(out, "<p>Error: %s</p>", buff);
+        }
         param = iw_web_req_get_next_parameter(req, NULL, param);
     }
     return true;
@@ -308,7 +314,7 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
         if(req->method == IW_WEB_METHOD_POST) {
             // A POST for the configuration page, let's set the assigned
             // values.
-            iw_web_gui_assign_config_values(req);
+            iw_web_gui_assign_config_values(req, out);
         }
         iw_web_gui_construct_config_page(req, out);
         break;

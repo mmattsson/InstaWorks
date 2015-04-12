@@ -225,8 +225,8 @@ int main(int argc, char **argv) {
     // are set before they are accessed and to do so, iw_cfg_init() must be
     // called.
     iw_cfg_init();
-    iw_val_store_set_number(&iw_cfg, IW_CFG_CMD_PORT, 10002);
-    iw_val_store_set_string(&iw_cfg, IW_CFG_CRASHHANDLER_FILE, "/tmp/philo.txt");
+    iw_val_store_set_number(&iw_cfg, IW_CFG_CMD_PORT, 10002, NULL, 0);
+    iw_val_store_set_string(&iw_cfg, IW_CFG_CRASHHANDLER_FILE, "/tmp/philo.txt", NULL, 0);
 
     if(argc == 1) {
         print_help(NULL);
@@ -241,14 +241,14 @@ int main(int argc, char **argv) {
             do_correct = true;
             break;
         case 'f' :
-            iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, 1);
+            iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, 1, NULL, 0);
             break;
         case 'l' :
             if(!iw_strtoll(optarg, &loglevel, 16)) {
                 print_help("Invalid log level");
                 exit(-1);
             }
-            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, loglevel);
+            iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, loglevel, NULL, 0);
             break;
         default :
             print_help("Invalid parameter");

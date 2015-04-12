@@ -65,14 +65,27 @@ static iw_opt s_loglevel;
 // --------------------------------------------------------------------------
 
 void iw_cmdline_check_opts() {
+    char buff[256];
     if(s_foreground.is_set) {
-        iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, s_foreground.val.flag);
+        if(!iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, s_foreground.val.flag,
+                                    buff, sizeof(buff)))
+        {
+            LOG(IW_LOG_IW, "Failed to set foreground setting (%s)", buff);
+        }
     }
     if(s_daemon.is_set) {
-        iw_val_store_set_number(&iw_cfg, IW_CFG_DAEMONIZE, s_daemon.val.flag);
+        if(!iw_val_store_set_number(&iw_cfg, IW_CFG_DAEMONIZE, s_daemon.val.flag,
+                                    buff, sizeof(buff)))
+        {
+            LOG(IW_LOG_IW, "Failed to set daemonize setting (%s)", buff);
+        }
     }
     if(s_loglevel.is_set) {
-        iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, s_loglevel.val.num);
+        if(!iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, s_loglevel.val.num,
+                                    buff, sizeof(buff)))
+        {
+            LOG(IW_LOG_IW, "Failed to set log level setting (%s)", buff);
+        }
     }
 }
 

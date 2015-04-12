@@ -88,13 +88,13 @@ static void test_insert_value(
 {
     char value_buff[16];
     if(type == IW_VAL_TYPE_NUMBER) {
-        bool ret = iw_val_store_set_number(&store, name, value_index);
+        bool ret = iw_val_store_set_number(&store, name, value_index, NULL, 0);
         test(result, ret == should_succeed, "%s to insert '%s'->%d",
              should_succeed ? "Succeeded" : "Failed",
              name, value_index);
     } else if(type == IW_VAL_TYPE_STRING) {
         snprintf(value_buff, sizeof(value_buff), "str_%d", value_index);
-        bool ret = iw_val_store_set_string(&store, name, value_buff);
+        bool ret = iw_val_store_set_string(&store, name, value_buff, NULL, 0);
         test(result, ret == should_succeed, "%s to insert '%s'->'%s'",
              should_succeed ? "Succeeded" : "Failed",
              name, value_buff);
@@ -161,7 +161,7 @@ void test_value_store(test_result *result) {
     test_insert_values(result, 3, IW_VAL_TYPE_NUMBER, false);
 
     test_display("Adding a value (num_1) that can be between 0..65535 (a port number)");
-    iw_val_store_add_name_regexp(&store, "num_1", IW_VAL_TYPE_NUMBER,
+    iw_val_store_add_name_regexp(&store, "num_1", NULL, IW_VAL_TYPE_NUMBER,
         "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
     test_insert_value(result, "num_1", 67000, IW_VAL_TYPE_STRING, false);
     test_insert_value(result, "num_1", -1, IW_VAL_TYPE_NUMBER, false);

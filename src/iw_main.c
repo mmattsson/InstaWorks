@@ -110,7 +110,8 @@ IW_MAIN_EXIT iw_main(
     if(argc > 0 && argv[0] != NULL) {
         const char *prg_name = strrchr(argv[0], '/');
         if(prg_name != NULL) {
-            iw_val_store_set_string(&iw_cfg, IW_CFG_PRG_NAME, prg_name + 1);
+            iw_val_store_set_string(&iw_cfg, IW_CFG_PRG_NAME, prg_name + 1,
+                                    NULL, 0);
         }
     }
 
