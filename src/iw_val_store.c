@@ -134,13 +134,16 @@ void iw_val_store_destroy(iw_val_store *store) {
 //
 // --------------------------------------------------------------------------
 
-bool iw_val_store_set(
+IW_VAL_RET iw_val_store_set(
     iw_val_store *store,
     const char *name,
     iw_val *value,
     char *err_buff,
     int buff_size)
 {
+    if(err_buff != NULL && buff_size > 0) {
+        err_buff[0] = '\0';
+    }
     if(store->controlled) {
         // We must check whether the name is allowed to be set and if the
         // provided value fits the givne criteria.
@@ -152,20 +155,23 @@ bool iw_val_store_set(
             if(err_buff != NULL) {
                 snprintf(err_buff, buff_size, "No such value");
             }
-            return false;
+            return IW_VAL_RET_NO_SUCH_VALUE;
         }
         if(crit->type != value->type) {
             // The value is of the wrong type, cannot set this value.
             if(err_buff != NULL) {
                 snprintf(err_buff, buff_size, "Incorrect type for value");
             }
-            return false;
+            return IW_VAL_RET_INCORRECT_TYPE;
         }
         if(crit->fn != NULL) {
             bool ret = (crit->fn)(name, value);
             if(!ret) {
                 // The validation function failed, cannot set this value.
-                return false;
+                if(err_buff != NULL) {
+                    snprintf(err_buff, buff_size, "Invalid value format");
+                }
+                return IW_VAL_RET_FAILED_CALLBACK;
             }
         }
         if(crit->regset) {
@@ -190,86 +196,102 @@ bool iw_val_store_set(
                regexec(&crit->regexp, buffer, 0, NULL, 0) != 0)
             {
                 // The regexp did not match, cannot set this value.
-                return false;
+                if(err_buff != NULL) {
+                    snprintf(err_buff, buff_size, "Invalid value format");
+                }
+                return IW_VAL_RET_FAILED_REGEXP;
             }
         }
     }
     return iw_htable_replace(&store->table, strlen(name), name, value,
-                             iw_val_destroy_value);
+                             iw_val_destroy_value) ?
+                                IW_VAL_RET_OK : IW_VAL_RET_FAILED_TO_CREATE;
 }
 
 // --------------------------------------------------------------------------
 
-bool iw_val_store_set_number(
+IW_VAL_RET iw_val_store_set_number(
     iw_val_store *store,
     const char *name,
     int num,
     char *err_buff,
     int buff_size)
 {
+    IW_VAL_RET ret;
     iw_val *value = iw_val_create_number(name, num);
+    if(err_buff != NULL && buff_size > 0) {
+        err_buff[0] = '\0';
+    }
     if(value == NULL) {
         if(err_buff != NULL) {
             snprintf(err_buff, buff_size, "Failed to create number");
         }
-        return false;
+        return IW_VAL_RET_FAILED_TO_CREATE;
     }
-    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
+    if((ret = iw_val_store_set(store, name, value, err_buff, buff_size)) != IW_VAL_RET_OK) {
         iw_val_destroy(value);
-        return false;
+        return ret;
     }
-    return true;
+    return IW_VAL_RET_OK;
 }
 
 // --------------------------------------------------------------------------
 
-bool iw_val_store_set_string(
+IW_VAL_RET iw_val_store_set_string(
     iw_val_store *store,
     const char *name,
     const char *str,
     char *err_buff,
     int buff_size)
 {
+    IW_VAL_RET ret;
     iw_val *value = iw_val_create_string(name, str);
+    if(err_buff != NULL && buff_size > 0) {
+        err_buff[0] = '\0';
+    }
     if(value == NULL) {
         if(err_buff != NULL) {
             snprintf(err_buff, buff_size, "Failed to create string");
         }
-        return false;
+        return IW_VAL_RET_FAILED_TO_CREATE;
     }
-    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
+    if((ret = iw_val_store_set(store, name, value, err_buff, buff_size)) != IW_VAL_RET_OK) {
         iw_val_destroy(value);
-        return false;
+        return ret;
     }
-    return true;
+    return IW_VAL_RET_OK;
 }
 
 // --------------------------------------------------------------------------
 
-bool iw_val_store_set_address(
+IW_VAL_RET iw_val_store_set_address(
     iw_val_store *store,
     const char *name,
     const iw_ip *address,
     char *err_buff,
     int buff_size)
 {
+    IW_VAL_RET ret;
     iw_val *value = iw_val_create_address(name, address);
+    if(err_buff != NULL && buff_size > 0) {
+        err_buff[0] = '\0';
+    }
     if(value == NULL) {
         if(err_buff != NULL) {
             snprintf(err_buff, buff_size, "Failed to create address");
         }
-        return false;
+        return IW_VAL_RET_FAILED_TO_CREATE;
     }
-    if(!iw_val_store_set(store, name, value, err_buff, buff_size)) {
+    if((ret = iw_val_store_set(store, name, value, err_buff, buff_size)) != IW_VAL_RET_OK) {
         iw_val_destroy(value);
         return false;
     }
-    return true;
+    return IW_VAL_RET_OK;
 }
 
 // --------------------------------------------------------------------------
 
-bool iw_val_store_set_existing_value(
+IW_VAL_RET iw_val_store_set_existing_value(
     iw_val_store *store,
     const char *name,
     const char *value,
@@ -277,8 +299,14 @@ bool iw_val_store_set_existing_value(
     int buff_size)
 {
     iw_val *val = iw_val_store_get(store, name);
+    if(err_buff != NULL && buff_size > 0) {
+        err_buff[0] = '\0';
+    }
     if(val == NULL) {
-        return false;
+        if(err_buff != NULL) {
+            snprintf(err_buff, buff_size, "No such value");
+        }
+        return IW_VAL_RET_NO_SUCH_VALUE;
     }
     switch(val->type) {
     case IW_VAL_TYPE_STRING :
@@ -287,7 +315,7 @@ bool iw_val_store_set_existing_value(
         long long num;
         if(!iw_strtoll(value, &num, 0)) {
             snprintf(err_buff, buff_size, "Invalid number");
-            return false;
+            return IW_VAL_RET_FAILED_REGEXP;
         }
         return iw_val_store_set_number(store, name, num, err_buff, buff_size);
         }
@@ -297,7 +325,7 @@ bool iw_val_store_set_existing_value(
             if(err_buff != NULL) {
                 snprintf(err_buff, buff_size, "Invalid IP address format");
             }
-            return false;
+            return IW_VAL_RET_FAILED_REGEXP;
         }
         return iw_val_store_set_address(store, name, &address, err_buff, buff_size);
         }
@@ -305,12 +333,12 @@ bool iw_val_store_set_existing_value(
         if(err_buff != NULL) {
             snprintf(err_buff, buff_size, "No value type set");
         }
-        return false;
+        return IW_VAL_RET_INCORRECT_TYPE;
     }
     if(err_buff != NULL) {
         snprintf(err_buff, buff_size, "Invalid value type");
     }
-    return false;
+    return IW_VAL_RET_INCORRECT_TYPE;
 }
 
 // --------------------------------------------------------------------------

@@ -62,7 +62,7 @@
 #define WRITE_HEX(fd,num) \
     { \
         char buff[16] = ""; \
-        unsigned long tmp, idx; \
+        long tmp, idx; \
         for(idx=14,tmp=(long)num;tmp != 0 && idx >= 0;tmp>>=4,idx--) { \
             buff[idx] = s_digits[tmp&0xF]; \
         } \

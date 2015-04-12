@@ -78,7 +78,7 @@ static void iw_cfg_add_number(
     } else {
         iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_NUMBER);
     }
-    if(!iw_val_store_set_number(&iw_cfg, name, def, buff, sizeof(buff))) {
+    if(iw_val_store_set_number(&iw_cfg, name, def, buff, sizeof(buff)) != IW_VAL_RET_OK) {
         LOG(IW_LOG_IW, "Failed to set default configuration setting for '%s' (%s)",
             name, buff);
     }
@@ -101,7 +101,7 @@ static void iw_cfg_add_string(
         iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_STRING);
     }
     if(def != NULL) {
-        if(!iw_val_store_set_string(&iw_cfg, name, def, buff, sizeof(buff))) {
+        if(iw_val_store_set_string(&iw_cfg, name, def, buff, sizeof(buff)) != IW_VAL_RET_OK) {
             LOG(IW_LOG_IW, "Failed to set default configuration setting for '%s' (%s)",
                 name, buff);
         }

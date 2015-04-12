@@ -50,6 +50,18 @@ extern "C" {
 
 // --------------------------------------------------------------------------
 
+/// @brief The return values for setting configuration settings.
+typedef enum {
+    IW_VAL_RET_OK = 0,
+    IW_VAL_RET_FAILED_TO_CREATE,///< Failed to create value, e.g. due to memory allocation failures
+    IW_VAL_RET_NO_SUCH_VALUE,   ///< Value does not exist
+    IW_VAL_RET_INCORRECT_TYPE,  ///< Incorrect type for this value
+    IW_VAL_RET_FAILED_CALLBACK, ///< The value failed the callback validation
+    IW_VAL_RET_FAILED_REGEXP,   ///< The value failed the regexp validation
+} IW_VAL_RET;
+
+// --------------------------------------------------------------------------
+
 /// The regular expression to use to specify a boolean (zero or one).
 #define IW_VAL_CRIT_BOOL "^[0-1]$"
 
@@ -181,8 +193,8 @@ extern void iw_val_store_destroy(iw_val_store *store);
 /// @param value The value to set.
 /// @param err_buff The error buffer to store any error messages in or NULL.
 /// @param buff_size The size of the error buffer.
-/// @return True if the value was successfully set.
-extern bool iw_val_store_set(
+/// @return IW_VAL_RET_OK if the value was successfully set.
+extern IW_VAL_RET iw_val_store_set(
     iw_val_store *store,
     const char *name,
     iw_val *value,
@@ -197,8 +209,8 @@ extern bool iw_val_store_set(
 /// @param num The number value to set.
 /// @param err_buff The error buffer to store any error messages in or NULL.
 /// @param buff_size The size of the error buffer.
-/// @return True if the value was successfully set.
-extern bool iw_val_store_set_number(
+/// @return IW_VAL_RET_OK if the value was successfully set.
+extern IW_VAL_RET iw_val_store_set_number(
     iw_val_store *store,
     const char *name,
     int num,
@@ -213,8 +225,8 @@ extern bool iw_val_store_set_number(
 /// @param str The string value to set.
 /// @param err_buff The error buffer to store any error messages in or NULL.
 /// @param buff_size The size of the error buffer.
-/// @return True if the value was successfully set.
-extern bool iw_val_store_set_string(
+/// @return IW_VAL_RET_OK if the value was successfully set.
+extern IW_VAL_RET iw_val_store_set_string(
     iw_val_store *store,
     const char *name,
     const char *str,
@@ -229,8 +241,8 @@ extern bool iw_val_store_set_string(
 /// @param address The IP address value to set.
 /// @param err_buff The error buffer to store any error messages in or NULL.
 /// @param buff_size The size of the error buffer.
-/// @return True if the value was successfully set.
-extern bool iw_val_store_set_address(
+/// @return IW_VAL_RET_OK if the value was successfully set.
+extern IW_VAL_RET iw_val_store_set_address(
     iw_val_store *store,
     const char *name,
     const iw_ip *address,
@@ -249,8 +261,8 @@ extern bool iw_val_store_set_address(
 /// @param value The value to set.
 /// @param err_buff The error buffer to store any error messages in or NULL.
 /// @param buff_size The size of the error buffer.
-/// @return True if the value was successfully set.
-extern bool iw_val_store_set_existing_value(
+/// @return IW_VAL_RET_OK if the value was successfully set.
+extern IW_VAL_RET iw_val_store_set_existing_value(
     iw_val_store *store,
     const char *name,
     const char *value,

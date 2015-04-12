@@ -194,10 +194,17 @@ static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
     char buff[256];
     iw_web_req_parameter *param = iw_web_req_get_parameter(req, NULL);
     while(param != NULL) {
-        if(!iw_val_store_set_existing_value(&iw_cfg, param->name, param->value,
-                                        buff, sizeof(buff)))
+        IW_VAL_RET ret = iw_val_store_set_existing_value(&iw_cfg,
+                                                         param->name, param->value,
+                                                         buff, sizeof(buff));
+        if(ret != IW_VAL_RET_OK && ret != IW_VAL_RET_NO_SUCH_VALUE)
         {
-            fprintf(out, "<p>Error: %s</p>", buff);
+            fprintf(out, "<p>Error: Failed to set parameter '%s'",
+                    param->name);
+            if(buff[0] != '\0') {
+                fprintf(out, " - %s", buff);
+            }
+            fprintf(out, "</p>\n");
         }
         param = iw_web_req_get_next_parameter(req, NULL, param);
     }

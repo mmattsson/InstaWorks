@@ -88,14 +88,18 @@ static void test_insert_value(
 {
     char value_buff[16];
     if(type == IW_VAL_TYPE_NUMBER) {
-        bool ret = iw_val_store_set_number(&store, name, value_index, NULL, 0);
-        test(result, ret == should_succeed, "%s to insert '%s'->%d",
+        IW_VAL_RET ret = iw_val_store_set_number(&store, name, value_index, NULL, 0);
+        test(result, ((ret == IW_VAL_RET_OK) && should_succeed) ||
+                     ((ret != IW_VAL_RET_OK) && !should_succeed),
+             "%s to insert '%s'->%d",
              should_succeed ? "Succeeded" : "Failed",
              name, value_index);
     } else if(type == IW_VAL_TYPE_STRING) {
         snprintf(value_buff, sizeof(value_buff), "str_%d", value_index);
-        bool ret = iw_val_store_set_string(&store, name, value_buff, NULL, 0);
-        test(result, ret == should_succeed, "%s to insert '%s'->'%s'",
+        IW_VAL_RET ret = iw_val_store_set_string(&store, name, value_buff, NULL, 0);
+        test(result, ((ret == IW_VAL_RET_OK) && should_succeed) ||
+                     ((ret != IW_VAL_RET_OK) && !should_succeed),
+             "%s to insert '%s'->'%s'",
              should_succeed ? "Succeeded" : "Failed",
              name, value_buff);
     }
