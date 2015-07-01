@@ -15,6 +15,7 @@
 
 #include <iw_cfg.h>
 #include <iw_cmds.h>
+#include <iw_cmdline.h>
 #include <iw_ip.h>
 #include <iw_log.h>
 #include <iw_list.h>
@@ -22,6 +23,7 @@
 #include <iw_memory.h>
 #include <iw_mutex.h>
 #include <iw_syslog.h>
+#include <iw_thread.h>
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -30,6 +32,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 // --------------------------------------------------------------------------
 //
