@@ -199,8 +199,8 @@ static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
                                                          buff, sizeof(buff));
         if(ret != IW_VAL_RET_OK && ret != IW_VAL_RET_NO_SUCH_VALUE)
         {
-            fprintf(out, "<p>Error: Failed to set parameter '%s'",
-                    param->name);
+            fprintf(out, "<p>Error: Failed to assigne value '%s=%s'",
+                    param->name, param->value);
             if(buff[0] != '\0') {
                 fprintf(out, " - %s", buff);
             }
