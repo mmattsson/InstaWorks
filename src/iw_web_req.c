@@ -32,7 +32,7 @@
 // --------------------------------------------------------------------------
 
 char *iw_web_req_urldecode(const char *str, unsigned int len) {
-    int str_idx, copy_idx;
+    unsigned int str_idx, copy_idx;
     char buff[3] = { 0 };
     char *copy = IW_MALLOC(len + 1);
     if(copy == NULL) {

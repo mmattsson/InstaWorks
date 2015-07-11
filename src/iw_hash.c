@@ -16,7 +16,7 @@
 
 unsigned long iw_hash_data(unsigned int len, const void *data) {
     unsigned long hash = 5381;
-    int c, cnt;
+    unsigned int c, cnt;
     const unsigned char *ptr = data;
 
     for(cnt=0;cnt < len;cnt++) {

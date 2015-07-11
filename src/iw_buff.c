@@ -67,7 +67,7 @@ bool iw_buff_add_data(iw_buff *buff, char *data, unsigned int size) {
 // --------------------------------------------------------------------------
 
 bool iw_buff_reserve_data(iw_buff *buff, char **data, unsigned int size) {
-    int remainder = iw_buff_remainder(buff);
+    unsigned int remainder = iw_buff_remainder(buff);
     if(size <= remainder) {
         // No problem, we got space enough
         *data = buff->buff + buff->end;

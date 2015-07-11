@@ -343,7 +343,7 @@ void iw_free(void *ptr) {
 
 char *iw_memory_display_str(unsigned int len, char *buff, unsigned int bytes) {
     static char *unit[] = { "Bytes", "KBytes", "MBytes", "GBytes" };
-    int cnt=0;
+    unsigned int cnt=0;
     for(;cnt < IW_ARR_LEN(unit);cnt++) {
         if(bytes < 1024) {
             snprintf(buff, len, "%d %s", bytes, unit[cnt]);

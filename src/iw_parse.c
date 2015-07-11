@@ -28,7 +28,7 @@ IW_PARSE iw_parse_find_token(
     const char *token)
 {
     int token_len = strlen(token);
-    int tmp = *offset;
+    unsigned int tmp = *offset;
     while(tmp + token_len <= len) {
         if(strncmp(buff + tmp, token, token_len) == 0) {
             // Only set offset if we find a match.

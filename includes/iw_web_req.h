@@ -92,7 +92,7 @@ typedef struct _iw_web_req {
     char *buff;
 
     /// The length of the request buffer.
-    int len;
+    unsigned int len;
 
     // ----------------------------------------------------------------------
     //
@@ -123,13 +123,13 @@ typedef struct _iw_web_req {
     /// The headers of the request.
     /// This is a list of indexes into the request buffer and is therefore
     /// using the \a iw_web_req_header structure.
-    iw_list  headers;
+    iw_list headers;
 
     /// True if all request headers have been parsed.
-    bool     headers_complete;
+    bool headers_complete;
 
     /// The length of the content of the body (or zero if no body).
-    int      content_length;
+    unsigned int content_length;
 
     /// The content of the request (if any).
     iw_parse_index content;

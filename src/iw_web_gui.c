@@ -50,7 +50,7 @@ typedef enum {
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully written.
 static bool iw_web_gui_construct_menu(iw_web_req *req, FILE *out) {
-    int cnt = 0;
+    unsigned int cnt = 0;
 
     fprintf(out, "<ul id='menu'>\n");
     for(cnt=0;cnt < IW_ARR_LEN(s_menu);cnt++) {
@@ -271,7 +271,7 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
     char *prg = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME);
     PAGE pg = PG_NONE;
     if(req->path.len > 0 && *(req->buff + req->path.start) == '/') {
-        int cnt;
+        unsigned int cnt;
         for(cnt=0;cnt < IW_ARR_LEN(s_menu);cnt++) {
             if(iw_parse_cmp(s_menu[cnt], req->buff, &req->path)) {
                 pg = cnt;

@@ -74,7 +74,7 @@ bool iw_ip_str_to_addr(
             // mistake an IPv6 address with colons for a port marker
             addr_end = port_start = strrchr(str, ':');
             if(port_start != NULL &&
-               strspn(str, ".1234567890") == port_start - str)
+               strspn(str, ".1234567890") == (size_t)(port_start - str))
             {
                 // There are just numbers and/or dots leading up to the last
                 // colon. This could be an IPv4 address. Let's use the port
