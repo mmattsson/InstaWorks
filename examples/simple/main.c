@@ -386,7 +386,12 @@ bool main_callback(int argc, char **argv) {
         return false;
     }
 
-    IW_SYSLOG(LOG_INFO, SIMPLE_LOG, "Opened server socket on port %d!", s_port);
+    printf("Opened simple server on TCP port %d!\n\n"
+           "Connect in using 'telnet localhost %d' from a couple of terminals\n"
+           "and then type text into the telnet sessions.\n\n"
+           "You can use the web GUI by pointing your browser to http://localhost:8080\n"
+           "and look at the programs run-time data and configuration settings.\n\n",
+           s_port, s_port);
 
     // Start serving clients
     if(!serve_data()) {
