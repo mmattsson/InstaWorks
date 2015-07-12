@@ -83,7 +83,7 @@ static char *argv[][MAX_ARGC] = {
 // --------------------------------------------------------------------------
 
 static iw_opt s_opts[5];
-static unsigned int s_num = 0;
+static int s_num = 0;
 static char *s_arg[3];
 
 // --------------------------------------------------------------------------

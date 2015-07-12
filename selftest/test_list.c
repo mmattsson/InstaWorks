@@ -23,7 +23,7 @@ static void validate_list(
     test_result *result, iw_list *list,
     unsigned int len, unsigned int *values)
 {
-    int cnt;
+    unsigned int cnt;
     test_disp_start("Validating list {");
     for(cnt=0;cnt < len;cnt++) {
         if(cnt > 0) {

@@ -53,7 +53,7 @@ typedef struct _iw_list {
     iw_list_node *head; ///< A pointer to the head of the list.
     iw_list_node *tail; ///< A pointer to the tail of the list.
     bool iw_mem_alloc;  ///< True if the IW memory allocation should be used.
-    int num_elems;      ///< The number of elements in the list.
+    unsigned int num_elems; ///< The number of elements in the list.
 } iw_list;
 
 // --------------------------------------------------------------------------

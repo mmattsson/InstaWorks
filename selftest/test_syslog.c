@@ -41,12 +41,12 @@ static void test_syslog_check(test_result *result, int cmp_size, ...) {
     int found = 0;
     char *ptr = buff, *end;
     va_start(ap, cmp_size);
-    for(;cnt < cmp_size && ptr - buff < size;cnt++) {
-        while(ptr - buff < size && *ptr != 'X') {
+    for(;cnt < cmp_size && (size_t)(ptr - buff) < size;cnt++) {
+        while((size_t)(ptr - buff) < size && *ptr != 'X') {
             ptr++;
         }
         end = ptr;
-        while(end - buff < size && *end != '\n') {
+        while((size_t)(end - buff) < size && *end != '\n') {
             end++;
         }
         char *cmp = va_arg(ap, char *);
