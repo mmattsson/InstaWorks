@@ -1,0 +1,40 @@
+{
+  "prgname" : "simple",
+  
+  "cfg" : {
+    "cmdport" : "10000",
+    "allowquit" : "1",
+
+    "crashhandler" : {
+      "file" : "/tmp/callstack.txt",
+      "enable" : true
+    },
+    "daemonize" : {
+      "enable" : false,
+      "opt" : "d"
+    },
+    "foreground" : {
+      "enable" : false,
+      "opt" : "f"
+    },
+    "healtcheck" : {
+      "enable" : true
+    },
+    "log" : {
+      "lvl" : 255,
+      "opt" : "l"
+    },
+    "memtrack" : {
+      "enable" : true,
+      "size" : 10000
+    },
+    "syslog" : {
+      "size" : 10000
+    },
+    "webgui" : {
+      "enable" : true,
+      "css" : true
+    }
+  }
+}
+
