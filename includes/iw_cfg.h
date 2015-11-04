@@ -154,12 +154,66 @@ extern iw_callbacks iw_cb;
 // --------------------------------------------------------------------------
 
 /// @brief Initialize the configuration store.
+/// This does not load configuration from file, this just sets up the
+/// configuration store. You can add configuration values to the store
+/// before calling \a iw_cfg_load().
 extern void iw_cfg_init();
+
+// --------------------------------------------------------------------------
+
+/// @brief Load configuration settings from file.
+/// The given file name is used to load settings. If no file name is given,
+/// the file name used in a previous call to \a iw_cfg_load() or
+/// \a iw_cfg_save() is used.
+/// @param file The name of the configuration file to use.
+extern bool iw_cfg_load(const char *file);
+
+// --------------------------------------------------------------------------
+
+/// @brief Save configuration settings to file.
+/// The given file name is used to save settings. If no file name is given,
+/// the file name used in a previous call to \a iw_cfg_load() or
+/// \a iw_cfg_save() is used.
+/// @param file The name of the configuration fiel to use or NULL.
+/// @return True if the configuration was successfully saved.
+extern bool iw_cfg_save(const char *file);
 
 // --------------------------------------------------------------------------
 
 /// @brief Destroy the configuration store.
 extern void iw_cfg_exit();
+
+// --------------------------------------------------------------------------
+
+/// @brief Called to add a number to the configuration settings for the program.
+/// Should be called after iw_cfg_init() but before iw_main(). This will add
+/// a number with a given name, message, and regexp criteria, as well as a
+/// default value.
+/// @param name The name of the configuration setting to add.
+/// @param msg The validation message to show in case the validation fails.
+/// @param regexp The validation criteria to use.
+/// @param def The default value.
+extern void iw_cfg_add_number(
+    const char *name,
+    const char *msg,
+    const char *regexp,
+    int def);
+
+// --------------------------------------------------------------------------
+
+/// @brief Called to add a string to the configuration settings for the program.
+/// Should be called after iw_cfg_init() but before iw_main(). This will add
+/// a string with a given name, message, and regexp criteria, as well as a
+/// default value.
+/// @param name The name of the configuration setting to add.
+/// @param msg The validation message to show in case the validation fails.
+/// @param regexp The validation criteria to use.
+/// @param def The default value.
+extern void iw_cfg_add_string(
+    const char *name,
+    const char *msg,
+    const char *regexp,
+    const char *def);
 
 // --------------------------------------------------------------------------
 

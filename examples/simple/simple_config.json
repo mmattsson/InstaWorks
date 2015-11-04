@@ -1,13 +1,13 @@
 {
   "prgname" : "simple",
-  
+
   "cfg" : {
-    "cmdport" : "10000",
-    "allowquit" : "1",
+    "cmdport" : 10000,
+    "allowquit" : true,
 
     "crashhandler" : {
-      "file" : "/tmp/callstack.txt",
-      "enable" : true
+      "enable" : true,
+      "file" : "/tmp/callstack.txt"
     },
     "daemonize" : {
       "enable" : false,
@@ -17,7 +17,7 @@
       "enable" : false,
       "opt" : "f"
     },
-    "healtcheck" : {
+    "healthcheck" : {
       "enable" : true
     },
     "log" : {

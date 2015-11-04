@@ -12,6 +12,8 @@
 
 #include "iw_log.h"
 
+#include <parson.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,7 +48,11 @@
 
 // --------------------------------------------------------------------------
 
+/// The configuration.
 iw_val_store iw_cfg;
+
+/// The configuration file.
+char *iw_cfg_file = NULL;
 
 // --------------------------------------------------------------------------
 //
@@ -64,7 +70,7 @@ iw_callbacks iw_cb = {
 //
 // --------------------------------------------------------------------------
 
-static void iw_cfg_add_number(
+void iw_cfg_add_number(
     const char *name,
     const char *msg,
     const char *regexp,
@@ -86,7 +92,7 @@ static void iw_cfg_add_number(
 
 // --------------------------------------------------------------------------
 
-static void iw_cfg_add_string(
+void iw_cfg_add_string(
     const char *name,
     const char *msg,
     const char *regexp,
@@ -141,8 +147,73 @@ void iw_cfg_init() {
 
 // --------------------------------------------------------------------------
 
+bool iw_cfg_load(const char *file) {
+    if(iw_cfg_file != NULL) {
+        free(iw_cfg_file);
+    }
+    iw_cfg_file = strdup(file);
+    return false;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_cfg_save(const char *file) {
+    // Update the file name if needed.
+    if(iw_cfg_file != NULL) {
+        free(iw_cfg_file);
+    }
+    iw_cfg_file = strdup(file);
+
+    // Create a JSON object, set the variables and write the JSON
+    // object to file.
+    JSON_Value *val = json_value_init_object();
+    if(val == NULL) {
+        LOG(IW_LOG_IW, "Failed to create JSON value for saving configuration.");
+        return false;
+    }
+    JSON_Object *obj = json_value_get_object(val);
+    if(obj == NULL) {
+        LOG(IW_LOG_IW, "Failed to create JSON object for saving configuration.");
+        return false;
+    }
+
+    unsigned long token;
+    iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
+    while(value != NULL) {
+        switch(value->type) {
+        case IW_VAL_TYPE_NONE :
+            break;
+        case IW_VAL_TYPE_NUMBER :
+            json_object_dotset_number(obj, value->name, value->v.number);
+            break;
+        case IW_VAL_TYPE_STRING :
+            json_object_dotset_string(obj, value->name, value->v.string);
+            break;
+        case IW_VAL_TYPE_ADDRESS : {
+            char value_buff[128];
+            iw_val_to_str(value, value_buff, sizeof(value_buff));
+            json_object_dotset_string(obj, value->name, value_buff);
+            } break;
+        }
+
+        value = iw_val_store_get_next(&iw_cfg, &token);
+    }
+
+/*    JSON_Status status = json_serialize_to_file(obj, iw_cfg_file);
+    if(status != JSONSuccess) {
+        LOG(IW_LOG_IW, "Failed to create file for saving configuration.");
+        return false;
+    }
+*/
+    return false;
+}
+
+// --------------------------------------------------------------------------
+
 void iw_cfg_exit() {
     iw_val_store_destroy(&iw_cfg);
+
+    free(iw_cfg_file);
 }
 
 // --------------------------------------------------------------------------

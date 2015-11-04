@@ -24,6 +24,7 @@
 #include <iw_mutex.h>
 #include <iw_syslog.h>
 #include <iw_thread.h>
+#include <iw_util.h>
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -44,6 +45,8 @@
 #define TIMEOUT_USEC    0
 
 #define SIMPLE_LOG      8
+
+#define DEFAULT_PORT    1234
 
 /// @brief The TCP connection object.
 /// Each client connection that is received will be represented by a TCP
@@ -68,7 +71,7 @@ typedef struct _tcp_conn {
 static int      s_sock = -1;               ///< The server socket.
 static iw_list  s_list = IW_LIST_INIT_MEM; ///< The TCP socket list.
 static IW_MUTEX s_mutex;                   ///< The mutex to protect the sockets.
-static unsigned short s_port = 1234;       ///< The port number to use.
+static unsigned short s_port = DEFAULT_PORT;///< The port number to use.
 
 // --------------------------------------------------------------------------
 //
@@ -212,8 +215,8 @@ static void print_help(const char *error) {
            "Usage: simple [options] [port number]\n"
            "\n"
            "[port number]\n"
-           "    The port number to use for the server (default is 1234)\n"
-           "\n");
+           "    The port number to use for the server (default is %d)\n"
+           "\n", DEFAULT_PORT);
     iw_cmdline_print_help();
     printf("\n"
            "If the program is started without any command line options it will\n"
@@ -370,7 +373,7 @@ bool main_callback(int argc, char **argv) {
     iw_cmd_add("log", "client", log_client,
             "Enable or disable logging for a given client",
             "Used to enable or disable logging for a given client by specifying\n"
-            "the peer IP address and port, e.g. 'log client 1.1.1.1:1234 on'.\n");
+            "the peer IP address and port, e.g. 'log client 1.1.1.1:" IW_STR(DEFAULT_PORT) " on'.\n");
 
     // Create the mutex to protect the TCP connection list.
     s_mutex = iw_mutex_create("TCP Connections");
@@ -419,6 +422,11 @@ int main(int argc, char **argv) {
     // called.
     iw_cfg_init();
     iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1, NULL, 0);
+
+    // Add the simple server port number as a configurable value
+    iw_cfg_add_number("cfg.port", "The port number must be between 1025 and 65535",
+                      "^(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$",
+                      DEFAULT_PORT);
 
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.

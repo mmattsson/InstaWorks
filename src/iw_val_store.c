@@ -146,7 +146,7 @@ IW_VAL_RET iw_val_store_set(
     }
     if(store->controlled) {
         // We must check whether the name is allowed to be set and if the
-        // provided value fits the givne criteria.
+        // provided value fits the given criteria.
         iw_val_criteria *crit = (iw_val_criteria *)iw_htable_get(&store->names,
                                                                  strlen(name),
                                                                  name);

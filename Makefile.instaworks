@@ -16,7 +16,7 @@
 
 USER_CFLAGS=$(USER_DEFINES)
 
-CFLAGS=-g -O0 -Iincludes -Wall -Wextra -Wno-unused -Werror $(USER_CFLAGS)
+CFLAGS=-g -O0 -Iincludes -Iexternal/parson -Wall -Wextra -Wno-unused -Werror $(USER_CFLAGS)
 
 # Comment out the following line if you want to disable all memory tracking.
 #CFLAGS+= -DIW_NO_MEMORY_TRACKING
