@@ -148,21 +148,38 @@ void iw_cfg_init() {
 // --------------------------------------------------------------------------
 
 static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx) {
-    const char *name = json_object_get_name(obj, idx);
-    JSON_Value *val = json_object_get_value(obj, name);
-    JSON_Value_Type type = json_value_get_type(val);
     const char *str;
     double num;
     int boolean;
+    char buff[256];
+    IW_VAL_RET ret = IW_VAL_RET_NO_SUCH_VALUE;
+
+    // Get the value
+    const char *name = json_object_get_name(obj, idx);
+    JSON_Value *val = json_object_get_value(obj, name);
+    JSON_Value_Type type = json_value_get_type(val);
+
+    // Depending on type of value, set the configuration variable
     switch(type) {
     case JSONString :
         str = json_value_get_string(val);
+        if(str != NULL) {
+            ret = iw_val_store_set_string(&iw_cfg,
+                                          name, str,
+                                          buff, sizeof(buff));
+        }
         break;
     case JSONNumber :
         num = json_value_get_number(val);
+        ret = iw_val_store_set_number(&iw_cfg,
+                                      name, num,
+                                      buff, sizeof(buff));
         break;
     case JSONBoolean :
         boolean = json_value_get_boolean(val);
+        ret = iw_val_store_set_number(&iw_cfg,
+                                      name, boolean,
+                                      buff, sizeof(buff));
         break;
     case JSONObject : {
         JSON_Object *sub_obj = json_value_get_object(val);
