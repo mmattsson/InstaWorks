@@ -156,7 +156,14 @@ extern iw_callbacks iw_cb;
 /// @brief Initialize the configuration store.
 /// This does not load configuration from file, this just sets up the
 /// configuration store. You can add configuration values to the store
-/// before calling \a iw_cfg_load().
+/// before calling \a iw_cfg_load(). The typical set of instructions would be:
+/// @code
+///    iw_cfg_init();
+///    iw_val_store_set_number(...);
+///    iw_val_store_set_string(...);
+///    iw_cfg_load(cfg_file_name);
+/// @endcode
+
 extern void iw_cfg_init();
 
 // --------------------------------------------------------------------------

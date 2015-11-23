@@ -48,6 +48,8 @@
 
 #define DEFAULT_PORT    1234
 
+#define SIMPLE_CFG      "/tmp/simple.cfg"
+
 /// @brief The TCP connection object.
 /// Each client connection that is received will be represented by a TCP
 /// connection object. This object will keep track of the client socket file
@@ -420,7 +422,7 @@ int main(int argc, char **argv) {
     // iw_main() to make sure that settings that are processed by iw_main()
     // are set before they are accessed and to do so, iw_cfg_init() must be
     // called.
-    iw_cfg_init();
+    iw_cfg_init(SIMPLE_CFG);
     iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1, NULL, 0);
 
     // Add the simple server port number as a configurable value
@@ -431,6 +433,9 @@ int main(int argc, char **argv) {
     // Also, adding log levels should be done before the iw_main() call
     // so that the log levels can be displayed in the program usage text.
     iw_log_add_level(SIMPLE_LOG, "The simple application general log level");
+
+    // Loading any saved configuration
+    iw_cfg_load(SIMPLE_CFG);
 
     // Calling iw_main(). The exit code tells us if the program was invoked
     // as a client or server, and whether the command line parameters

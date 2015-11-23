@@ -34,6 +34,8 @@
 
 #define PHILO_LOG   8
 
+#define PHILO_CFG   "/tmp/philo.cfg"
+
 static long long int num_philosophers = 5;
 
 static bool do_correct = false;
@@ -227,6 +229,9 @@ int main(int argc, char **argv) {
     iw_cfg_init();
     iw_val_store_set_number(&iw_cfg, IW_CFG_CMD_PORT, 10002, NULL, 0);
     iw_val_store_set_string(&iw_cfg, IW_CFG_CRASHHANDLER_FILE, "/tmp/philo.txt", NULL, 0);
+
+    // Loading any saved configuration
+    iw_cfg_load(PHILO_CFG);
 
     if(argc == 1) {
         print_help(NULL);

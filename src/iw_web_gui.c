@@ -208,6 +208,7 @@ static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
         }
         param = iw_web_req_get_next_parameter(req, NULL, param);
     }
+    iw_cfg_save(NULL);
     return true;
 }
 

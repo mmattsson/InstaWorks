@@ -147,22 +147,81 @@ void iw_cfg_init() {
 
 // --------------------------------------------------------------------------
 
-bool iw_cfg_load(const char *file) {
-    if(iw_cfg_file != NULL) {
-        free(iw_cfg_file);
+static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx) {
+    const char *name = json_object_get_name(obj, idx);
+    JSON_Value *val = json_object_get_value(obj, name);
+    JSON_Value_Type type = json_value_get_type(val);
+    const char *str;
+    double num;
+    int boolean;
+    switch(type) {
+    case JSONString :
+        str = json_value_get_string(val);
+        break;
+    case JSONNumber :
+        num = json_value_get_number(val);
+        break;
+    case JSONBoolean :
+        boolean = json_value_get_boolean(val);
+        break;
+    case JSONObject : {
+        JSON_Object *sub_obj = json_value_get_object(val);
+        size_t max = json_object_get_count(sub_obj);
+        size_t sub_idx;
+        for(sub_idx=0;sub_idx < max;sub_idx++) {
+            iw_cfg_get_json_obj(sub_obj, sub_idx);
+        }
+        } break;
     }
-    iw_cfg_file = strdup(file);
-    return false;
+}
+
+// --------------------------------------------------------------------------
+
+bool iw_cfg_load(const char *file) {
+    JSON_Value *root_value, *val;
+    JSON_Array *array;
+    JSON_Object *obj, *cfg;
+    size_t idx;
+
+    // Update the file name if needed.
+    if(file != NULL) {
+        if(iw_cfg_file != NULL) {
+            free(iw_cfg_file);
+        }
+        iw_cfg_file = strdup(file);
+    }
+
+    // Load the configuration settings (if any).
+    root_value = json_parse_file(file);
+    if(root_value == NULL || json_value_get_type(root_value) != JSONObject) {
+        LOG(IW_LOG_IW, "Failed to read configuration file.");
+        return false;
+    }
+
+    // Access the json variables
+    obj = json_object(root_value);
+    cfg = json_object_get_object(obj, "cfg");
+    size_t max = json_object_get_count(cfg);
+    for(idx=0;idx < max;idx++) {
+        // Iterate through each setting and set the internal configuration
+        iw_cfg_get_json_obj(cfg, idx);
+    }
+
+    json_value_free(root_value);
+
+    return true;
 }
 
 // --------------------------------------------------------------------------
 
 bool iw_cfg_save(const char *file) {
     // Update the file name if needed.
-    if(iw_cfg_file != NULL) {
-        free(iw_cfg_file);
+    if(file != NULL) {
+        if(iw_cfg_file != NULL) {
+            free(iw_cfg_file);
+        }
+        iw_cfg_file = strdup(file);
     }
-    iw_cfg_file = strdup(file);
 
     // Create a JSON object, set the variables and write the JSON
     // object to file.
@@ -199,12 +258,12 @@ bool iw_cfg_save(const char *file) {
         value = iw_val_store_get_next(&iw_cfg, &token);
     }
 
-/*    JSON_Status status = json_serialize_to_file(obj, iw_cfg_file);
+    JSON_Status status = json_serialize_to_file_pretty(val, iw_cfg_file);
     if(status != JSONSuccess) {
         LOG(IW_LOG_IW, "Failed to create file for saving configuration.");
         return false;
     }
-*/
+
     return false;
 }
 
