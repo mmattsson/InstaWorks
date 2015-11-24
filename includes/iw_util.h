@@ -54,7 +54,19 @@ extern "C" {
 /// @param num The resulting number.
 /// @param base The base to use when converting.
 /// @return True if the conversion was successful.
-extern bool iw_strtoll(const char *str, long long int *num, unsigned int base);
+extern bool iw_util_strtoll(const char *str, long long int *num, unsigned int base);
+
+// --------------------------------------------------------------------------
+
+/// @brief Concatenates a number of strings into a new buffer.
+/// Allocates a new buffer large enough to hold the given strings. Copies
+/// the two given strings into the new buffer. This does not affect the given
+/// string's buffers. Uses the IW_MEM functions to allocate the buffer so the
+/// returned buffer must be freed with IW_FREE().
+/// @param num The number of strings to concatenate.
+/// @param ... The strings to concatenate.
+/// @return The resulting string, or NULL if the concatenation failed.
+extern char *iw_util_concat(int num, ...);
 
 // --------------------------------------------------------------------------
 

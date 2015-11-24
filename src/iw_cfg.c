@@ -11,6 +11,7 @@
 #include "iw_cfg.h"
 
 #include "iw_log.h"
+#include "iw_util.h"
 
 #include <parson.h>
 
@@ -47,6 +48,9 @@
 #define ADD_CHAR(n)  ADD_STR(n,"Must be a single character",IW_VAL_CRIT_CHAR)
 
 // --------------------------------------------------------------------------
+
+/// The root JSON config object name.
+#define ROOT_CFG_OBJ    "cfg"
 
 /// The configuration.
 iw_val_store iw_cfg;
@@ -147,7 +151,7 @@ void iw_cfg_init() {
 
 // --------------------------------------------------------------------------
 
-static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx) {
+static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx, const char *path) {
     const char *str;
     double num;
     int boolean;
@@ -159,26 +163,32 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx) {
     JSON_Value *val = json_object_get_value(obj, name);
     JSON_Value_Type type = json_value_get_type(val);
 
+    char *full_name = iw_util_concat(3, path, ".", name);
+    if(full_name == NULL) {
+        // Failed to allocate memory for the path.
+        return;
+    }
+
     // Depending on type of value, set the configuration variable
     switch(type) {
     case JSONString :
         str = json_value_get_string(val);
         if(str != NULL) {
             ret = iw_val_store_set_string(&iw_cfg,
-                                          name, str,
+                                          full_name, str,
                                           buff, sizeof(buff));
         }
         break;
     case JSONNumber :
         num = json_value_get_number(val);
         ret = iw_val_store_set_number(&iw_cfg,
-                                      name, num,
+                                      full_name, num,
                                       buff, sizeof(buff));
         break;
     case JSONBoolean :
         boolean = json_value_get_boolean(val);
         ret = iw_val_store_set_number(&iw_cfg,
-                                      name, boolean,
+                                      full_name, boolean,
                                       buff, sizeof(buff));
         break;
     case JSONObject : {
@@ -186,10 +196,11 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx) {
         size_t max = json_object_get_count(sub_obj);
         size_t sub_idx;
         for(sub_idx=0;sub_idx < max;sub_idx++) {
-            iw_cfg_get_json_obj(sub_obj, sub_idx);
+            iw_cfg_get_json_obj(sub_obj, sub_idx, full_name);
         }
         } break;
     }
+    free(full_name);
 }
 
 // --------------------------------------------------------------------------
@@ -217,11 +228,11 @@ bool iw_cfg_load(const char *file) {
 
     // Access the json variables
     obj = json_object(root_value);
-    cfg = json_object_get_object(obj, "cfg");
+    cfg = json_object_get_object(obj, ROOT_CFG_OBJ);
     size_t max = json_object_get_count(cfg);
     for(idx=0;idx < max;idx++) {
         // Iterate through each setting and set the internal configuration
-        iw_cfg_get_json_obj(cfg, idx);
+        iw_cfg_get_json_obj(cfg, idx, ROOT_CFG_OBJ);
     }
 
     json_value_free(root_value);

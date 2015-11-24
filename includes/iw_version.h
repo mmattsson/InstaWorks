@@ -26,10 +26,13 @@ extern "C" {
 #define IW_VERSION_MAJOR        0
 
 /// The minor version number of the InstaWorks library.
-#define IW_VERSION_MINOR        20
+#define IW_VERSION_MINOR        30
+
+/// The release level (Alpha, Beta, or empty for release).
+#define IW_VERSION_LEVEL        "Alpha"
 
 /// A string representation of the version number.
-#define IW_VER_STR              IW_STR(IW_VERSION_MAJOR)"."IW_STR(IW_VERSION_MINOR)
+#define IW_VER_STR              IW_STR(IW_VERSION_MAJOR)"."IW_STR(IW_VERSION_MINOR)"."IW_VERSION_LEVEL
 
 // --------------------------------------------------------------------------
 

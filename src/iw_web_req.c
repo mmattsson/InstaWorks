@@ -44,7 +44,7 @@ char *iw_web_req_urldecode(const char *str, unsigned int len) {
             buff[0] = *(str + str_idx + 1);
             buff[1] = *(str + str_idx + 2);
             long long int ascii;
-            if(!iw_strtoll(buff, &ascii, 16)) {
+            if(!iw_util_strtoll(buff, &ascii, 16)) {
                 IW_FREE(copy);
                 return NULL;
             }
@@ -315,7 +315,7 @@ IW_WEB_PARSE iw_web_req_parse(iw_web_req *req) {
         // If this is the Content-Length header, then set the content-length.
         if(iw_parse_casecmp("Content-Length", req->buff, &name)) {
             long long int content_length;
-            if(iw_strtoll(req->buff + value.start, &content_length, 10)) {
+            if(iw_util_strtoll(req->buff + value.start, &content_length, 10)) {
                 req->content_length = content_length;
             }
         }

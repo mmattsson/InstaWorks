@@ -313,7 +313,7 @@ IW_VAL_RET iw_val_store_set_existing_value(
         return iw_val_store_set_string(store, name, value, err_buff, buff_size);
     case IW_VAL_TYPE_NUMBER : {
         long long num;
-        if(!iw_strtoll(value, &num, 0)) {
+        if(!iw_util_strtoll(value, &num, 0)) {
             snprintf(err_buff, buff_size, "Invalid number");
             return IW_VAL_RET_FAILED_REGEXP;
         }

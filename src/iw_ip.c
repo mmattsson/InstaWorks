@@ -32,7 +32,7 @@ bool iw_ip_str_to_port(
     unsigned short *port)
 {
     long long int tmp;
-    if(!iw_strtoll(str, &tmp, 10) ||
+    if(!iw_util_strtoll(str, &tmp, 10) ||
        tmp < 0 || tmp > 65535)
     {
         return false;
@@ -88,7 +88,7 @@ bool iw_ip_str_to_addr(
         }
         if(port_start != NULL) {
             long long int tmp;
-            if(iw_strtoll(port_start, &tmp, 10) && tmp >= 0 && tmp <= 65535) {
+            if(iw_util_strtoll(port_start, &tmp, 10) && tmp >= 0 && tmp <= 65535) {
                 port = tmp;
             } else {
                 return false;

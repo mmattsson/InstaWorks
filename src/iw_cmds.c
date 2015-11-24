@@ -304,7 +304,7 @@ static bool cmd_log_lvl(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
         return false;
     }
     long long int lvl;
-    if(!iw_strtoll(lvlstr, &lvl, 16)) {
+    if(!iw_util_strtoll(lvlstr, &lvl, 16)) {
         fprintf(out, "\nInvalid log level\n");
         cmd_log_help(out);
         return false;
@@ -357,7 +357,7 @@ static bool cmd_log_thread(FILE *out, const char *cmd, iw_cmd_parse_info *info) 
     // Check thread id parameter
     if(strcmp(threadstr, "all") == 0) {
         threadid = 0;
-    } else if(!iw_strtoll(threadstr, &threadid, 16)) {
+    } else if(!iw_util_strtoll(threadstr, &threadid, 16)) {
         fprintf(out, "\nInvalid parameter\n");
         cmd_log_thread_help(out);
     }

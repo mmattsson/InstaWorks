@@ -1,4 +1,9 @@
-* Add JSON saving of configuration
+Todo
+--------------------------------------------------
 * Add callbacks for config setting changes
 * Add REST API to access configuration and run-time values
 * Add HA facilities
+
+Done
+--------------------------------------------------
+* Add JSON saving of configuration

@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
             iw_val_store_set_number(&iw_cfg, IW_CFG_FOREGROUND, 1, NULL, 0);
             break;
         case 'l' :
-            if(!iw_strtoll(optarg, &loglevel, 16)) {
+            if(!iw_util_strtoll(optarg, &loglevel, 16)) {
                 print_help("Invalid log level");
                 exit(-1);
             }
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
     int *foreground = iw_val_store_get_number(&iw_cfg, IW_CFG_FOREGROUND);
     if(optind < argc && foreground != NULL && *foreground) {
-        if(!iw_strtoll(argv[optind], &num_philosophers, 10)) {
+        if(!iw_util_strtoll(argv[optind], &num_philosophers, 10)) {
             print_help("Expected number of philosophers");
             exit(-1);
         }

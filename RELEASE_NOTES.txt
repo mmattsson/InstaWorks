@@ -1,6 +1,13 @@
 InstaWorks debug framework
 =============================================================================
 
+Release version 0.30 - 2015-12-xx
+-----------------------------------------------------------------------------
+Added
++ Ability to save/load configuration settings from JSON files. JSON support
+  was added by including an external JSON parser 'parson'.
+
+
 Release version 0.20 - 2015-01-25
 -----------------------------------------------------------------------------
 Added
@@ -10,6 +17,7 @@ Added
 + Added web GUI based on web server module for access to the program via
   HTTP. A user can connect in to the program and display an 'About' page,
   a 'Configuration' page, and a 'Run-time' page.
+
 
 Release version 0.12 - 2014-07-08
 -----------------------------------------------------------------------------
