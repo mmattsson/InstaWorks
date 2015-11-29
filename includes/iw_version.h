@@ -29,7 +29,7 @@ extern "C" {
 #define IW_VERSION_MINOR        30
 
 /// The release level (Alpha, Beta, or empty for release).
-#define IW_VERSION_LEVEL        "Alpha"
+#define IW_VERSION_LEVEL        "0"
 
 /// A string representation of the version number.
 #define IW_VER_STR              IW_STR(IW_VERSION_MAJOR)"."IW_STR(IW_VERSION_MINOR)"."IW_VERSION_LEVEL

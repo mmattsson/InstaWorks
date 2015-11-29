@@ -102,17 +102,6 @@ typedef bool (*IW_VAL_CRITERIA_FN)(const char *name, iw_val *);
 
 // --------------------------------------------------------------------------
 
-/// @brief A criteria definition for a given value name.
-typedef struct _iw_val_criteria {
-    IW_VAL_TYPE        type;   ///< The type of the value.
-    regex_t            regexp; ///< A regexp defining the criteria for the value.
-    bool               regset; ///< True if the regexp is set.
-    IW_VAL_CRITERIA_FN fn;     ///< A callback function defining the criteria.
-    char              *msg;    ///< The message to display regarding valid range.
-} iw_val_criteria;
-
-// --------------------------------------------------------------------------
-
 /// @brief A value store object.
 typedef struct _iw_val_store {
     iw_htable table;     ///< The hash table containing the value store values.
@@ -183,7 +172,7 @@ extern void iw_val_store_destroy(iw_val_store *store);
 
 // --------------------------------------------------------------------------
 //
-// Value access functions
+// Value access functions, setting and retrieving value store values.
 //
 // --------------------------------------------------------------------------
 
@@ -271,6 +260,14 @@ extern IW_VAL_RET iw_val_store_set_existing_value(
 
 // --------------------------------------------------------------------------
 
+/// @brief Return whether a given name can be persisted.
+/// @param store The store to get the value from.
+/// @param name The name of the value to get.
+/// @return True if the value can be persisted, i.e. loaded and saved to file.
+bool iw_val_store_get_persist(iw_val_store *store, const char *name);
+
+// --------------------------------------------------------------------------
+
 /// @brief Get the value of the given value name.
 /// @param store The store to get the value from.
 /// @param name The name of the value to get.
@@ -346,12 +343,15 @@ extern void *iw_val_store_get_next(iw_val_store *store, unsigned long *token);
 /// @param msg The error message to show for the variable. If the variable
 ///        cannot be set, an error message can be shown to explain the valid
 ///        format of the variable.
+/// @param persist True if the value should be saved and loaded from
+///        configuration.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name(
     iw_val_store *store,
     const char *name,
     const char *msg,
-    IW_VAL_TYPE type);
+    IW_VAL_TYPE type,
+    bool persist);
 
 // --------------------------------------------------------------------------
 
@@ -363,13 +363,16 @@ extern bool iw_val_store_add_name(
 ///        format of the variable.
 /// @param type The type of the value that can be added.
 /// @param fn The callback function for validation of values.
+/// @param persist True if the value should be saved and loaded from
+///        configuration.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name_callback(
     iw_val_store *store,
     const char *name,
     const char *msg,
     IW_VAL_TYPE type,
-    IW_VAL_CRITERIA_FN fn);
+    IW_VAL_CRITERIA_FN fn,
+    bool persist);
 
 // --------------------------------------------------------------------------
 
@@ -384,13 +387,16 @@ extern bool iw_val_store_add_name_callback(
 ///        format of the variable.
 /// @param type The type of the value that can be added.
 /// @param regexp The regular expression to use for validation for this value.
+/// @param persist True if the value should be saved and loaded from
+///        configuration.
 /// @return True if the name was successfully added.
 extern bool iw_val_store_add_name_regexp(
     iw_val_store *store,
     const char *name,
     const char *msg,
     IW_VAL_TYPE type,
-    const char *regexp);
+    const char *regexp,
+    bool persist);
 
 // --------------------------------------------------------------------------
 

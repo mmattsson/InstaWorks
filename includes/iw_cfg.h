@@ -197,11 +197,14 @@ extern void iw_cfg_exit();
 /// a number with a given name, message, and regexp criteria, as well as a
 /// default value.
 /// @param name The name of the configuration setting to add.
+/// @param persist True if the value should be peristed when loading or saving
+///        the configuration to file.
 /// @param msg The validation message to show in case the validation fails.
 /// @param regexp The validation criteria to use.
 /// @param def The default value.
 extern void iw_cfg_add_number(
     const char *name,
+    bool persist,
     const char *msg,
     const char *regexp,
     int def);
@@ -213,11 +216,14 @@ extern void iw_cfg_add_number(
 /// a string with a given name, message, and regexp criteria, as well as a
 /// default value.
 /// @param name The name of the configuration setting to add.
+/// @param persist True if the value should be peristed when loading or saving
+///        the configuration to file.
 /// @param msg The validation message to show in case the validation fails.
 /// @param regexp The validation criteria to use.
 /// @param def The default value.
 extern void iw_cfg_add_string(
     const char *name,
+    bool persist,
     const char *msg,
     const char *regexp,
     const char *def);

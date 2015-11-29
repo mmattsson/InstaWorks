@@ -187,6 +187,7 @@ iw_web_srv *iw_web_srv_init(
         address = &tmp;
         if(!iw_ip_ipv4_to_addr(INADDR_LOOPBACK, address)) {
             LOG(IW_LOG_WEB, "Failed to open web server socket.");
+            IW_FREE(srv);
             return NULL;
         }
     }
@@ -199,6 +200,7 @@ iw_web_srv *iw_web_srv_init(
        (srv->fd = iw_ip_open_server_socket(SOCK_STREAM, address, true)) == -1)
     {
         LOG(IW_LOG_WEB, "Failed to open web server socket.");
+        IW_FREE(srv);
         return NULL;
     }
 
@@ -206,6 +208,7 @@ iw_web_srv *iw_web_srv_init(
     if(!iw_thread_create("Web Server", iw_web_srv_thread, srv)) {
         LOG(IW_LOG_WEB, "Failed to create web server thread");
         close(srv->fd);
+        IW_FREE(srv);
         return NULL;
     }
 

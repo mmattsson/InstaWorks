@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
     iw_val_store_set_number(&iw_cfg, IW_CFG_ALLOW_QUIT, 1, NULL, 0);
 
     // Add the simple server port number as a configurable value
-    iw_cfg_add_number("cfg.port", "The port number must be between 1025 and 65535",
+    iw_cfg_add_number("cfg.port", true, "The port number must be between 1025 and 65535",
                       "^(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$",
                       DEFAULT_PORT);
 

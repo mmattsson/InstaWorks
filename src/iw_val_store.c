@@ -18,6 +18,22 @@
 
 // --------------------------------------------------------------------------
 //
+// Internal structures.
+//
+// --------------------------------------------------------------------------
+
+/// @brief A criteria definition for a given value name.
+typedef struct _iw_val_criteria {
+    IW_VAL_TYPE        type;   ///< The type of the value.
+    bool               persist;///< True if the value should be persisted.
+    regex_t            regexp; ///< A regexp defining the criteria for the value.
+    bool               regset; ///< True if the regexp is set.
+    IW_VAL_CRITERIA_FN fn;     ///< A callback function defining the criteria.
+    char              *msg;    ///< The message to display regarding valid range.
+} iw_val_criteria;
+
+// --------------------------------------------------------------------------
+//
 // Function API
 //
 // --------------------------------------------------------------------------
@@ -343,6 +359,15 @@ IW_VAL_RET iw_val_store_set_existing_value(
 
 // --------------------------------------------------------------------------
 
+bool iw_val_store_get_persist(iw_val_store *store, const char *name) {
+    iw_val_criteria *crit = (iw_val_criteria *)iw_htable_get(&store->names,
+                                                             strlen(name),
+                                                             name);
+    return (crit != NULL && crit->persist);
+}
+
+// --------------------------------------------------------------------------
+
 iw_val *iw_val_store_get(
     iw_val_store *store,
     const char *name)
@@ -413,6 +438,7 @@ void *iw_val_store_get_next(iw_val_store *store, unsigned long *token) {
 
 static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_TYPE type,
+    bool persist,
     const char *msg,
     IW_VAL_CRITERIA_FN fn,
     const char *regexp)
@@ -421,9 +447,10 @@ static iw_val_criteria *iw_val_store_create_criteria(
     if(crit == NULL) {
         return NULL;
     }
-    crit->type   = type;
-    crit->fn     = fn;
-    crit->regset = false;
+    crit->type    = type;
+    crit->persist = persist;
+    crit->fn      = fn;
+    crit->regset  = false;
     if(msg != NULL) {
         crit->msg    = strdup(msg);
     }
@@ -457,9 +484,11 @@ bool iw_val_store_add_name(
     iw_val_store *store,
     const char *name,
     const char *msg,
-    IW_VAL_TYPE type)
+    IW_VAL_TYPE type,
+    bool persist)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, NULL, NULL);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
+                                                         msg, NULL, NULL);
     if(crit == NULL) {
         return false;
     }
@@ -473,9 +502,11 @@ bool iw_val_store_add_name_callback(
     const char *name,
     const char *msg,
     IW_VAL_TYPE type,
-    IW_VAL_CRITERIA_FN fn)
+    IW_VAL_CRITERIA_FN fn,
+    bool persist)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, fn, NULL);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
+                                                         msg, fn, NULL);
     if(crit == NULL) {
         return false;
     }
@@ -489,9 +520,11 @@ bool iw_val_store_add_name_regexp(
     const char *name,
     const char *msg,
     IW_VAL_TYPE type,
-    const char *regexp)
+    const char *regexp,
+    bool persist)
 {
-    iw_val_criteria *crit = iw_val_store_create_criteria(type, msg, NULL, regexp);
+    iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
+                                                         msg, NULL, regexp);
     if(crit == NULL) {
         return false;
     }

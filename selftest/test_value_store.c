@@ -166,7 +166,7 @@ void test_value_store(test_result *result) {
 
     test_display("Adding a value (num_1) that can be between 0..65535 (a port number)");
     iw_val_store_add_name_regexp(&store, "num_1", NULL, IW_VAL_TYPE_NUMBER,
-        "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
+        "^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", false);
     test_insert_value(result, "num_1", 67000, IW_VAL_TYPE_STRING, false);
     test_insert_value(result, "num_1", -1, IW_VAL_TYPE_NUMBER, false);
     test_insert_value(result, "num_1", 67000, IW_VAL_TYPE_NUMBER, false);

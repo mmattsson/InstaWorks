@@ -22,30 +22,35 @@
 
 /// Add a number to the configuration settings.
 /// @param n The name of the setting.
+/// @param p True if the value should be persisted.
 /// @param m The error message for the setting.
 /// @param r The range of the number.
-#define ADD_NUM(n,m,r) iw_cfg_add_number(IW_CFG_##n,m,r,IW_DEF_##n)
+#define ADD_NUM(n,p,m,r) iw_cfg_add_number(IW_CFG_##n,p,m,r,IW_DEF_##n)
 
 /// Add a port number to the configuration settings. The allowed range for the
 /// port number is 0-65535.
 /// @param n The name of the setting.
-#define ADD_PORT(n)  ADD_NUM(n,"Must be between 0 and 65535",IW_VAL_CRIT_PORT)
+/// @param p True if the value should be persisted.
+#define ADD_PORT(n,p)  ADD_NUM(n,p,"Must be between 0 and 65535",IW_VAL_CRIT_PORT)
 
 /// Add a boolean to the configuration settings. The allowed range for the
 /// number is 0 or 1.
 /// @param n The name of the setting.
-#define ADD_BOOL(n)  ADD_NUM(n,"Must be 0 or 1",IW_VAL_CRIT_BOOL)
+/// @param p True if the value should be persisted.
+#define ADD_BOOL(n,p)  ADD_NUM(n,p,"Must be 0 or 1",IW_VAL_CRIT_BOOL)
 
 /// Add a string to the configuration settings.
 /// @param n The name of the setting.
+/// @param p True if the value should be persisted.
 /// @param m The error message for the setting.
 /// @param r The regular expression for the string.
-#define ADD_STR(n,m,r) iw_cfg_add_string(IW_CFG_##n,m,r,IW_DEF_##n)
+#define ADD_STR(n,p,m,r) iw_cfg_add_string(IW_CFG_##n,p,m,r,IW_DEF_##n)
 
 /// Add a character to the configuration settings. The string can only be
 /// one character long.
 /// @param n The name of the setting.
-#define ADD_CHAR(n)  ADD_STR(n,"Must be a single character",IW_VAL_CRIT_CHAR)
+/// @param p True if the value should be persisted.
+#define ADD_CHAR(n,p)  ADD_STR(n,p,"Must be a single character",IW_VAL_CRIT_CHAR)
 
 // --------------------------------------------------------------------------
 
@@ -76,6 +81,7 @@ iw_callbacks iw_cb = {
 
 void iw_cfg_add_number(
     const char *name,
+    bool persist,
     const char *msg,
     const char *regexp,
     int def)
@@ -84,9 +90,9 @@ void iw_cfg_add_number(
 
     if(regexp != NULL) {
         iw_val_store_add_name_regexp(&iw_cfg, name, msg,
-                                     IW_VAL_TYPE_NUMBER, regexp);
+                                     IW_VAL_TYPE_NUMBER, regexp, persist);
     } else {
-        iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_NUMBER);
+        iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_NUMBER, persist);
     }
     if(iw_val_store_set_number(&iw_cfg, name, def, buff, sizeof(buff)) != IW_VAL_RET_OK) {
         LOG(IW_LOG_IW, "Failed to set default configuration setting for '%s' (%s)",
@@ -98,6 +104,7 @@ void iw_cfg_add_number(
 
 void iw_cfg_add_string(
     const char *name,
+    bool persist,
     const char *msg,
     const char *regexp,
     const char *def)
@@ -106,9 +113,9 @@ void iw_cfg_add_string(
 
     if(regexp != NULL) {
         iw_val_store_add_name_regexp(&iw_cfg, name, msg,
-                                     IW_VAL_TYPE_STRING, regexp);
+                                     IW_VAL_TYPE_STRING, regexp, persist);
     } else {
-        iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_STRING);
+        iw_val_store_add_name(&iw_cfg, name, msg, IW_VAL_TYPE_STRING, persist);
     }
     if(def != NULL) {
         if(iw_val_store_set_string(&iw_cfg, name, def, buff, sizeof(buff)) != IW_VAL_RET_OK) {
@@ -129,24 +136,24 @@ void iw_cfg_init() {
 
     iw_val_store_initialize(&iw_cfg, true);
 
-    ADD_PORT(CMD_PORT);
-    ADD_BOOL(FOREGROUND);
-    ADD_CHAR(FOREGROUND_OPT);
-    ADD_BOOL(DAEMONIZE);
-    ADD_CHAR(DAEMONIZE_OPT);
-    ADD_NUM(LOGLEVEL, NULL, NULL);
-    ADD_CHAR(LOGLEVEL_OPT);
-    ADD_BOOL(ALLOW_QUIT);
-    ADD_BOOL(CRASHHANDLER_ENABLE);
-    ADD_STR(CRASHHANDLER_FILE, NULL, NULL);
-    ADD_BOOL(MEMTRACK_ENABLE);
-    ADD_NUM(MEMTRACK_SIZE, NULL, NULL);
-    ADD_BOOL(HEALTHCHECK_ENABLE);
-    ADD_BOOL(WEBGUI_ENABLE);
-    ADD_STR(WEBGUI_CSS_FILE, NULL, NULL);
-    ADD_NUM(SYSLOG_SIZE, NULL, NULL);
-    ADD_STR(PRG_NAME, NULL, NULL);
-    ADD_STR(PRG_ABOUT, NULL, NULL);
+    ADD_PORT(CMD_PORT, true);
+    ADD_BOOL(FOREGROUND, false);
+    ADD_CHAR(FOREGROUND_OPT, true);
+    ADD_BOOL(DAEMONIZE, false);
+    ADD_CHAR(DAEMONIZE_OPT, true);
+    ADD_NUM(LOGLEVEL, true, NULL, NULL);
+    ADD_CHAR(LOGLEVEL_OPT, true);
+    ADD_BOOL(ALLOW_QUIT, true);
+    ADD_BOOL(CRASHHANDLER_ENABLE, true);
+    ADD_STR(CRASHHANDLER_FILE, true, NULL, NULL);
+    ADD_BOOL(MEMTRACK_ENABLE, true);
+    ADD_NUM(MEMTRACK_SIZE, true, NULL, NULL);
+    ADD_BOOL(HEALTHCHECK_ENABLE, true);
+    ADD_BOOL(WEBGUI_ENABLE, true);
+    ADD_STR(WEBGUI_CSS_FILE, true, NULL, NULL);
+    ADD_NUM(SYSLOG_SIZE, true, NULL, NULL);
+    ADD_STR(PRG_NAME, true, NULL, NULL);
+    ADD_STR(PRG_ABOUT, false, NULL, NULL);
 }
 
 // --------------------------------------------------------------------------
@@ -167,6 +174,23 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx, const char *path) 
     if(full_name == NULL) {
         // Failed to allocate memory for the path.
         return;
+    }
+
+    // For leaf-values, we check whether we should persist them or not.
+    // If we should not persist them, we return here. If it is not a
+    // leaf-value, we should not check for persistance since non-leaf
+    // values are not saved in the value store.
+    switch(type) {
+    case JSONString :
+    case JSONNumber :
+    case JSONBoolean : {
+        bool persist = iw_val_store_get_persist(&iw_cfg, full_name);
+        if(!persist) {
+            // Should not persist this value
+            free(full_name);
+            return;
+        }
+        } break;
     }
 
     // Depending on type of value, set the configuration variable
@@ -267,20 +291,24 @@ bool iw_cfg_save(const char *file) {
     unsigned long token;
     iw_val *value = iw_val_store_get_first(&iw_cfg, &token);
     while(value != NULL) {
-        switch(value->type) {
-        case IW_VAL_TYPE_NONE :
-            break;
-        case IW_VAL_TYPE_NUMBER :
-            json_object_dotset_number(obj, value->name, value->v.number);
-            break;
-        case IW_VAL_TYPE_STRING :
-            json_object_dotset_string(obj, value->name, value->v.string);
-            break;
-        case IW_VAL_TYPE_ADDRESS : {
-            char value_buff[128];
-            iw_val_to_str(value, value_buff, sizeof(value_buff));
-            json_object_dotset_string(obj, value->name, value_buff);
-            } break;
+        // If we should not persist the value, then continue to the next.
+        bool persist = iw_val_store_get_persist(&iw_cfg, value->name);
+        if(persist) {
+            switch(value->type) {
+            case IW_VAL_TYPE_NONE :
+                break;
+            case IW_VAL_TYPE_NUMBER :
+                json_object_dotset_number(obj, value->name, value->v.number);
+                break;
+            case IW_VAL_TYPE_STRING :
+                json_object_dotset_string(obj, value->name, value->v.string);
+                break;
+            case IW_VAL_TYPE_ADDRESS : {
+                char value_buff[128];
+                iw_val_to_str(value, value_buff, sizeof(value_buff));
+                json_object_dotset_string(obj, value->name, value_buff);
+                } break;
+            }
         }
 
         value = iw_val_store_get_next(&iw_cfg, &token);
