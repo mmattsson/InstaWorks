@@ -1,7 +1,7 @@
 InstaWorks debug framework
 =============================================================================
 
-Release version 0.30 - 2015-12-xx
+Release version 0.30 - 2015-11-29
 -----------------------------------------------------------------------------
 Added
 + Ability to save/load configuration settings from JSON files. JSON support
