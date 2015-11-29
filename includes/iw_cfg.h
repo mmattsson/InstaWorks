@@ -52,7 +52,7 @@ extern "C" {
 /// The default daemonize flag value.
 #define IW_DEF_DAEMONIZE                0
 /// The damonize command line option character.
-#define IW_CFG_DAEMONIZE_OPT            IW_CFG ".daemonize.opt"
+#define IW_CFG_DAEMONIZE_OPT            IW_CFG_OPT ".daemonize"
 /// The default daemonize command line option character.
 #define IW_DEF_DAEMONIZE_OPT            "d"
 /// The log-level setting.

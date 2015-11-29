@@ -292,6 +292,8 @@ bool iw_cfg_save(const char *file) {
         return false;
     }
 
+    json_value_free(val);
+
     return false;
 }
 

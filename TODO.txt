@@ -1,5 +1,8 @@
 Todo
 --------------------------------------------------
+* Add util tests
+* Alphabetize hash tables
+* Add shutdown handler to clean up all memory
 * Add callbacks for config setting changes
 * Add REST API to access configuration and run-time values
 * Add HA facilities

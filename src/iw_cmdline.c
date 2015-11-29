@@ -92,9 +92,9 @@ void iw_cmdline_check_opts() {
 // --------------------------------------------------------------------------
 
 static bool iw_cmdline_help_log(const char *option) {
-    printf(" -l <loglevel>\n"
+    printf(" %s <loglevel>\n"
            IW_OPT_INDENT"The <loglevel> is the desired log level. The log level is a sum of individual\n"
-           IW_OPT_INDENT"levels in either decimal or hexadecimal.\n");
+           IW_OPT_INDENT"levels in either decimal or hexadecimal.\n", option);
     iw_log_list(stdout);
     printf("\n");
     return true;
