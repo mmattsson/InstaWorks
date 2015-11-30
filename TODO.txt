@@ -1,6 +1,5 @@
 Todo
 --------------------------------------------------
-* Add util tests
 * Alphabetize hash tables
 * Add shutdown handler to clean up all memory
 * Add CLI config access
@@ -10,7 +9,10 @@ Todo
 * Add CLOC script
 * Add source code spell checker
 * Add splint
+* Add expect tests for simple and philo to test common commands
 
 Done
 --------------------------------------------------
+* Add util tests
 * Add JSON saving of configuration
+
