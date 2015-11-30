@@ -115,7 +115,7 @@ static bool iw_memory_tracking = false;
 typedef struct _iw_memory_loc {
     char         file[32];  ///< The file that the memory was allocated in.
     unsigned int line;      ///< The line that the memory was allocated in.
-    unsigned int size;      ///< The size of the allocated memory chunk.
+    size_t       size;      ///< The size of the allocated memory chunk.
 } iw_memory_loc;
 
 // --------------------------------------------------------------------------
@@ -146,7 +146,7 @@ static void iw_memory_add_chunk(
     const char *file,
     unsigned int line,
     void *address,
-    unsigned int size)
+    size_t size)
 {
     iw_memory_info *info = (iw_memory_info *)calloc(1, sizeof(iw_memory_info));
     snprintf(info->loc.file, sizeof(info->loc.file), "%s", file);
@@ -194,7 +194,7 @@ void iw_memory_exit() {
 
 // --------------------------------------------------------------------------
 
-void *iw_malloc(const char *file, unsigned int line, int size) {
+void *iw_malloc(const char *file, unsigned int line, size_t size) {
     if(!iw_memory_tracking) {
         return malloc(size);
     }
@@ -224,7 +224,7 @@ void *iw_malloc(const char *file, unsigned int line, int size) {
 
 // --------------------------------------------------------------------------
 
-void *iw_calloc(const char *file, unsigned int line, int elems, int size) {
+void *iw_calloc(const char *file, unsigned int line, int elems, size_t size) {
     if(!iw_memory_tracking) {
         return calloc(elems, size);
     }
@@ -240,7 +240,7 @@ void *iw_calloc(const char *file, unsigned int line, int elems, int size) {
 
 // --------------------------------------------------------------------------
 
-void *iw_realloc(const char *file, unsigned int line, void *ptr, int size) {
+void *iw_realloc(const char *file, unsigned int line, void *ptr, size_t size) {
     if(!iw_memory_tracking) {
         return realloc(ptr, size);
     }

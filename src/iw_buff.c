@@ -26,8 +26,8 @@
 
 bool iw_buff_create(
     iw_buff *buff,
-    unsigned int initial_size,
-    unsigned int max_size)
+    size_t initial_size,
+    size_t max_size)
 {
     memset(buff, 0, sizeof(*buff));
     buff->buff = (char *)IW_CALLOC(1, initial_size);
@@ -52,7 +52,7 @@ void iw_buff_destroy(iw_buff *buff) {
 
 // --------------------------------------------------------------------------
 
-bool iw_buff_add_data(iw_buff *buff, char *data, unsigned int size) {
+bool iw_buff_add_data(iw_buff *buff, char *data, size_t size) {
     char *ptr;
     if(!iw_buff_reserve_data(buff, &ptr, size)) {
         return false;
@@ -66,15 +66,15 @@ bool iw_buff_add_data(iw_buff *buff, char *data, unsigned int size) {
 
 // --------------------------------------------------------------------------
 
-bool iw_buff_reserve_data(iw_buff *buff, char **data, unsigned int size) {
-    unsigned int remainder = iw_buff_remainder(buff);
+bool iw_buff_reserve_data(iw_buff *buff, char **data, size_t size) {
+    size_t remainder = iw_buff_remainder(buff);
     if(size <= remainder) {
         // No problem, we got space enough
         *data = buff->buff + buff->end;
         return true;
     } else if(buff->size < buff->max_size) {
         // Not enough space, see if we can reallocate the buffer.
-        int new_size = buff->size + (size - remainder);
+        size_t new_size = buff->size + (size - remainder);
         char *ptr = (char *)IW_REALLOC(buff->buff, new_size);
         if(ptr == NULL) {
             // Couldn't realloc
@@ -95,20 +95,20 @@ bool iw_buff_reserve_data(iw_buff *buff, char **data, unsigned int size) {
 
 // --------------------------------------------------------------------------
 
-void iw_buff_commit_data(iw_buff *buff, unsigned int size) {
+void iw_buff_commit_data(iw_buff *buff, size_t size) {
     buff->end += size;
 }
 
 // --------------------------------------------------------------------------
 
-void iw_buff_remove_data(iw_buff *buff, unsigned int size) {
+void iw_buff_remove_data(iw_buff *buff, size_t size) {
     memmove(buff->buff, buff->buff + size, buff->end - size);
     buff->end -= size;
 }
 
 // --------------------------------------------------------------------------
 
-int iw_buff_remainder(const iw_buff *buff) {
+size_t iw_buff_remainder(const iw_buff *buff) {
     return buff->size - buff->end;
 }
 

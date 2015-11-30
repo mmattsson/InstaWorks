@@ -83,7 +83,7 @@ extern "C" {
 extern void *iw_malloc(
     const char *file,
     unsigned int line,
-    int size);
+    size_t size);
 
 // --------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ extern void *iw_calloc(
     const char *file,
     unsigned int line,
     int elems,
-    int size);
+    size_t size);
 
 // --------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ extern void *iw_realloc(
     const char *file,
     unsigned int line,
     void *ptr,
-    int size);
+    size_t size);
 
 // --------------------------------------------------------------------------
 

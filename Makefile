@@ -24,6 +24,9 @@ examples:
 dox:
 	doxygen InstaWorks.doxygen
 
+splint:
+	splint -Iincludes -Iexternal/parson -posixlib -preproc -weak src/*.c selftest/*.c examples/*/*.c
+
 clean:
 	$(MAKE) -f Makefile.instaworks clean
 	$(MAKE) -f Makefile.selftest clean

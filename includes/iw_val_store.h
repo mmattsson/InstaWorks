@@ -45,6 +45,7 @@ extern "C" {
 #include "iw_htable.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <regex.h>
 
@@ -144,7 +145,7 @@ extern iw_val *iw_val_create_address(const char *name, const iw_ip *address);
 /// @param buff [out] The buffer to save the string in.
 /// @param buff_len The length of the buffer.
 /// @return True if the value was successfully converted.
-extern bool iw_val_to_str(iw_val *value, char *buff, int buff_len);
+extern bool iw_val_to_str(iw_val *value, char *buff, size_t buff_len);
 
 // --------------------------------------------------------------------------
 

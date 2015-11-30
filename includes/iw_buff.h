@@ -20,6 +20,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 // --------------------------------------------------------------------------
 //
@@ -29,10 +30,10 @@ extern "C" {
 
 /// @brief The buffer structure.
 typedef struct _iw_buff {
-    char *buff;                 ///< A pointer to the beginning of the buffer.
-    unsigned int end;           ///< The end of the actual data.
-    unsigned int size;          ///< The size of the complete buffer memory.
-    unsigned int max_size;      ///< The maximum size of the buffer.
+    char  *buff;          ///< A pointer to the beginning of the buffer.
+    size_t end;           ///< The end of the actual data.
+    size_t size;          ///< The size of the complete buffer memory.
+    size_t max_size;      ///< The maximum size of the buffer.
 } iw_buff;
 
 //---------------------------------------------------------------------------
@@ -48,8 +49,8 @@ typedef struct _iw_buff {
 /// @return True if the buffer was successfully created.
 extern bool iw_buff_create(
     iw_buff *buff,
-    unsigned int initial_size,
-    unsigned int max_size);
+    size_t initial_size,
+    size_t max_size);
 
 // --------------------------------------------------------------------------
 
@@ -65,7 +66,7 @@ extern void iw_buff_destroy(iw_buff *buff);
 /// @param data The data to add.
 /// @param size The size of the data to add.
 /// @return True if the data was successfully added.
-extern bool iw_buff_add_data(iw_buff *buff, char *data, unsigned int size);
+extern bool iw_buff_add_data(iw_buff *buff, char *data, size_t size);
 
 // --------------------------------------------------------------------------
 
@@ -78,13 +79,13 @@ extern bool iw_buff_add_data(iw_buff *buff, char *data, unsigned int size);
 /// @param data [out] A pointer to the data space reserved.
 /// @param size The size of the buffer being reserved.
 /// @return True if the data was successfully reserved.
-extern bool iw_buff_reserve_data(iw_buff *buff, char **data, unsigned int size);
+extern bool iw_buff_reserve_data(iw_buff *buff, char **data, size_t size);
 
 // --------------------------------------------------------------------------
 
 /// @param buff A pointer to the buffer structure.
 /// @param size The size of the data being committed as written.
-extern void iw_buff_commit_data(iw_buff *buff, unsigned int size);
+extern void iw_buff_commit_data(iw_buff *buff, size_t size);
 
 // --------------------------------------------------------------------------
 
@@ -93,7 +94,7 @@ extern void iw_buff_commit_data(iw_buff *buff, unsigned int size);
 /// data is moved to the beginning of the buffer.
 /// @param buff A pointer to the buffer structure.
 /// @param size The size of the data to remove.
-extern void iw_buff_remove_data(iw_buff *buff, unsigned int size);
+extern void iw_buff_remove_data(iw_buff *buff, size_t size);
 
 // --------------------------------------------------------------------------
 
@@ -103,7 +104,7 @@ extern void iw_buff_remove_data(iw_buff *buff, unsigned int size);
 /// to provide that space.
 /// @param buff A pointer to the buffer structure.
 /// @return The number of bytes that remains in the current buffer.
-extern int iw_buff_remainder(const iw_buff *buff);
+extern size_t iw_buff_remainder(const iw_buff *buff);
 
 // --------------------------------------------------------------------------
 
