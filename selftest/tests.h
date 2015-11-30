@@ -51,6 +51,11 @@ extern void test_opts(test_result *result);
 /// @param result The result of the test.
 extern void test_syslog(test_result *result);
 
+/// @brief The utilities test suite.
+/// Tests miscellaneous functions in the iw_util.c module.
+/// @param result The result of the test.
+extern void test_util(test_result *result);
+
 /// @brief The value store test suite.
 /// @param result The result of the test.
 extern void test_value_store(test_result *result);
