@@ -1,9 +1,7 @@
 #!/bin/sh
 
-H_FILES=`find . -type f -name *.h`
-#H_FILES=`find . -type f -name *.h | grep -v ./external`
-C_FILES=`find . -type f -name *.c`
-#C_FILES=`find . -type f -name *.c | grep -v ./external`
+H_FILES=`find . -type f -name *.h | grep -v ./external`
+C_FILES=`find . -type f -name *.c | grep -v ./external`
 
 NUM_H_FILES=`echo $H_FILES | wc | awk '{ print $2 }'`
 NUM_C_FILES=`echo $C_FILES | wc | awk '{ print $2 }'`
