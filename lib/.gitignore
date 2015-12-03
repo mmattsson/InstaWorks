@@ -1,5 +1,5 @@
 # Ignore binaries
-selftest
+libinstaworks.a
 # Except for this file
 !.gitignore
 

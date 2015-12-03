@@ -11,7 +11,7 @@
 BIN=philosophers
 OBJS=main.o
 CFLAGS=-g -O0 -I../../includes -Wall -Werror
-LDFLAGS=-rdynamic -L../../bin -linstaworks -lpthread
+LDFLAGS=-rdynamic -L../../lib -linstaworks -lpthread
 
 .PHONY: clean
 

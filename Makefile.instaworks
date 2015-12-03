@@ -37,7 +37,7 @@ BUILDDIR=objs
 #
 # ---
 
-IW_LIB=bin/libinstaworks.a
+IW_LIB=lib/libinstaworks.a
 
 C_FILES   := $(wildcard $(VPATH)/*.c)
 OBJ_FILES := $(addprefix $(BUILDDIR)/,$(notdir $(C_FILES:.c=.o)))

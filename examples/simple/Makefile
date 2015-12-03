@@ -11,7 +11,7 @@
 BIN=simple
 OBJS=main.o
 CFLAGS=-g -O0 -I../../includes
-LDFLAGS=-L../../bin -linstaworks -lpthread
+LDFLAGS=-L../../lib -linstaworks -lpthread
 
 .PHONY: clean
 
