@@ -281,9 +281,11 @@ int main(int argc, char **argv) {
     switch(retval) {
     case IW_MAIN_SRV_INVALID_PARAMETER :
         print_help("Invalid command-line options");
+        exit_code = 0;
         break;
     case IW_MAIN_SRV_NO_OPTS :
         print_help(NULL);
+        exit_code = 0;
         break;
     case IW_MAIN_SRV_OK :
     case IW_MAIN_CLNT_OK :
