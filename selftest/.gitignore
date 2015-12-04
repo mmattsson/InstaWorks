@@ -1,5 +1,5 @@
 # Ignore binaries
-
+selftest
 # Except for this file
 !.gitignore
 

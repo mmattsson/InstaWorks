@@ -6,7 +6,6 @@ Todo
 * Add callbacks for config setting changes
 * Add REST API to access configuration and run-time values
 * Add HA facilities
-* Add CLOC script
 * Add source code spell checker
 * Add splint
 * Add expect tests for simple and philo to test common commands
@@ -15,4 +14,5 @@ Done
 --------------------------------------------------
 * Add util tests
 * Add JSON saving of configuration
+* Add CLOC script
 

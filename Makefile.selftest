@@ -32,7 +32,7 @@ BUILDDIR=objs
 #
 # ---
 
-SELFTEST=bin/selftest
+SELFTEST=selftest/selftest
 
 C_FILES   := $(wildcard $(VPATH)/*.c)
 OBJ_FILES := $(addprefix $(BUILDDIR)/,$(notdir $(C_FILES:.c=.o)))
