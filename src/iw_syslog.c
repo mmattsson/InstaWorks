@@ -136,7 +136,10 @@ static void iw_syslog_add(const char *msg, va_list ap) {
     }
 
     // Try to write the message in the available space.
-    length = iw_syslog_write_entry(s_write_pos, remainder, &cur_time, msg, ap);
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    length = iw_syslog_write_entry(s_write_pos, remainder, &cur_time, msg, ap_copy);
+    va_end(ap_copy);
 
     if(length > 0) {
         // The message fit in the buffer, update the pointers
