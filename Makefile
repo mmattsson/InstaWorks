@@ -31,6 +31,7 @@ clean:
 	$(MAKE) -f Makefile.instaworks clean
 	$(MAKE) -f Makefile.selftest clean
 	$(MAKE) -C examples -f Makefile clean
+	rm -rf cov-int
 	rm -rf html
 
 # ---
