@@ -48,6 +48,7 @@ iw_val *iw_val_create_number(const char *name, int num) {
     value->v.number = num;
     if(value->name == NULL) {
         iw_val_destroy(value);
+        return NULL;
     }
     return value;
 }
@@ -64,6 +65,7 @@ iw_val *iw_val_create_string(const char *name, const char *str) {
     value->v.string = strdup(str);
     if(value->name == NULL || value->v.string == NULL) {
         iw_val_destroy(value);
+        return NULL;
     }
     return value;
 }
@@ -80,6 +82,7 @@ iw_val *iw_val_create_address(const char *name, const iw_ip *address) {
     memcpy(&value->v.address, address, sizeof(iw_ip));
     if(value->name == NULL || value->v.string == NULL) {
         iw_val_destroy(value);
+        return NULL;
     }
     return value;
 }
@@ -330,7 +333,9 @@ IW_VAL_RET iw_val_store_set_existing_value(
     case IW_VAL_TYPE_NUMBER : {
         long long num;
         if(!iw_util_strtoll(value, &num, 0)) {
-            snprintf(err_buff, buff_size, "Invalid number");
+            if(err_buff != NULL) {
+                snprintf(err_buff, buff_size, "Invalid number");
+            }
             return IW_VAL_RET_FAILED_REGEXP;
         }
         return iw_val_store_set_number(store, name, num, err_buff, buff_size);

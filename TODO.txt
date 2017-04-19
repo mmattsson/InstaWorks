@@ -1,6 +1,5 @@
 Todo
 --------------------------------------------------
-* Alphabetize hash tables
 * Add shutdown handler to clean up all memory
 * Add CLI config access
 * Add callbacks for config setting changes
@@ -12,6 +11,7 @@ Todo
 
 Done
 --------------------------------------------------
+* Alphabetize hash tables
 * Add util tests
 * Add JSON saving of configuration
 * Add CLOC script

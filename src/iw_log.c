@@ -137,7 +137,7 @@ void iw_log_set_level(const char *dev, unsigned int level) {
             // device before closing it.
             LOG(level, "Changed log level, new device=\"%s\", new level=\"%X\"",
                 dev != NULL ? dev : "<none>", level);
-            if(strcmp(s_dev, "stdout") != 0) {
+            if(s_dev != NULL && strcmp(s_dev, "stdout") != 0) {
                 fclose(s_fd);
             }
             s_fd = NULL;

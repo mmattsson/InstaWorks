@@ -102,7 +102,7 @@ extern bool iw_htable_replace(
 /// @param data The data to insert.
 /// @return True if the element was successfully inserted.
 extern bool iw_htable_insert(
-    iw_htable *table, 
+    iw_htable *table,
     unsigned int key_size,
     const void *key,
     void *data);
@@ -158,9 +158,11 @@ extern void iw_htable_destroy(iw_htable *table, IW_HASH_DEL_FN fn);
 // --------------------------------------------------------------------------
 
 /// @brief Get the first element of the hash table.
-/// Starts an iteration of the elements in the hash table. The \p hash 
-/// parameter is used to return the hash of the element returned. This will
-/// then be passed to the iw_htable_get_next() function.
+/// Starts an iteration of the elements in the hash table. The elements
+/// are returned in the order they are found in the internal hash table
+/// implementation. The \p hash parameter is used to return the hash of
+/// the element returned. This parameter will then be passed to the
+/// \a iw_htable_get_next() function.
 /// @param table The hash table to get the first element from.
 /// @param hash [out] A variable to store the hash of the found element.
 /// @return The data in the first element in the hash table.
@@ -169,10 +171,46 @@ extern void *iw_htable_get_first(iw_htable *table, unsigned long *hash);
 // --------------------------------------------------------------------------
 
 /// @brief Get the next element of the hash table.
+/// Should be used after \a iw_htable_get_first() to get the subsequent
+/// elements in the table.
 /// @param table The hash table to get the next element from.
 /// @param hash [in/out] A variable to store the hash of the found element.
 /// @return The data in the next element in the hash table or NULL at the end.
 extern void *iw_htable_get_next(iw_htable *table, unsigned long *hash);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the first element of the table according to the given order.
+/// Starts an iteration of the elements in the hash table. The elements
+/// are returned according to the order of the given comparison function.
+/// The \p hash parameter is used to return the hash of the element returned.
+/// This parameter will then be passed to the \a iw_htable_get_next_ordered()
+/// function.
+/// The comparison function is called to compare two elements in the table.
+/// The function should return less than zero if the first element is less
+/// than the second element, zero if the elements are equal, and greater than
+/// zero if the first element is larger than the second element.
+/// This iteration may be quite time-consuming for large tables.
+/// @param table The hash table to get the first element from.
+/// @param compare A comparison function to use to sort the elements.
+/// @param hash [out] A variable to store the hash of the found element.
+/// @return The data in the first element in the hash table.
+extern void *iw_htable_get_first_ordered(
+    iw_htable *table,
+    int (*compare)(const void *, const void *),
+    unsigned long *hash);
+
+// --------------------------------------------------------------------------
+
+/// @brief Get the next element of the hash table.
+/// @param table The hash table to get the next element from.
+/// @param compare A comparison function to use to sort the elements.
+/// @param hash [in/out] A variable to store the hash of the found element.
+/// @return The data in the next element in the hash table or NULL at the end.
+extern void *iw_htable_get_next_ordered(
+    iw_htable *table,
+    int (*compare)(const void *, const void *),
+    unsigned long *hash);
 
 // --------------------------------------------------------------------------
 

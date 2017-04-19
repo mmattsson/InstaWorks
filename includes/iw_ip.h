@@ -117,6 +117,7 @@ extern unsigned short iw_ip_get_port(iw_ip *address);
 /// @brief Sets the port number for an address structure.
 /// @param address The address to set the port number for.
 /// @param port The port number to set.
+/// @return true if the port was successfully set.
 extern bool iw_ip_set_port(iw_ip *address, unsigned short port);
 
 // --------------------------------------------------------------------------

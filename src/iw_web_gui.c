@@ -82,6 +82,7 @@ static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
             }
             fputs(buffer, out);
         }
+        fclose(fptr);
     } else {
         fprintf(out,
             "body {\n"

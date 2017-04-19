@@ -144,7 +144,7 @@ IW_MAIN_EXIT iw_main(
     int *daemonize  = iw_val_store_get_number(&iw_cfg, IW_CFG_DAEMONIZE);
     int *cmd_port   = iw_val_store_get_number(&iw_cfg, IW_CFG_CMD_PORT);
     if((foreground != NULL && *foreground) || (daemonize != NULL && *daemonize)) {
-        if(*daemonize) {
+        if(daemonize != NULL && *daemonize) {
             if(daemon(0, 0) != 0) {
                 return IW_MAIN_SRV_FAILED;
             }

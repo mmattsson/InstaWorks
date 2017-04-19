@@ -114,16 +114,18 @@ bool iw_ip_str_to_addr(
 
     if(result == NULL || result->ai_addrlen > sizeof(*address)) {
         LOG(IW_LOG_IW, "Failed to convert string to address");
+        if(result != NULL) {
+            freeaddrinfo(result);
+        }
         return false;
     }
 
     memcpy(address, result->ai_addr, result->ai_addrlen);
-
-    if(port != 0) {
-        iw_ip_set_port(address, port);
-    }
-
     freeaddrinfo(result);
+
+    if(port != 0 && !iw_ip_set_port(address, port)) {
+        return false;
+    }
 
     return true;
 }
@@ -252,6 +254,7 @@ int iw_ip_open_client_socket(int type, iw_ip *address) {
     if(connect(sock, (struct sockaddr *)address, sizeof(*address)) != 0) {
         LOG(IW_LOG_IW, "Failed to connect to server (%d:%s)",
             errno, strerror(errno));
+        close(sock);
         return -1;
     }
 

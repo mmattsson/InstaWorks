@@ -235,13 +235,15 @@ bool iw_cfg_load(const char *file) {
     JSON_Object *obj, *cfg;
     size_t idx;
 
-    // Update the file name if needed.
-    if(file != NULL) {
-        if(iw_cfg_file != NULL) {
-            free(iw_cfg_file);
-        }
-        iw_cfg_file = strdup(file);
+    if(file == NULL) {
+        return false;
     }
+
+    // Update the file name.
+    if(iw_cfg_file != NULL) {
+        free(iw_cfg_file);
+    }
+    iw_cfg_file = strdup(file);
 
     // Load the configuration settings (if any).
     root_value = json_parse_file(file);

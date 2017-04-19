@@ -42,7 +42,11 @@ static void validate_list(
         cnt < len;
         cnt++, node=(iw_list_gen_node *)node->node.next)
     {
-        if(node == NULL || (uintptr_t)node->data != values[cnt]) {
+        if(node == NULL) {
+            test(result, false, "Node %d is NULL, expected %d",
+                 cnt, values[cnt]);
+            return;
+        } else if((uintptr_t)node->data != values[cnt]) {
             test(result, false, "Node %d has value %d, expected %d",
                  cnt, node->data, values[cnt]);
             return;
@@ -50,7 +54,10 @@ static void validate_list(
     }
     // Testing the tail pointer separately, the head pointer was tested
     // by the above loop.
-    if((uintptr_t)((iw_list_gen_node *)list->tail)->data != values[len - 1]) {
+    if((iw_list_gen_node *)list->tail == NULL) {
+        test(result, false, "List tail is NULL, expected %d",
+             values[len - 1]);
+    } else if((uintptr_t)((iw_list_gen_node *)list->tail)->data != values[len - 1]) {
         test(result, false, "List tail is pointing to value %d, expected %d",
              ((iw_list_gen_node *)list->tail)->data,
              values[len - 1]);

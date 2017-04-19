@@ -47,12 +47,21 @@ bool iw_cmd_clnt(unsigned short port, int argc, char **argv) {
     // Write the command line parameters to the server socket as our request.
     int cnt;
     for(cnt=0;cnt < argc;cnt++) {
-        send(sock, argv[cnt], strlen(argv[cnt]), 0);
+        if(send(sock, argv[cnt], strlen(argv[cnt]), 0) == -1) {
+            fprintf(stderr, "Failed to send request\n");
+            goto done;
+        }
         if(cnt < argc - 1) {
-            send(sock, " ", 1, 0);
+            if(send(sock, " ", 1, 0) == -1) {
+                fprintf(stderr, "Failed to send request\n");
+                goto done;
+            }
         }
     }
-    send(sock, "\r\n", 2, 0);
+    if(send(sock, "\r\n", 2, 0) == -1) {
+        fprintf(stderr, "Failed to send request\n");
+        goto done;
+    }
 
     // Read the server response and display the results.
     bool keepGoing = true;
@@ -77,6 +86,7 @@ bool iw_cmd_clnt(unsigned short port, int argc, char **argv) {
     }
     printf("\n");
 
+done:
     // At this point we need to close the socket if we didn't receive the
     // NUL byte from the server.
     if(sock != -1) {

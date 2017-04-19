@@ -80,6 +80,25 @@ void test_hash_table(test_result *result) {
     test(result, data != NULL && strcmp("1005", data) == 0, "Accessing element 5 (qrst->1005)");
     test_display("Number of collisions: %d", table.collisions);
 
+    // Iterate through elemnts in alphabetical order
+    test_display("Iterating table");
+    unsigned long hash;
+    data = (char *)iw_htable_get_first_ordered(
+                            &table,
+                            (int (*)(const void *, const void *))strcmp,
+                             &hash);
+    unsigned int cnt;
+    char *should[] = { "1001", "1002", "1003", "1004", "1005" };
+    unsigned int max = sizeof(should)/sizeof(should[0]);
+    for(cnt=0;data != NULL && cnt < max;cnt++) {
+        test(result, strcmp(should[cnt], data) == 0, "Is element [%d]=%s? (actual=%s)", cnt, should[cnt], data);
+        data = (char *)iw_htable_get_next_ordered(
+                                &table,
+                                (int (*)(const void *, const void *))strcmp,
+                                &hash);
+    }
+    test(result, cnt == max, "Found %d elements? (actual=%d)", max, cnt);
+
     test_display("Removing elements");
     iw_htable_delete(&table, 4, "efgh", test_hash_node_delete);
     test(result, table.num_elems == 4, "Deleted 2nd element from table (efgh)");

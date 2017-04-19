@@ -199,13 +199,32 @@ void iw_htable_destroy(iw_htable *table, IW_HASH_DEL_FN fn) {
 
 // --------------------------------------------------------------------------
 
-void *iw_htable_get_first(iw_htable *table, unsigned long *hash) {
+static iw_hash_node *iw_htable_find_hash(iw_htable *table, unsigned long *hash)
+{
+    int index, size = table->size;
+    for(index=0;index < size;index++) {
+        iw_hash_node *node = table->table[index];
+        while(node != NULL) {
+            if(node->hash == *hash) {
+                // Found the element with the given hash
+                return node;
+            }
+            node = node->next;
+        }
+    }
+    // We did not find anything, this means we've gone through the whole table.
+    return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+static iw_hash_node *iw_htable_get_first_hash(iw_htable *table, unsigned long *hash) {
     int index, size = table->size;
     for(index=0;index < size;index++) {
         iw_hash_node *node = table->table[index];
         if(node != NULL) {
             *hash = node->hash;
-            return node->data;
+            return node;
         }
     }
     return NULL;
@@ -213,7 +232,7 @@ void *iw_htable_get_first(iw_htable *table, unsigned long *hash) {
 
 // --------------------------------------------------------------------------
 
-void *iw_htable_get_next(iw_htable *table, unsigned long *hash) {
+static void *iw_htable_get_next_hash(iw_htable *table, unsigned long *hash) {
     bool found_last = false;
     int index, size = table->size;
     for(index=0;index < size;index++) {
@@ -222,7 +241,7 @@ void *iw_htable_get_next(iw_htable *table, unsigned long *hash) {
             if(found_last) {
                 // We already found the last hash element, now return this one.
                 *hash = node->hash;
-                return node->data;
+                return node;
             }
             if(node->hash == *hash) {
                 // Found the last element that was returned, now return the
@@ -234,6 +253,90 @@ void *iw_htable_get_next(iw_htable *table, unsigned long *hash) {
     }
     // We did not find anything, this means we've gone through the whole table.
     return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+void *iw_htable_get_first(iw_htable *table, unsigned long *hash) {
+    iw_hash_node *node = iw_htable_get_first_hash(table, hash);
+
+    return node != NULL ? node->data : NULL;
+}
+
+// --------------------------------------------------------------------------
+
+void *iw_htable_get_next(iw_htable *table, unsigned long *hash) {
+    iw_hash_node *node = iw_htable_get_next_hash(table, hash);
+
+    return node != NULL ? node->data : NULL;
+}
+
+// --------------------------------------------------------------------------
+
+void *iw_htable_get_first_ordered(
+    iw_htable *table,
+    int (*compare)(const void *, const void *),
+    unsigned long *hash)
+{
+    // Find the lowest node using the given comparison function
+    unsigned long hash_cur = 0;
+    iw_hash_node *cur = iw_htable_get_first_hash(table, &hash_cur);
+    *hash = 0;
+    while(cur != NULL) {
+        iw_hash_node *next = iw_htable_get_next_hash(table, &hash_cur);
+        if(next == NULL) {
+            break;
+        }
+        if((*compare)(cur->data, next->data) > 0) {
+            cur = next;
+        }
+    }
+
+    // Now we've found the first element given the order to use
+    if(cur != NULL) {
+        *hash = cur->hash;
+        return cur->data;
+    }
+    return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+void *iw_htable_get_next_ordered(
+    iw_htable *table,
+    int (*compare)(const void *, const void *),
+    unsigned long *hash)
+{
+    unsigned long hash_cur;
+    iw_hash_node *prev = iw_htable_find_hash(table, hash);
+    iw_hash_node *cur  = NULL;
+    iw_hash_node *next = iw_htable_get_first_hash(table, &hash_cur);
+    if(prev == NULL || next == NULL) {
+        // The previous returned node is NULL or the whole table is empty,
+        // either way, we can't continue
+        return NULL;
+    }
+
+    // We're searching for the lowest value that is still higher than the
+    // previous value. We need to check if the next value is lower than
+    // current, but higher than previous. If so, this is the new current value.
+    while(next != NULL) {
+        if((*compare)(prev->data, next->data) < 0) {
+            // 'next' node is 'higher' than 'prev' node, also make sure it
+            // is lower than current node if any
+            if(cur == NULL || (*compare)(cur->data, next->data) > 0) {
+                // Either there were no old 'cur' value, or there was an old
+                // 'cur' value, but the 'next' value is lower, so now this is
+                // the new 'cur' value.
+                *hash = hash_cur;
+                cur = next;
+            }
+        }
+        next = iw_htable_get_next_hash(table, &hash_cur);
+    }
+
+    // Now we've found the first element given the order to use
+    return cur != NULL ? cur->data : NULL;
 }
 
 // --------------------------------------------------------------------------

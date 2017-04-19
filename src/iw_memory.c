@@ -153,7 +153,7 @@ static void iw_memory_add_chunk(
     info->loc.line = line;
     info->loc.size = size;
     info->address = address;
-    iw_htable_insert(&s_memory, sizeof(&address), &address, info);
+    iw_htable_insert(&s_memory, sizeof(address), &address, info);
 }
 
 // --------------------------------------------------------------------------

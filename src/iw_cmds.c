@@ -44,6 +44,20 @@ static iw_cmd_info s_root;
 //
 // --------------------------------------------------------------------------
 
+/// @brief Compare the keyword of two given commands.
+/// @param cmd1 The first command.
+/// @param cmd2 The second command.
+/// @return Less than zero, zero, or higher than zero if the first command
+///         is prior to, equal to, or subsequent to the second command
+///         alphabetically.
+static int iw_cmds_compare(const void *cmd1, const void *cmd2) {
+    iw_cmd_info *info1 = (iw_cmd_info *)cmd1;
+    iw_cmd_info *info2 = (iw_cmd_info *)cmd2;
+    return strcmp(info1->cmd, info2->cmd);
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief Show the command help text.
 /// @param out The output file stream to print the help on.
 /// @param cinfo The command information structure for the command.
@@ -63,16 +77,21 @@ static void iw_cmds_help(FILE *out, iw_cmd_info *cinfo, const char *unknown) {
 
     // Then print out all command nodes under this command
     unsigned long hash;
-    iw_cmd_info *child = (iw_cmd_info *)iw_htable_get_first(&cinfo->children,
-                                                            &hash);
+    iw_cmd_info *child = (iw_cmd_info *)
+        iw_htable_get_first_ordered(&cinfo->children,
+                                    iw_cmds_compare,
+                                    &hash);
     if(child != NULL) {
         fprintf(out, "The following sub-commands are available:\n");
-        // TODO: Alphabetize the commands
         while(child != NULL) {
             fprintf(out, " %-*s %s\n", IW_CMD_WIDTH, child->cmd, child->info);
 
             // Continue to check the next node in the hash table.
-            child = (iw_cmd_info *)iw_htable_get_next(&cinfo->children, &hash);
+            child = (iw_cmd_info *)
+                iw_htable_get_next_ordered(
+                                   &cinfo->children,
+                                   iw_cmds_compare,
+                                   &hash);
         }
     } else {
         fprintf(out, "\n");
@@ -114,13 +133,7 @@ static iw_cmd_info *iw_cmd_find_parent(iw_htable *table, const char *parent) {
         cinfo = (iw_cmd_info *)iw_htable_get_next(table, &hash);
     }
 
-    if(cinfo == NULL) {
-        // Failed to find the parent.
-        return NULL;
-    }
-
-    table = &cinfo->children;
-
+    // Failed to find the parent.
     return NULL;
 }
 
