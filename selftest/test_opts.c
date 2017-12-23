@@ -108,7 +108,7 @@ static IW_CMD_OPT_RET test_line(char **argv) {
 
     int offset = snprintf(buff, sizeof(buff), "Parsing command-line: \"");
     for(cnt=0;cnt < MAX_ARGC;cnt++) {
-        if(argv[cnt] == '\0') {
+        if(argv[cnt] == NULL) {
             break;
         }
         if(cnt > 0) {

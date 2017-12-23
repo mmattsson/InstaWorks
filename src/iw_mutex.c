@@ -130,7 +130,7 @@ bool iw_mutex_lock(IW_MUTEX mutex) {
         // Try to lock the mutex we want
         pthread_mutex_lock(tmp_mtx);
 
-        // Got the mutex, now we need to reaquire the mutex lock and find
+        // Got the mutex, now we need to re-acquire the mutex lock and find
         // the mutex info again (since it may have been removed since we
         // last had it).
         pthread_rwlock_rdlock(&s_mtx_lock);
