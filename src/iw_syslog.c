@@ -269,7 +269,7 @@ void iw_syslog_display(FILE *out) {
         // least before we consider the entry.
         while(ptr < end - hdr_len) {
             time_t nowtime;
-            struct tm *nowtm;
+            struct tm *now_tm;
             char buff[64];
             int offset;
             int length = ntohl(*(int *)ptr);
@@ -283,8 +283,8 @@ void iw_syslog_display(FILE *out) {
             memcpy(&tv, ptr, sizeof(tv));
             ptr += sizeof(tv);
             nowtime = tv.tv_sec;
-            nowtm = localtime(&nowtime);
-            offset = strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", nowtm);
+            now_tm = localtime(&nowtime);
+            offset = strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", now_tm);
             snprintf(buff + offset, sizeof(buff) - offset, "%06ld", tv.tv_usec);
 
             fprintf(out, "LOG: [%s] %s\n", buff, ptr);
