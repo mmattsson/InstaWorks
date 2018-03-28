@@ -335,6 +335,20 @@ static bool serve_data() {
         }
         iw_mutex_unlock(s_mutex);
     }
+
+    // Free up all allocated resources still in use at exit
+    iw_mutex_lock(s_mutex);
+    conn = (tcp_conn *)s_list.head;
+    while(conn != NULL) {
+        close(conn->fd);
+        tcp_conn *tmp = (tcp_conn *)conn->node.next;
+        conn = (tcp_conn *)iw_list_delete(&s_list,
+                                            (iw_list_node *)conn,
+                                            delete_tcp_conn);
+        conn = tmp;
+    }
+    iw_mutex_unlock(s_mutex);
+
     if(retval == -1) {
         LOG(SIMPLE_LOG, "Select failed, exiting (%d:%s)", errno, strerror(errno));
         return false;
