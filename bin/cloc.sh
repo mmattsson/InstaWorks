@@ -27,12 +27,12 @@ TOT_FILE_LINES=$((H_FILE_LINES + C_FILE_LINES))
 echo "----------------------------------------------------------------------"
 echo "                     Files      Empty   Comments      Code      Total"
 echo "----------------------------------------------------------------------"
-printf " Header Files        %5s      %5s      %5s     %5s      %5s\n" \
+ printf " Header Files        %5s      %5s      %5s     %5s      %5s\n" \
     $NUM_H_FILES  $H_FILE_EMPTY  $H_FILE_COMMENT  $H_FILE_CODE  $H_FILE_LINES
-printf " C Source Files      %5s      %5s      %5s     %5s      %5s\n" \
+ printf " C Source Files      %5s      %5s      %5s     %5s      %5s\n" \
     $NUM_C_FILES  $C_FILE_EMPTY  $C_FILE_COMMENT  $C_FILE_CODE  $C_FILE_LINES
 echo "----------------------------------------------------------------------"
-printf " Sum                 %5s      %5s      %5s     %5s      %5s\n" \
+ printf " Sum                 %5s      %5s      %5s     %5s      %5s\n" \
     $TOT_FILES $TOT_FILE_EMPTY $TOT_FILE_COMMENT $TOT_FILE_CODE $TOT_FILE_LINES
 echo "----------------------------------------------------------------------"
 
