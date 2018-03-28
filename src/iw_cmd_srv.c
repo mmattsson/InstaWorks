@@ -41,6 +41,8 @@
 
 static int s_cmd_sock = -1;
 
+static pthread_t s_cmd_srv_tid = 0;
+
 // --------------------------------------------------------------------------
 //
 // Helper functions
@@ -165,7 +167,7 @@ bool iw_cmd_srv(
     }
 
     // Create thread to serve the command socket.
-    if(!iw_thread_create("CMD Server", iw_cmd_srv_thread, NULL)) {
+    if(!iw_thread_create(&s_cmd_srv_tid, "CMD Server", iw_cmd_srv_thread, NULL)) {
         LOG(IW_LOG_IW, "Failed to create command server thread");
         close(s_cmd_sock);
         return false;
@@ -178,6 +180,15 @@ bool iw_cmd_srv(
     }
 
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+void iw_cmd_srv_exit() {
+    if(s_cmd_srv_tid != 0) {
+        shutdown(s_cmd_sock, SHUT_RDWR);
+        pthread_join(s_cmd_srv_tid, NULL);
+    }
 }
 
 // --------------------------------------------------------------------------

@@ -21,7 +21,10 @@ extern "C" {
 // --------------------------------------------------------------------------
 
 /// @brief Start the health check thread.
-extern void iw_health_start();
+extern void iw_health_init();
+
+/// @brief Terminate the health check thread.
+extern void iw_health_exit();
 
 // --------------------------------------------------------------------------
 

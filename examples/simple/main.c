@@ -74,6 +74,7 @@ static int      s_sock = -1;               ///< The server socket.
 static iw_list  s_list = IW_LIST_INIT_MEM; ///< The TCP socket list.
 static IW_MUTEX s_mutex;                   ///< The mutex to protect the sockets.
 static unsigned short s_port = DEFAULT_PORT;///< The port number to use.
+static bool     s_keep_going = true;       ///< True as long as the program should execute.
 
 // --------------------------------------------------------------------------
 //
@@ -250,8 +251,8 @@ static bool serve_data() {
     // Initial setup
     FD_ZERO(&readfds);
     FD_SET(s_sock, &readfds);
-    while((retval = select(maxfd + 1,
-                           &readfds, NULL, NULL, &timeout) >= 0))
+    while(s_keep_going && (retval = select(maxfd + 1,
+                                           &readfds, NULL, NULL, &timeout) >= 0))
     {
         // Check the server socket for events
         if(FD_ISSET(s_sock, &readfds)) {
@@ -408,6 +409,14 @@ bool main_callback(int argc, char **argv) {
 
 // --------------------------------------------------------------------------
 
+/// @brief The termination notification callback.
+/// Called when the program should terminate.
+void main_term() {
+    s_keep_going = false;
+}
+
+// --------------------------------------------------------------------------
+
 /// @brief The program main entry-point.
 /// @param argc The number of arguments.
 /// @param argv The arguments.
@@ -441,7 +450,7 @@ int main(int argc, char **argv) {
     // as a client or server, and whether the command line parameters
     // were invalid or not. If the command line parameters are invalid, the
     // program can print out help for the user.
-    IW_MAIN_EXIT retval = iw_main(main_callback, true, argc, argv);
+    IW_MAIN_EXIT retval = iw_main(main_callback, main_term, true, argc, argv);
 
     switch(retval) {
     case IW_MAIN_SRV_INVALID_PARAMETER :

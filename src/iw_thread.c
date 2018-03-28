@@ -13,6 +13,7 @@
 
 #include "iw_cfg.h"
 #include "iw_log.h"
+#include "iw_main.h"
 #include "iw_memory.h"
 #include "iw_mutex_int.h"
 
@@ -159,6 +160,13 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
         }
         LOG(IW_LOG_IW, " ^-- Thread [%08lX] backtrace --^", pthread_self());
         } break;
+    case SIGINT  : {
+        // Handle shutdown by Ctrl-C. By handling Ctrl-C properly we can
+        // clean up known memory to make memory leaks more noticable.
+        LOG(IW_LOG_IW, "Received SIGINT, shutting down");
+        iw_exit();
+        exit(0);
+        } break;
     case SIGILL  :
     case SIGABRT :
     case SIGFPE  :
@@ -217,6 +225,9 @@ static void iw_thread_install_sighandler() {
     sa.sa_flags     = SA_RESTART | SA_SIGINFO;
     sigfillset(&sa.sa_mask);
     sigaction(SIGUSR1, &sa, NULL);
+
+    // Install SIGINT to handle shutdown through Ctrl-C
+    sigaction(SIGINT, &sa, NULL);
 
     int *enable = iw_val_store_get_number(&iw_cfg, IW_CFG_CRASHHANDLER_ENABLE);
     if(enable != NULL && *enable) {
@@ -356,13 +367,24 @@ bool iw_thread_set_log(pthread_t threadid, bool log_on) {
 
 // --------------------------------------------------------------------------
 
-bool iw_thread_create(const char *name, IW_THREAD_CALLBACK func, void *param) {
+bool iw_thread_create(
+    pthread_t *tid,
+    const char *name, 
+    IW_THREAD_CALLBACK func, 
+    void *param)
+{
+    if(tid != NULL) {
+        *tid = 0;
+    }
     iw_thread_info *tinfo = iw_thread_info_create(name, 0, func, param);
     if(tinfo == NULL) {
         return false;
     }
 
     if(pthread_create(&tinfo->thread, NULL, iw_thread_callback, tinfo) == 0) {
+        if(tid != NULL) {
+            *tid = tinfo->thread;
+        }
         return true;
     } else {
         // Failed to create the thread.

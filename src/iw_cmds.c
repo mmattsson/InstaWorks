@@ -11,12 +11,13 @@
 #include "iw_cmds.h"
 #include "iw_cmds_int.h"
 
+#include "iw_cfg.h"
+#include "iw_cmd_srv.h"
 #include "iw_htable.h"
 #include "iw_log_int.h"
 #include "iw_main.h"
 #include "iw_memory_int.h"
 #include "iw_mutex_int.h"
-#include "iw_cfg.h"
 #include "iw_syslog.h"
 #include "iw_thread_int.h"
 #include "iw_util.h"
@@ -260,8 +261,9 @@ static bool cmd_quit(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     if(iw_cb.shutdown != NULL) {
         iw_cb.shutdown();
     }
-    iw_exit();
-    exit(0);
+    iw_cmd_srv_exit();
+    iw_main_loop_exit();
+    return true;
 }
 
 // --------------------------------------------------------------------------

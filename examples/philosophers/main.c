@@ -164,7 +164,7 @@ bool main_callback(int argc, char **argv) {
     }
     for(cnt=0,max=num_philosophers;cnt < max;cnt++) {
         snprintf(buffer, sizeof(buffer), "Philosopher %zd", cnt+1);
-        iw_thread_create(buffer, philo_callback, (void *)cnt);
+        iw_thread_create(NULL, buffer, philo_callback, (void *)cnt);
     }
 
     // Done, let the main thread go into the framework loop
@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
     // settings for whether the program should execute as a server or client
     // before calling iw_main(). Since we processed the parameters we pass
     // 0 and NULL for argc and argv.
-    IW_MAIN_EXIT retval = iw_main(main_callback, false, argc, argv);
+    IW_MAIN_EXIT retval = iw_main(main_callback, NULL, false, argc, argv);
 
     unsigned int exit_code = -1;
     switch(retval) {

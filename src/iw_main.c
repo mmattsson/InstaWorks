@@ -30,7 +30,20 @@
 #include <string.h>
 #include <unistd.h>
 
+// --------------------------------------------------------------------------
+//
+// Variables
+//
+// --------------------------------------------------------------------------
+
+/// The main initialization state, true if we are successfully initialized.
 static bool s_initialized = false;
+
+/// The main loop state, true if we should continue to run.
+static bool s_main_go = true;
+
+/// The termination notification callback (if any).
+static IW_TERM_FN  s_term_fn = NULL;
 
 // --------------------------------------------------------------------------
 //
@@ -68,7 +81,7 @@ void iw_init() {
         // Then syslog, command server, and health check.
         iw_syslog_reinit(1000);
         iw_cmd_init();
-        iw_health_start();
+        iw_health_init();
 
         // Finally set up the web server if enabled.
         if(websrv_enable != NULL && *websrv_enable) {
@@ -82,24 +95,32 @@ void iw_init() {
 // --------------------------------------------------------------------------
 
 void iw_exit() {
+    // Terminating modules in reverse order from startup
     iw_web_gui_exit();
+    iw_health_exit();
+    iw_cmd_srv_exit();
     iw_syslog_exit();
     iw_mutex_exit();
     iw_memory_exit();
     iw_cfg_exit();
-
-    // Wait a while to allow threads to exit. We should really do an ordered
-    // shutdown and wait for a semaphore but we also shouldn't block
-    // indefinitely just because a sub-system doesn't shut down properly.
-    usleep(100000);
 
     s_initialized = false;
 }
 
 // --------------------------------------------------------------------------
 
+void iw_main_loop_exit() {
+    s_main_go = false;
+    if(s_term_fn != NULL) {
+        (*s_term_fn)();
+    }
+}
+
+// --------------------------------------------------------------------------
+
 IW_MAIN_EXIT iw_main(
     IW_MAIN_FN main_fn,
+    IW_TERM_FN term_fn,
     bool parse_options,
     int argc,
     char **argv)
@@ -114,6 +135,8 @@ IW_MAIN_EXIT iw_main(
                                     NULL, 0);
         }
     }
+
+    s_term_fn = term_fn;
 
     // Init config first of all
     iw_cfg_init();
@@ -166,9 +189,13 @@ IW_MAIN_EXIT iw_main(
 
 void iw_main_loop() {
     // Go into an infinite loop here.
-    while(true) {
-        sleep(10);
+    while(s_main_go) {
+        sleep(1);
     }
+
+    // If we return we are supposed to terminate the program gracefully
+    iw_exit();
+    exit(0);
 }
 
 // --------------------------------------------------------------------------

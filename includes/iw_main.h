@@ -57,6 +57,16 @@ typedef enum {
 /// @return True if the arguments were successfully parsed.
 typedef bool (*IW_MAIN_FN)(int argc, char **argv);
 
+/// @brief The main loop termination notification callback.
+/// If the framework receives a termination request (such as a 'quit' command
+/// on the client command channel, the program will get a notification through
+/// this callback. The program should terminate any processing and free
+/// any resources in use. Termination can be done by setting a flag to
+/// indicate that the main thread should exit its loop, or shut down a
+/// server socket. After local cleanup is done, iw_exit() and then exit()
+/// should be called.
+typedef void (*IW_TERM_FN)();
+
 // --------------------------------------------------------------------------
 //
 // Function API
@@ -86,12 +96,14 @@ extern void iw_exit();
 /// control functionality to work.
 /// @param main_fn The main function to call back after the framework is
 ///        initialized or NULL if the main thread is not needed.
+/// @param term_fn The termination notification callback.
 /// @param parse_options True if options should be parsed.
 /// @param argc The number of arguments being passed.
 /// @param argv The arguments being passed.
 /// @return The exit code for the function call.
 extern IW_MAIN_EXIT iw_main(
     IW_MAIN_FN main_fn,
+    IW_TERM_FN term_fn,
     bool parse_options,
     int argc,
     char **argv);
@@ -102,6 +114,15 @@ extern IW_MAIN_EXIT iw_main(
 /// This should be called if the main thread is not used for processing to
 /// prevent the main thread from exiting.
 extern void iw_main_loop();
+
+// --------------------------------------------------------------------------
+
+/// @brief Terminate the main loop and exit the program.
+/// This should be called if the program chose to call the iw_main_loop()
+/// function call. If the program is using the main thread for its own
+/// processing, it should listen to the main termination notifiation
+/// callback rather than calling this function.
+extern void iw_main_loop_exit();
 
 // --------------------------------------------------------------------------
 

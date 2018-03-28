@@ -33,11 +33,13 @@ typedef void *(*IW_THREAD_CALLBACK)(void *param);
 // --------------------------------------------------------------------------
 
 /// @brief Create a new thread.
+/// @param tid A pointer to receive the thread-id of the created thread.
 /// @param name The name of the thread.
 /// @param func The thread callback function.
 /// @param param An opaque parameter to pass to the callback function.
 /// @return True if the thread was successfully created.
 extern bool iw_thread_create(
+    pthread_t *tid,
     const char *name,
     IW_THREAD_CALLBACK func,
     void *param);

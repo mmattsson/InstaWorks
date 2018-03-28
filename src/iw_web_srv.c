@@ -33,6 +33,15 @@
 
 // --------------------------------------------------------------------------
 //
+// Variables
+//
+// --------------------------------------------------------------------------
+
+/// The Web Server thread's TID, used to join the thread for orderly shutdown.
+static pthread_t s_srv_tid;
+
+// --------------------------------------------------------------------------
+//
 // Helper functions
 //
 // --------------------------------------------------------------------------
@@ -205,7 +214,7 @@ iw_web_srv *iw_web_srv_init(
     }
 
     // Create thread to serve the command socket.
-    if(!iw_thread_create("Web Server", iw_web_srv_thread, srv)) {
+    if(!iw_thread_create(&s_srv_tid, "Web Server", iw_web_srv_thread, srv)) {
         LOG(IW_LOG_WEB, "Failed to create web server thread");
         close(srv->fd);
         IW_FREE(srv);
@@ -218,7 +227,8 @@ iw_web_srv *iw_web_srv_init(
 // --------------------------------------------------------------------------
 
 void iw_web_srv_exit(iw_web_srv *srv) {
-    close(srv->fd);
+    shutdown(srv->fd, SHUT_RDWR);
+    pthread_join(s_srv_tid, NULL);
 }
 
 // --------------------------------------------------------------------------

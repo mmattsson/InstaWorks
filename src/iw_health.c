@@ -20,12 +20,24 @@
 
 // --------------------------------------------------------------------------
 //
+// Variables
+//
+// --------------------------------------------------------------------------
+
+/// The health thread TID, used to terminate and join the thread when exiting.
+static pthread_t s_health_tid = 0;
+
+/// Status for whether the health thread should continue to execute.
+static bool s_health_go = true;
+
+// --------------------------------------------------------------------------
+//
 // Health thread callback
 //
 // --------------------------------------------------------------------------
 
 static void *iw_health_thread(void *param) {
-    while(true) {
+    while(s_health_go) {
         if(iw_thread_deadlock_check(false)) {
             LOG(IW_LOG_IW, "Deadlock detected!");
             iw_thread_deadlock_check(true);
@@ -43,13 +55,23 @@ static void *iw_health_thread(void *param) {
 //
 // --------------------------------------------------------------------------
 
-void iw_health_start() {
+void iw_health_init() {
     int *enable = iw_val_store_get_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE);
     if(enable && *enable) {
-        if(!iw_thread_create("Health Check", iw_health_thread, NULL)) {
+        if(!iw_thread_create(&s_health_tid, "Health Check", iw_health_thread, NULL)) {
             LOG(IW_LOG_IW, "Failed to create health check thread");
         }
     }
 }
 
 // --------------------------------------------------------------------------
+
+void iw_health_exit() {
+    if(s_health_tid != 0) {
+        s_health_go = false;
+        pthread_join(s_health_tid, NULL);
+    }
+}
+
+// --------------------------------------------------------------------------
+

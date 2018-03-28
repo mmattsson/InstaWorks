@@ -37,6 +37,11 @@ extern bool iw_cmd_srv(
 
 // --------------------------------------------------------------------------
 
+/// @brief Terminate the command server.
+extern void iw_cmd_srv_exit();
+
+// --------------------------------------------------------------------------
+
 #ifdef _cplusplus
 }
 #endif
