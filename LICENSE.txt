@@ -1,5 +1,5 @@
 InstaWorks - A C-based debug framework
-Copyright (c) 2014 Mattias Mattsson
+Copyright (c) 2014-2018 Mattias Mattsson
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

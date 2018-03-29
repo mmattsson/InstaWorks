@@ -2,7 +2,7 @@
 ///
 /// @file iw_cmdline.c
 ///
-/// Copyright (c) 2014-2015 Mattias Mattsson. All rights reserved.
+/// Copyright (c) 2014-2018 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
 /// InstaWorks directory.
 ///

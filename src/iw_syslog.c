@@ -10,7 +10,7 @@
 /// the length value itself, the timestamp, the string as well as the
 /// terminating NUL-byte.
 ///
-/// Copyright (c) 2014-2015 Mattias Mattsson. All rights reserved.
+/// Copyright (c) 2014-2018 Mattias Mattsson. All rights reserved.
 /// This source is distributed under the license in LICENSE.txt in the top
 /// InstaWorks directory.
 ///
