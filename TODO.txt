@@ -4,6 +4,7 @@ Todo
  + Add term-callback to philo example
  + Make sure all threads exit properly
  + Make sure all threads clean up all memory when using orderly shutdown
+ + Fix thread cleanup in example simple when doing Ctrl-C
  + Document the intended usage that programs should follow
 * Add CLI config access
 * Add callbacks for config setting changes
