@@ -24,6 +24,12 @@ extern "C" {
 //
 // --------------------------------------------------------------------------
 
+/// @brief Delete a command node and free all associated resources.
+/// @param node The node to delete.
+extern void iw_cmds_delete(void *node);
+
+// --------------------------------------------------------------------------
+
 /// @brief Called to process a client request.
 /// @param info The command info structure for parsing the request.
 /// @param out The file stream to write the response to.

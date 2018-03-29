@@ -402,6 +402,23 @@ static bool cmd_log_thread(FILE *out, const char *cmd, iw_cmd_parse_info *info) 
 }
 
 // --------------------------------------------------------------------------
+
+void iw_cmds_delete(void *cmd) {
+    iw_cmd_info *cinfo = (iw_cmd_info *)cmd;
+
+    // Free local information
+    free(cinfo->cmd);
+    free(cinfo->info);
+    free(cinfo->help);
+    
+    // Free all child nodes and destroy the local table
+    iw_htable_destroy(&cinfo->children, iw_cmds_delete);
+
+    // Delete the node itself
+    free(cinfo);
+}
+
+// --------------------------------------------------------------------------
 //
 // Function API
 //
@@ -453,6 +470,12 @@ bool iw_cmd_init() {
     }
 
     return true;
+}
+
+// --------------------------------------------------------------------------
+
+void iw_cmd_exit() {
+    iw_htable_destroy(&s_root.children, iw_cmds_delete);
 }
 
 // --------------------------------------------------------------------------
@@ -510,3 +533,4 @@ bool iw_cmds_process(iw_cmd_parse_info *info, FILE *out) {
 }
 
 // --------------------------------------------------------------------------
+

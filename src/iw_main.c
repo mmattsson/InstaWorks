@@ -99,6 +99,7 @@ void iw_exit() {
     iw_web_gui_exit();
     iw_health_exit();
     iw_cmd_srv_exit();
+    iw_cmd_exit();
     iw_syslog_exit();
     iw_mutex_exit();
     iw_memory_exit();

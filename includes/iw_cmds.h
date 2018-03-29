@@ -67,6 +67,11 @@ extern bool iw_cmd_init();
 
 // --------------------------------------------------------------------------
 
+/// @brief Terminate the command module.
+extern void iw_cmd_exit();
+
+// --------------------------------------------------------------------------
+
 /// @brief Add a command to an existing node.
 /// @param parent The parent node to add the command to or NULL if the command
 ///        is a top-level command.
