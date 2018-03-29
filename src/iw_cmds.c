@@ -261,8 +261,7 @@ static bool cmd_quit(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
     if(iw_cb.shutdown != NULL) {
         iw_cb.shutdown();
     }
-    iw_cmd_srv_exit();
-    iw_main_loop_exit();
+    iw_main_loop_terminate();
     return true;
 }
 

@@ -122,7 +122,7 @@ extern void iw_main_loop();
 /// function call. If the program is using the main thread for its own
 /// processing, it should listen to the main termination notifiation
 /// callback rather than calling this function.
-extern void iw_main_loop_exit();
+extern void iw_main_loop_terminate();
 
 // --------------------------------------------------------------------------
 

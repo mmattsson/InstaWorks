@@ -164,8 +164,7 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
         // Handle shutdown by Ctrl-C. By handling Ctrl-C properly we can
         // clean up known memory to make memory leaks more noticable.
         LOG(IW_LOG_IW, "Received SIGINT, shutting down");
-        iw_exit();
-        exit(0);
+        iw_main_loop_terminate();
         } break;
     case SIGILL  :
     case SIGABRT :

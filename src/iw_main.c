@@ -109,7 +109,7 @@ void iw_exit() {
 
 // --------------------------------------------------------------------------
 
-void iw_main_loop_exit() {
+void iw_main_loop_terminate() {
     s_main_go = false;
     if(s_term_fn != NULL) {
         (*s_term_fn)();
