@@ -87,6 +87,11 @@ extern void iw_cmdline_init();
 
 // --------------------------------------------------------------------------
 
+/// @brief Terminate and free up resources allocated by this module.
+extern void iw_cmdline_exit();
+
+// --------------------------------------------------------------------------
+
 /// @brief Display help for all the defined command line options.
 extern void iw_cmdline_print_help();
 

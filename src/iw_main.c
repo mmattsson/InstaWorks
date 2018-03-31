@@ -96,6 +96,7 @@ void iw_init() {
 
 void iw_exit() {
     // Terminating modules in reverse order from startup
+    iw_cmdline_exit();
     iw_web_gui_exit();
     iw_health_exit();
     iw_cmd_srv_exit();

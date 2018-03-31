@@ -262,6 +262,17 @@ static const char *iw_cmdline_print_type(IW_OPT_TYPE type) {
     return "";
 }
 
+static void iw_cmdline_destroy_option(void *opt) {
+    iw_opt_info *opt_info = (iw_opt_info *)opt;
+    if(opt_info == NULL) {
+        return;
+    }
+
+    free(opt_info->option);
+    free(opt_info->help);
+    free(opt_info);
+ }
+
 // --------------------------------------------------------------------------
 //
 // Function API
@@ -271,6 +282,12 @@ static const char *iw_cmdline_print_type(IW_OPT_TYPE type) {
 void iw_cmdline_init() {
     iw_htable_init(&s_options, 100, false, NULL);
     iw_cmdline_add_predefined_options();
+}
+
+// --------------------------------------------------------------------------
+
+void iw_cmdline_exit() {
+    iw_htable_destroy(&s_options, iw_cmdline_destroy_option);
 }
 
 // --------------------------------------------------------------------------
