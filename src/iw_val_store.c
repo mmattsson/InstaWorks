@@ -127,6 +127,17 @@ static void iw_val_destroy_value(void *value) {
 
 // --------------------------------------------------------------------------
 
+static void iw_val_store_destroy_criteria(void *node) {
+    iw_val_criteria *crit = (iw_val_criteria *)node;
+    if(crit->regset) {
+        regfree(&crit->regexp);
+    }
+    free(crit->msg);
+    free(crit);
+}
+
+// --------------------------------------------------------------------------
+
 bool iw_val_store_initialize(iw_val_store *store, bool controlled) {
     if(!iw_htable_init(&store->table, 1024, false, NULL)) {
         return false;
@@ -145,6 +156,7 @@ bool iw_val_store_initialize(iw_val_store *store, bool controlled) {
 
 void iw_val_store_destroy(iw_val_store *store) {
     iw_htable_destroy(&store->table, iw_val_destroy_value);
+    iw_htable_destroy(&store->names, iw_val_store_destroy_criteria);
 }
 
 // --------------------------------------------------------------------------
@@ -460,17 +472,6 @@ static iw_val_criteria *iw_val_store_create_criteria(
         crit->msg    = strdup(msg);
     }
     return crit;
-}
-
-// --------------------------------------------------------------------------
-
-static void iw_val_store_destroy_criteria(void *node) {
-    iw_val_criteria *crit = (iw_val_criteria *)node;
-    if(crit->regset) {
-        regfree(&crit->regexp);
-    }
-    free(crit->msg);
-    free(crit);
 }
 
 // --------------------------------------------------------------------------

@@ -269,6 +269,7 @@ static const char *iw_cmdline_print_type(IW_OPT_TYPE type) {
 // --------------------------------------------------------------------------
 
 void iw_cmdline_init() {
+    iw_htable_init(&s_options, 100, false, NULL);
     iw_cmdline_add_predefined_options();
 }
 
@@ -303,21 +304,12 @@ bool iw_cmdline_add_option(
     IW_OPT_PROC_FN proc_fn,
     IW_OPT_HELP_FN help_fn)
 {
-    static bool s_initialized = false;
-
     if(option == NULL ||
        (help == NULL && help_fn == NULL) ||
        opt == NULL)
     {
         // Required parameter is not defined.
         return false;
-    }
-
-    if(!s_initialized) {
-        if(!iw_htable_init(&s_options, 100, false, NULL)) {
-            return false;
-        }
-        s_initialized = true;
     }
 
     iw_opt_info *opt_info = (iw_opt_info *)calloc(1, sizeof(iw_opt_info));

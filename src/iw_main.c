@@ -180,9 +180,10 @@ IW_MAIN_EXIT iw_main(
         iw_exit();
         return retval ? IW_MAIN_SRV_OK : IW_MAIN_SRV_FAILED;
     } else {
-        return iw_cmd_clnt(cmd_port != NULL ? *cmd_port : 0,
-                           argc-cnt-1, argv+cnt+1) ?
-                                    IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
+        bool result = iw_cmd_clnt(cmd_port != NULL ? *cmd_port : 0,
+                                  argc-cnt-1, argv+cnt+1);
+        iw_exit();
+        return result ? IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
     }
 }
 
