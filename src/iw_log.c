@@ -86,6 +86,16 @@ void iw_log_init() {
 
 // --------------------------------------------------------------------------
 
+void iw_log_exit() {
+    free(s_dev);
+    if(s_fd != NULL) {
+        fclose(s_fd);
+        s_fd = NULL;
+    }
+}
+
+// --------------------------------------------------------------------------
+
 void iw_log_list(FILE *out) {
     iw_log_init(); // Ensure that log levels have been added.
 

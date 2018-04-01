@@ -105,6 +105,7 @@ void iw_exit() {
     iw_mutex_exit();
     iw_memory_exit();
     iw_cfg_exit();
+    iw_log_exit();
 
     s_initialized = false;
 }

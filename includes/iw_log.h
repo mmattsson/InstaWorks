@@ -56,7 +56,12 @@ extern unsigned int s_log_level;
 //
 // --------------------------------------------------------------------------
 
+/// @brief Terminate the logging module and free all resources.
+extern void iw_log_exit();
+
 /// @brief Set the log level for the program.
+/// Also initializes the logging module if this is the first time the
+/// function is called.
 /// @param dev The device to output logs to.
 /// @param level The new log level to use, zero disabled logging.
 extern void iw_log_set_level(const char *dev, unsigned int level);
