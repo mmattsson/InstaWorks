@@ -52,6 +52,11 @@ extern void iw_thread_init();
 
 // --------------------------------------------------------------------------
 
+/// @brief Terminate the thread module.
+extern void iw_thread_exit();
+
+/// --------------------------------------------------------------------------
+
 /// @brief Register the main thread for record keeping.
 /// @return True if the main thread was successfully registered.
 extern bool iw_thread_register_main();

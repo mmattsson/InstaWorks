@@ -80,6 +80,9 @@
 /// The global thread list.
 static iw_htable s_threads;
 
+/// The main thread info.
+static iw_thread_info *s_main_tinfo = NULL;
+
 /// The thread local storage for the threads.
 pthread_key_t s_thread_key;
 
@@ -286,18 +289,32 @@ void iw_thread_init() {
 
 // --------------------------------------------------------------------------
 
+void iw_thread_exit() {
+    // When exiting, make sure to remove and delete the main thread info
+    pthread_rwlock_wrlock(&s_thread_lock);
+    if(s_main_tinfo != NULL) {
+        iw_htable_delete(&s_threads,
+                     sizeof(s_main_tinfo->thread), &(s_main_tinfo->thread),
+                     iw_thread_info_delete);
+    }
+    iw_htable_destroy(&s_threads, iw_thread_info_delete);
+    pthread_rwlock_unlock(&s_thread_lock);
+}
+
+// --------------------------------------------------------------------------
+
 bool iw_thread_register_main() {
     // Install signal handler for the thread
     iw_thread_install_sighandler();
 
-    iw_thread_info *tinfo = iw_thread_info_create("Main", pthread_self(),
+    s_main_tinfo = iw_thread_info_create("Main", pthread_self(),
                                                   NULL, NULL);
-    if(tinfo == NULL) {
+    if(s_main_tinfo == NULL) {
         return false;
     }
 
     if(pthread_key_create(&s_thread_key, NULL) != 0 ||
-       pthread_setspecific(s_thread_key, tinfo) != 0)
+       pthread_setspecific(s_thread_key, s_main_tinfo) != 0)
     {
         // Can't use thread local storage, just note this in the logs. No
         // need t return since we can function with reduced features.
@@ -306,7 +323,9 @@ bool iw_thread_register_main() {
 
     // No other thread is created yet, no need to lock thread lock
     return iw_htable_insert(&s_threads,
-                     sizeof(tinfo->thread), &(tinfo->thread), tinfo);
+                     sizeof(s_main_tinfo->thread),
+                     &(s_main_tinfo->thread), 
+                     s_main_tinfo);
 }
 
 // --------------------------------------------------------------------------
