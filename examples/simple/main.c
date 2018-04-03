@@ -486,6 +486,10 @@ int main(int argc, char **argv) {
         break;
     }
 
+    // Calling iw_exit() to clean up all resources allocated by the
+    // framework.
+    iw_exit();
+
     return exit_code;
 }
 

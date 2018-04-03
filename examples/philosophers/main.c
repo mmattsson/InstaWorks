@@ -218,6 +218,7 @@ static void print_help(const char *error) {
 /// @return -1 if an error occurred.
 int main(int argc, char **argv) {
     int opt;
+    unsigned int exit_code = -1;
 
     // No calls to the instaworks framework should be done before calling
     // iw_init() or before iw_main() calls the provided callback function.
@@ -235,7 +236,8 @@ int main(int argc, char **argv) {
 
     if(argc == 1) {
         print_help(NULL);
-        exit(0);
+        exit_code = -1;
+        goto prg_exit;
     }
 
     // Process command-line parameters ourselves before calling iw_main().
@@ -251,14 +253,15 @@ int main(int argc, char **argv) {
         case 'l' :
             if(!iw_util_strtoll(optarg, &loglevel, 16)) {
                 print_help("Invalid log level");
-                exit(-1);
+                exit_code = -1;
+                goto prg_exit;
             }
             iw_val_store_set_number(&iw_cfg, IW_CFG_LOGLEVEL, loglevel, NULL, 0);
             break;
         default :
             print_help("Invalid parameter");
-            exit(-1);
-            break;
+            exit_code = -1;
+            goto prg_exit;
         }
     }
 
@@ -266,7 +269,8 @@ int main(int argc, char **argv) {
     if(optind < argc && foreground != NULL && *foreground) {
         if(!iw_util_strtoll(argv[optind], &num_philosophers, 10)) {
             print_help("Expected number of philosophers");
-            exit(-1);
+            exit_code = -1;
+            goto prg_exit;
         }
     }
 
@@ -277,7 +281,6 @@ int main(int argc, char **argv) {
     // 0 and NULL for argc and argv.
     IW_MAIN_EXIT retval = iw_main(main_callback, NULL, false, argc, argv);
 
-    unsigned int exit_code = -1;
     switch(retval) {
     case IW_MAIN_SRV_INVALID_PARAMETER :
         print_help("Invalid command-line options");
@@ -297,6 +300,11 @@ int main(int argc, char **argv) {
     default :
         break;
     }
+
+prg_exit:
+    // Calling iw_exit() to clean up all resources allocated by the
+    // framework.
+    iw_exit();
 
     return exit_code;
 }
