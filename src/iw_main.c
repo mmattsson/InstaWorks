@@ -215,7 +215,6 @@ IW_MAIN_EXIT iw_main(
     }
 
 iw_main_exit:
-    iw_exit();
     return retval;
 }
 
