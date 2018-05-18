@@ -6,6 +6,9 @@ Todo
  + Make sure all threads clean up all memory when using orderly shutdown
  + Fix thread cleanup in example simple when doing Ctrl-C
  + Document the intended usage that programs should follow
+ + Fix any un-released memory at exit
+* Add threadinfo to list for reaping by main thread
+* Sort threads for <simple threads> in order of creation
 * Add CLI config access
 * Add callbacks for config setting changes
 * Add REST API to access configuration and run-time values

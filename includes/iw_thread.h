@@ -46,6 +46,14 @@ extern bool iw_thread_create(
 
 // --------------------------------------------------------------------------
 
+/// @brief Wait for all threads to exit.
+/// Will call pthread_join on all created threads and return when all
+/// calls have been made. It is the responsibility of the calling program
+/// to initiate thread shutdown.
+extern void iw_thread_wait_all();
+
+// --------------------------------------------------------------------------
+
 /// @brief Set logging for all threads.
 /// Set logging to on or off for all threads.
 /// @param log_on True if logging should be enabled, false for disabled.

@@ -42,6 +42,8 @@ static bool do_correct = false;
 
 static IW_MUTEX *s_mutexes = NULL;
 
+static bool s_keep_going = true;
+
 // --------------------------------------------------------------------------
 //
 // Internal functions
@@ -118,10 +120,9 @@ void *philo_callback(void *param) {
     // Add a log level for philosopher specific logs.
     iw_log_add_level(PHILO_LOG, "The simple application general log level");
 
-    while(true) {
+    while(s_keep_going) {
         philo_take_forks(num, left, right);
     }
-
     return NULL;
 }
 
@@ -167,9 +168,6 @@ bool main_callback(int argc, char **argv) {
         iw_thread_create(NULL, buffer, philo_callback, (void *)cnt);
     }
 
-    // Done, let the main thread go into the framework loop
-    iw_main_loop();
-
     return true;
 }
 
@@ -210,6 +208,27 @@ static void print_help(const char *error) {
 //
 // Main program
 //
+// --------------------------------------------------------------------------
+
+/// @brief The termination notification callback.
+/// Called when the program should terminate.
+void main_term() {
+    int cnt, max;
+
+    s_keep_going = false;
+
+    // Cancel all threads
+    iw_thread_wait_all();
+
+    // Destroy all mutexes
+    for(cnt=0,max=num_philosophers;cnt < max;cnt++) {
+        iw_mutex_destroy(s_mutexes[cnt]);
+    }
+
+    // Free the memory allocated to store mutexes
+    IW_FREE(s_mutexes);
+}
+
 // --------------------------------------------------------------------------
 
 /// @brief The program main entrypoint.
@@ -279,7 +298,7 @@ int main(int argc, char **argv) {
     // settings for whether the program should execute as a server or client
     // before calling iw_main(). Since we processed the parameters we pass
     // 0 and NULL for argc and argv.
-    IW_MAIN_EXIT retval = iw_main(main_callback, NULL, false, argc, argv);
+    IW_MAIN_EXIT retval = iw_main(main_callback, main_term, false, argc, argv);
 
     switch(retval) {
     case IW_MAIN_SRV_INVALID_PARAMETER :
@@ -302,10 +321,6 @@ int main(int argc, char **argv) {
     }
 
 prg_exit:
-    // Calling iw_exit() to clean up all resources allocated by the
-    // framework.
-    iw_exit();
-
     return exit_code;
 }
 

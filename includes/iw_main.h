@@ -78,14 +78,6 @@ extern void iw_init();
 
 // --------------------------------------------------------------------------
 
-/// @brief Terminate the InstaWorks module.
-/// Releases any allocated memory to allow external tools to check for memory
-/// leaks. This should be called at the end of the IW_MAIN_FN function just
-/// before returning.
-extern void iw_exit();
-
-// --------------------------------------------------------------------------
-
 /// @brief The main entry point.
 /// Should be called from main(). If the main program wants to handle
 /// command line options before calling the InstaWorks framework it can do so.

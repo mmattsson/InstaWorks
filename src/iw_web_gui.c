@@ -375,6 +375,7 @@ bool iw_web_gui_init(
 void iw_web_gui_exit() {
     if(s_web_gui != NULL) {
         iw_web_srv_exit(s_web_gui);
+        s_web_gui = NULL;
     }
 }
 

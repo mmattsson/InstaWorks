@@ -96,6 +96,7 @@ void iw_init() {
 
 void iw_exit() {
     // Terminating modules in reverse order from startup
+    LOG(IW_LOG_IW, "iw_exit: terminating all InstaWorks resources");
     iw_cmdline_exit();
     iw_web_gui_exit();
     iw_health_exit();
@@ -114,10 +115,11 @@ void iw_exit() {
 // --------------------------------------------------------------------------
 
 void iw_main_loop_terminate() {
-    s_main_go = false;
+    LOG(IW_LOG_IW, "iw_main_loop_terminate");
     if(s_term_fn != NULL) {
         (*s_term_fn)();
     }
+    s_main_go = false;
 }
 
 // --------------------------------------------------------------------------
@@ -177,28 +179,34 @@ IW_MAIN_EXIT iw_main(
             }
         }
         iw_init();
-        bool retval = iw_cmd_srv(main_fn,
-                                 cmd_port != NULL ? *cmd_port : 0,
-                                 argc-cnt-1, argv+cnt+1);
-        return retval ? IW_MAIN_SRV_OK : IW_MAIN_SRV_FAILED;
+
+        // Starting the command server thread.
+        if(!iw_cmd_srv(cmd_port != NULL ? *cmd_port : 0))
+        {
+            return IW_MAIN_SRV_FAILED;
+        }
+
+        // Trying to call back and start the client program.
+        if(!main_fn(argc-cnt-1, argv+cnt+1)) {
+            return IW_MAIN_SRV_FAILED;
+        }
+
+        // Go into an infinite loop here.
+        LOG(IW_LOG_IW, "Program successfully started, entering main loop");
+        while(s_main_go) {
+            sleep(1);
+        }
+
+        // When the main loop is terminating, it'll clean up all resources
+        LOG(IW_LOG_IW, "Main loop exiting, calling iw_exit to shut down");
+        iw_exit();
+
+        return IW_MAIN_SRV_OK;
     } else {
         bool result = iw_cmd_clnt(cmd_port != NULL ? *cmd_port : 0,
                                   argc-cnt-1, argv+cnt+1);
         return result ? IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
     }
-}
-
-// --------------------------------------------------------------------------
-
-void iw_main_loop() {
-    // Go into an infinite loop here.
-    while(s_main_go) {
-        sleep(1);
-    }
-
-    // If we return we are supposed to terminate the program gracefully
-    iw_exit();
-    exit(0);
 }
 
 // --------------------------------------------------------------------------

@@ -58,7 +58,7 @@ static void *iw_health_thread(void *param) {
 void iw_health_init() {
     int *enable = iw_val_store_get_number(&iw_cfg, IW_CFG_HEALTHCHECK_ENABLE);
     if(enable && *enable) {
-        if(!iw_thread_create(&s_health_tid, "Health Check", iw_health_thread, NULL)) {
+        if(!iw_thread_create_int(&s_health_tid, "Health Check", iw_health_thread, false, NULL)) {
             LOG(IW_LOG_IW, "Failed to create health check thread");
         }
     }
@@ -67,10 +67,12 @@ void iw_health_init() {
 // --------------------------------------------------------------------------
 
 void iw_health_exit() {
+    LOG(IW_LOG_IW, "Terminating health thread");
     if(s_health_tid != 0) {
         s_health_go = false;
         pthread_join(s_health_tid, NULL);
     }
+    LOG(IW_LOG_IW, "Health thread successfully terminated");
 }
 
 // --------------------------------------------------------------------------

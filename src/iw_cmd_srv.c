@@ -14,6 +14,7 @@
 #include "iw_cmds_int.h"
 #include "iw_ip.h"
 #include "iw_log.h"
+#include "iw_thread_int.h"
 #include "iw_thread.h"
 
 #include <arpa/inet.h>
@@ -150,12 +151,7 @@ static void *iw_cmd_srv_thread(void *param) {
 //
 // --------------------------------------------------------------------------
 
-bool iw_cmd_srv(
-    IW_MAIN_FN fn,
-    unsigned short port,
-    int argc,
-    char **argv)
-{
+bool iw_cmd_srv(unsigned short port) {
     // Open command socket
     iw_ip address;
     if(!iw_ip_ipv4_to_addr(INADDR_LOOPBACK, &address) ||
@@ -167,28 +163,24 @@ bool iw_cmd_srv(
     }
 
     // Create thread to serve the command socket.
-    if(!iw_thread_create(&s_cmd_srv_tid, "CMD Server", iw_cmd_srv_thread, NULL)) {
+    if(!iw_thread_create_int(&s_cmd_srv_tid, "CMD Server", iw_cmd_srv_thread, false, NULL)) {
         LOG(IW_LOG_IW, "Failed to create command server thread");
         close(s_cmd_sock);
         return false;
     }
 
-    // Adjust arguments to remove already parsed ones, then call back to
-    // the main programs main callback function.
-    if(!fn(argc, argv)) {
-        return false;
-    }
-
-    return true;
+   return true;
 }
 
 // --------------------------------------------------------------------------
 
 void iw_cmd_srv_exit() {
+    LOG(IW_LOG_IW, "Terminating command server");
     if(s_cmd_srv_tid != 0) {
         shutdown(s_cmd_sock, SHUT_RDWR);
         pthread_join(s_cmd_srv_tid, NULL);
     }
+    LOG(IW_LOG_IW, "Command server successfully terminated");
 }
 
 // --------------------------------------------------------------------------

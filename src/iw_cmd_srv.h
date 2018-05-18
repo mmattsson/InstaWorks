@@ -25,15 +25,8 @@ extern "C" {
 // --------------------------------------------------------------------------
 
 /// @brief Called to create a command server to process client requests.
-/// @param main_fn The main function callback or NULL if none.
 /// @param port The port number to use to serve client requests.
-/// @param argc The number of arguments being passed.
-/// @param argv The arguments being passed.
-extern bool iw_cmd_srv(
-    IW_MAIN_FN main_fn,
-    unsigned short port,
-    int argc,
-    char **argv);
+extern bool iw_cmd_srv(unsigned short port);
 
 // --------------------------------------------------------------------------
 

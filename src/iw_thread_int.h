@@ -38,6 +38,7 @@ typedef struct _iw_thread_info {
     IW_MUTEX     mutex;     ///< The mutex this thread is waiting for (if any).
     IW_THREAD_CALLBACK fn;  ///< The callback function to call.
     bool         log;       ///< True if logging should be done for this thread.
+    bool         client;    ///< True if the thread is a client thread.
     void *       param;     ///< The parameter to pass to the callback
 } iw_thread_info;
 
@@ -60,6 +61,24 @@ extern void iw_thread_exit();
 /// @brief Register the main thread for record keeping.
 /// @return True if the main thread was successfully registered.
 extern bool iw_thread_register_main();
+
+/// --------------------------------------------------------------------------
+
+/// @brief Internal version of function to create a new thread.
+/// This internal thread creation function allows for differentiation of
+/// internal InstaWork threads and client program threads.
+/// @param tid A pointer to receive the thread-id of the created thread.
+/// @param name The name of the thread.
+/// @param func The thread callback function.
+/// @param client True if this is a client thread.
+/// @param param An opaque parameter to pass to the callback function.
+/// @return True if the thread was successfully created.
+extern bool iw_thread_create_int(
+    pthread_t *tid,
+    const char *name,
+    IW_THREAD_CALLBACK func,
+    bool client,
+    void *param);
 
 // --------------------------------------------------------------------------
 

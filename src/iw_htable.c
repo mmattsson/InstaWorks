@@ -180,6 +180,9 @@ bool iw_htable_delete(
 // --------------------------------------------------------------------------
 
 void iw_htable_destroy(iw_htable *table, IW_HASH_DEL_FN fn) {
+    if(table == NULL) {
+        return;
+    }
     int index, size = table->size;
     for(index=0;index < size;index++) {
         iw_hash_node *node = table->table[index];

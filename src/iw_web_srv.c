@@ -12,6 +12,7 @@
 
 #include "iw_log.h"
 #include "iw_memory.h"
+#include "iw_thread_int.h"
 #include "iw_thread.h"
 
 #include <arpa/inet.h>
@@ -214,7 +215,7 @@ iw_web_srv *iw_web_srv_init(
     }
 
     // Create thread to serve the command socket.
-    if(!iw_thread_create(&s_srv_tid, "Web Server", iw_web_srv_thread, srv)) {
+    if(!iw_thread_create_int(&s_srv_tid, "Web Server", iw_web_srv_thread, false, srv)) {
         LOG(IW_LOG_WEB, "Failed to create web server thread");
         close(srv->fd);
         IW_FREE(srv);

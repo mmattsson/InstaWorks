@@ -241,7 +241,7 @@ static void print_help(const char *error) {
 /// on a TCP connection, it is read and the data is written on all other
 /// TCP connections.
 /// @return False if the server exited prematurely.
-static bool serve_data() {
+static void *serve_data(void *param) {
     tcp_conn *conn;
     int retval = 0;
     int maxfd = s_sock;
@@ -336,6 +336,8 @@ static bool serve_data() {
         iw_mutex_unlock(s_mutex);
     }
 
+    LOG(SIMPLE_LOG, "Exiting main loop");
+
     // Free up all allocated resources still in use at exit
     iw_mutex_lock(s_mutex);
     conn = (tcp_conn *)s_list.head;
@@ -351,9 +353,7 @@ static bool serve_data() {
 
     if(retval == -1) {
         LOG(SIMPLE_LOG, "Select failed, exiting (%d:%s)", errno, strerror(errno));
-        return false;
     }
-    return true;
 }
 
 // --------------------------------------------------------------------------
@@ -414,7 +414,7 @@ bool main_callback(int argc, char **argv) {
            s_port, s_port);
 
     // Start serving clients
-    if(!serve_data()) {
+    if(!iw_thread_create(NULL, "simple", serve_data, NULL)) {
         return false;
     }
 
@@ -426,7 +426,9 @@ bool main_callback(int argc, char **argv) {
 /// @brief The termination notification callback.
 /// Called when the program should terminate.
 void main_term() {
+    LOG(SIMPLE_LOG, "main_term called, terminating execution");
     s_keep_going = false;
+    iw_thread_wait_all();
 }
 
 // --------------------------------------------------------------------------
@@ -485,10 +487,6 @@ int main(int argc, char **argv) {
     default :
         break;
     }
-
-    // Calling iw_exit() to clean up all resources allocated by the
-    // framework.
-    iw_exit();
 
     return exit_code;
 }

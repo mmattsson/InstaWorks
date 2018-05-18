@@ -89,6 +89,9 @@ pthread_key_t s_thread_key;
 /// The internal rwlock for access to the mutex hash.
 static pthread_rwlock_t s_thread_lock;
 
+/// Counter to track number of SIGINTs received.
+static int s_sigint_cnt = 0;
+
 /// Helper for WRITE_HEX() to convert to character string.
 static char s_digits[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
@@ -167,7 +170,17 @@ static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
         // Handle shutdown by Ctrl-C. By handling Ctrl-C properly we can
         // clean up known memory to make memory leaks more noticable.
         LOG(IW_LOG_IW, "Received SIGINT, shutting down");
+        s_sigint_cnt++;
+        if(s_sigint_cnt == 1) {
+            // This is the first SIGINT, attempt to shut down orderly.
         iw_main_loop_terminate();
+        } else {
+            // This is not the first SIGINT we receive, it is possible
+            // that the shutdown process deadlocked. Go ahead and
+            // forcibly exit the program.
+            LOG(IW_LOG_IW, "Received multiple SIGINT, exiting forcefully");
+            exit(-1);
+        }
         } break;
     case SIGILL  :
     case SIGABRT :
@@ -263,14 +276,14 @@ static void *iw_thread_callback(void *param) {
     iw_thread_install_sighandler();
 
     // Call back into the thread callback function
+    LOG(IW_LOG_IW, "Calling thread callback function for thread \"%s\"",
+                    tinfo->name);
     tinfo->fn(tinfo->param);
+    LOG(IW_LOG_IW, "Thread callback function for thread \"%s\" returned",
+                    tinfo->name);
 
-    // Thread has exited, remove it from the thread list
-    pthread_rwlock_wrlock(&s_thread_lock);
-    iw_htable_delete(&s_threads,
-                     sizeof(tinfo->thread), &(tinfo->thread),
-                     iw_thread_info_delete);
-    pthread_rwlock_unlock(&s_thread_lock);
+    // Don't delete the thread info structure here since we won't be able
+    // to join the thread if we do so.
 
     return NULL;
 }
@@ -291,6 +304,7 @@ void iw_thread_init() {
 
 void iw_thread_exit() {
     // When exiting, make sure to remove and delete the main thread info
+    LOG(IW_LOG_IW, "Terminating thread module");
     pthread_rwlock_wrlock(&s_thread_lock);
     if(s_main_tinfo != NULL) {
         iw_htable_delete(&s_threads,
@@ -385,10 +399,11 @@ bool iw_thread_set_log(pthread_t threadid, bool log_on) {
 
 // --------------------------------------------------------------------------
 
-bool iw_thread_create(
+bool iw_thread_create_int(
     pthread_t *tid,
     const char *name, 
     IW_THREAD_CALLBACK func, 
+    bool client,
     void *param)
 {
     if(tid != NULL) {
@@ -399,6 +414,7 @@ bool iw_thread_create(
         return false;
     }
 
+    tinfo->client = client;
     if(pthread_create(&tinfo->thread, NULL, iw_thread_callback, tinfo) == 0) {
         if(tid != NULL) {
             *tid = tinfo->thread;
@@ -413,19 +429,64 @@ bool iw_thread_create(
 
 // --------------------------------------------------------------------------
 
+bool iw_thread_create(
+    pthread_t *tid,
+    const char *name,
+    IW_THREAD_CALLBACK func,
+    void *param)
+{
+    return iw_thread_create_int(tid, name, func, true, param);
+}
+
+// --------------------------------------------------------------------------
+
+void iw_thread_wait_all() {
+    bool foundClientThread = true;
+    unsigned long hash;
+
+LOG(IW_LOG_IW, "*** iw_thread_wait_all");
+    while(foundClientThread) {
+        pthread_rwlock_rdlock(&s_thread_lock);
+        iw_thread_info *tinfo = (iw_thread_info *)iw_htable_get_first(&s_threads,
+                                                                   &hash);
+        while(tinfo != NULL && !tinfo->client) {
+            tinfo = (iw_thread_info *)iw_htable_get_next(&s_threads, &hash);
+        }
+        if(tinfo != NULL && tinfo->client) {
+            foundClientThread = true;
+            LOG(IW_LOG_IW, "Joining thread \"%s\"", tinfo->name);
+            pthread_t pid = tinfo->thread;
+            pthread_rwlock_unlock(&s_thread_lock);
+            pthread_join(tinfo->thread, NULL);
+
+            // Thread has exited, remove it from the thread list
+            iw_htable_delete(&s_threads,
+                     sizeof(pid), &(pid),
+                     iw_thread_info_delete);
+        } else {
+            foundClientThread = false;
+            pthread_rwlock_unlock(&s_thread_lock);
+        }
+    }
+LOG(IW_LOG_IW, "*** iw_thread_wait_all done");
+}
+
+// --------------------------------------------------------------------------
+
 void iw_thread_dump(FILE *out) {
     unsigned long hash;
     pthread_rwlock_rdlock(&s_thread_lock);
     iw_thread_info *thread = (iw_thread_info *)iw_htable_get_first(&s_threads,
                                                                    &hash);
     fprintf(out, "== Thread Information ==\n");
-    fprintf(out, "Thread-ID  Log Mutex  Thread-name\n");
+    fprintf(out, "Thread-ID  Log Mutex Clnt Thread-name\n");
     fprintf(out, "---------------------------------\n");
     while(thread != NULL) {
-        fprintf(out, "[%08lX] %s %04X : \"%s\"\n",
+        fprintf(out, "[%08lX] %3s %04X %c: \"%s\"\n",
             (unsigned long int)thread->thread,
             thread->log ? "on " : "off",
             thread->mutex,
+            thread->client ? 'Y' : 'N',
             thread->name);
         thread = (iw_thread_info *)iw_htable_get_next(&s_threads, &hash);
     }
