@@ -428,7 +428,6 @@ bool main_callback(int argc, char **argv) {
 void main_term() {
     LOG(SIMPLE_LOG, "main_term called, terminating execution");
     s_keep_going = false;
-    iw_thread_wait_all();
 }
 
 // --------------------------------------------------------------------------
@@ -438,7 +437,7 @@ void main_term() {
 /// @param argv The arguments.
 /// @return -1 if an error occurred.
 int main(int argc, char **argv) {
-    unsigned int exit_code = -1;
+    unsigned int exit_code = 0;
 
     // No calls to the instaworks framework should be done before calling
     // iw_init() or before iw_main() calls the provided callback function.
@@ -471,23 +470,22 @@ int main(int argc, char **argv) {
     switch(retval) {
     case IW_MAIN_SRV_INVALID_PARAMETER :
         print_help("Invalid command-line options");
-        exit_code = 0;
         break;
     case IW_MAIN_SRV_NO_OPTS :
         print_help(NULL);
-        exit_code = 0;
         break;
     case IW_MAIN_SRV_OK :
     case IW_MAIN_CLNT_OK :
-        exit_code = 0;
         break;
     case IW_MAIN_SRV_FAILED :
         printf("Failed to start program!\n");
+        exit_code = -1;
         break;
     default :
         break;
     }
 
+    iw_exit();
     return exit_code;
 }
 

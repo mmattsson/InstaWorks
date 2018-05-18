@@ -231,7 +231,10 @@ void iw_syslog_reinit(int buff_size) {
 // --------------------------------------------------------------------------
 
 void iw_syslog_exit() {
-    IW_FREE(s_msg_buff);
+    if(s_msg_buff != NULL) {
+        IW_FREE(s_msg_buff);
+        s_msg_buff = NULL;
+    }
 }
 
 // --------------------------------------------------------------------------

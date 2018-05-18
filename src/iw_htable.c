@@ -180,7 +180,7 @@ bool iw_htable_delete(
 // --------------------------------------------------------------------------
 
 void iw_htable_destroy(iw_htable *table, IW_HASH_DEL_FN fn) {
-    if(table == NULL) {
+    if(table == NULL || table->table == NULL) {
         return;
     }
     int index, size = table->size;

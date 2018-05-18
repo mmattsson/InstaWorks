@@ -217,7 +217,8 @@ void main_term() {
 
     s_keep_going = false;
 
-    // Cancel all threads
+    // Cancel all threads and wait for them to exit before doing further
+    // cleanup of resources
     iw_thread_wait_all();
 
     // Destroy all mutexes
@@ -321,6 +322,7 @@ int main(int argc, char **argv) {
     }
 
 prg_exit:
+    iw_exit();
     return exit_code;
 }
 

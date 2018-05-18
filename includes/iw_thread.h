@@ -46,6 +46,14 @@ extern bool iw_thread_create(
 
 // --------------------------------------------------------------------------
 
+/// @brief Terminate the InstaWorks module.
+/// Releases any allocated memory to allow external tools to check for memory
+/// leaks. This should be called at the end of the IW_MAIN_FN function just
+/// before returning.
+extern void iw_exit();
+
+// --------------------------------------------------------------------------
+
 /// @brief Wait for all threads to exit.
 /// Will call pthread_join on all created threads and return when all
 /// calls have been made. It is the responsibility of the calling program

@@ -119,6 +119,7 @@ void iw_main_loop_terminate() {
     if(s_term_fn != NULL) {
         (*s_term_fn)();
     }
+    iw_thread_wait_all();
     s_main_go = false;
 }
 
@@ -131,6 +132,7 @@ IW_MAIN_EXIT iw_main(
     int argc,
     char **argv)
 {
+    int retval = 0;
     int cnt = 0;
 
     // Set the program name to the content of argv[0] for future use.
@@ -158,11 +160,13 @@ IW_MAIN_EXIT iw_main(
         if(ret == IW_CMD_OPT_INVALID || ret == IW_CMD_OPT_UNKNOWN) {
             // An invalid option was given. Return to the caller so
             // the caller can decide what to do.
-            return IW_MAIN_SRV_INVALID_PARAMETER;
+            retval = IW_MAIN_SRV_INVALID_PARAMETER;
+            goto iw_main_exit;
         } else if(argc == 1) {
             // Checking this after the call to iw_cmdline_process() to
             // add the pre-defined options to the help output.
-            return IW_MAIN_SRV_NO_OPTS;
+            retval = IW_MAIN_SRV_NO_OPTS;
+            goto iw_main_exit;
         }
     }
 
@@ -175,7 +179,8 @@ IW_MAIN_EXIT iw_main(
     if((foreground != NULL && *foreground) || (daemonize != NULL && *daemonize)) {
         if(daemonize != NULL && *daemonize) {
             if(daemon(0, 0) != 0) {
-                return IW_MAIN_SRV_FAILED;
+                retval = IW_MAIN_SRV_FAILED;
+                goto iw_main_exit;
             }
         }
         iw_init();
@@ -183,12 +188,14 @@ IW_MAIN_EXIT iw_main(
         // Starting the command server thread.
         if(!iw_cmd_srv(cmd_port != NULL ? *cmd_port : 0))
         {
-            return IW_MAIN_SRV_FAILED;
+            retval = IW_MAIN_SRV_FAILED;
+            goto iw_main_exit;
         }
 
         // Trying to call back and start the client program.
         if(!main_fn(argc-cnt-1, argv+cnt+1)) {
-            return IW_MAIN_SRV_FAILED;
+            retval = IW_MAIN_SRV_FAILED;
+            goto iw_main_exit;
         }
 
         // Go into an infinite loop here.
@@ -198,15 +205,18 @@ IW_MAIN_EXIT iw_main(
         }
 
         // When the main loop is terminating, it'll clean up all resources
-        LOG(IW_LOG_IW, "Main loop exiting, calling iw_exit to shut down");
-        iw_exit();
+        LOG(IW_LOG_IW, "Main loop exiting");
 
-        return IW_MAIN_SRV_OK;
+        retval = IW_MAIN_SRV_OK;
     } else {
         bool result = iw_cmd_clnt(cmd_port != NULL ? *cmd_port : 0,
                                   argc-cnt-1, argv+cnt+1);
-        return result ? IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
+        retval = result ? IW_MAIN_CLNT_OK : IW_MAIN_CLNT_FAILED;
     }
+
+iw_main_exit:
+    iw_exit();
+    return retval;
 }
 
 // --------------------------------------------------------------------------

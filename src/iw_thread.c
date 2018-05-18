@@ -310,6 +310,7 @@ void iw_thread_exit() {
         iw_htable_delete(&s_threads,
                      sizeof(s_main_tinfo->thread), &(s_main_tinfo->thread),
                      iw_thread_info_delete);
+        s_main_tinfo = NULL;
     }
     iw_htable_destroy(&s_threads, iw_thread_info_delete);
     pthread_rwlock_unlock(&s_thread_lock);
@@ -444,7 +445,7 @@ void iw_thread_wait_all() {
     bool foundClientThread = true;
     unsigned long hash;
 
-LOG(IW_LOG_IW, "*** iw_thread_wait_all");
+    LOG(IW_LOG_IW, "iw_thread_wait_all");
     while(foundClientThread) {
         pthread_rwlock_rdlock(&s_thread_lock);
         iw_thread_info *tinfo = (iw_thread_info *)iw_htable_get_first(&s_threads,
@@ -468,7 +469,7 @@ LOG(IW_LOG_IW, "*** iw_thread_wait_all");
             pthread_rwlock_unlock(&s_thread_lock);
         }
     }
-LOG(IW_LOG_IW, "*** iw_thread_wait_all done");
+    LOG(IW_LOG_IW, "iw_thread_wait_all done");
 }
 
 // --------------------------------------------------------------------------

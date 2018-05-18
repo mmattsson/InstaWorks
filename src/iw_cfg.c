@@ -333,6 +333,7 @@ void iw_cfg_exit() {
     iw_val_store_destroy(&iw_cfg);
 
     free(iw_cfg_file);
+    iw_cfg_file = NULL;
 }
 
 // --------------------------------------------------------------------------

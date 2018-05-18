@@ -10,8 +10,9 @@
 
 #include "tests.h"
 
-#include <iw_main.h>
 #include <iw_cfg.h>
+#include <iw_main.h>
+#include <iw_thread.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -23,10 +24,6 @@
 
 /// The number of space characters to use in the test information column.
 #define TEST_SPACE      60
-
-// --------------------------------------------------------------------------
-
-extern void iw_exit();
 
 // --------------------------------------------------------------------------
 
