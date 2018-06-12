@@ -13,6 +13,7 @@
 
 #include "iw_cfg.h"
 #include "iw_cmd_srv.h"
+#include "iw_common.h"
 #include "iw_htable.h"
 #include "iw_log_int.h"
 #include "iw_main.h"
@@ -194,6 +195,9 @@ static bool iw_cmds_process_internal(
 // --------------------------------------------------------------------------
 
 static bool cmd_help(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_cmds_help(out, &s_root, "help");
     return true;
 }
@@ -201,6 +205,9 @@ static bool cmd_help(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 // --------------------------------------------------------------------------
 
 static bool cmd_thread_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_thread_dump(out);
     return true;
 }
@@ -208,6 +215,9 @@ static bool cmd_thread_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info)
 // --------------------------------------------------------------------------
 
 static bool cmd_mutex_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_mutex_dump(out);
     return true;
 }
@@ -215,6 +225,9 @@ static bool cmd_mutex_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info) 
 // --------------------------------------------------------------------------
 
 static bool cmd_memory_show(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_memory_show(out);
     return true;
 }
@@ -222,6 +235,9 @@ static bool cmd_memory_show(FILE *out, const char *cmd, iw_cmd_parse_info *info)
 // --------------------------------------------------------------------------
 
 static bool cmd_memory_summary(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_memory_summary(out);
     return true;
 }
@@ -229,6 +245,9 @@ static bool cmd_memory_summary(FILE *out, const char *cmd, iw_cmd_parse_info *in
 // --------------------------------------------------------------------------
 
 static bool cmd_memory_brief(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_memory_brief(out);
     return true;
 }
@@ -236,6 +255,9 @@ static bool cmd_memory_brief(FILE *out, const char *cmd, iw_cmd_parse_info *info
 // --------------------------------------------------------------------------
 
 static bool cmd_syslog_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_syslog_display(out);
     return true;
 }
@@ -243,6 +265,9 @@ static bool cmd_syslog_dump(FILE *out, const char *cmd, iw_cmd_parse_info *info)
 // --------------------------------------------------------------------------
 
 static bool cmd_syslog_clear(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     iw_syslog_clear(out);
     return true;
 }
@@ -250,6 +275,9 @@ static bool cmd_syslog_clear(FILE *out, const char *cmd, iw_cmd_parse_info *info
 // --------------------------------------------------------------------------
 
 static bool cmd_iwver(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     fprintf(out, INSTAWORKS" version %s", IW_VER_STR);
     return true;
 }
@@ -257,6 +285,9 @@ static bool cmd_iwver(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 // --------------------------------------------------------------------------
 
 static bool cmd_quit(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+    UNUSED(info);
+
     fprintf(out, "Shutting down");
     if(iw_cb.shutdown != NULL) {
         iw_cb.shutdown();
@@ -268,19 +299,21 @@ static bool cmd_quit(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
 // --------------------------------------------------------------------------
 
 static bool cmd_callstack(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+
     char *threadidstr = iw_cmd_get_token(info);
     if(threadidstr == NULL) {
         fprintf(out, "Missing parameters\n");
         return false;
     }
     errno = 0;
-    unsigned int threadid = strtoul(threadidstr, NULL, 16);
+    pthread_t threadid = strtoul(threadidstr, NULL, 16);
     if(errno != 0) {
         fprintf(out, "Invalid thread id\n");
         return false;
     }
 
-    iw_thread_callstack(out, threadid);
+    iw_thread_callstack(out, (pthread_t)threadid);
     return true;
 }
 
@@ -310,6 +343,8 @@ static void cmd_log_help(FILE *out) {
 // --------------------------------------------------------------------------
 
 static bool cmd_log_lvl(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+
     char *lvlstr = iw_cmd_get_token(info);
     char *dev = iw_cmd_get_token(info);
     if(lvlstr == NULL) {
@@ -356,6 +391,8 @@ static void cmd_log_thread_help(FILE *out) {
 // --------------------------------------------------------------------------
 
 static bool cmd_log_thread(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
+    UNUSED(cmd);
+
     long long int threadid;
     bool log_on = false;
     char *threadstr = iw_cmd_get_token(info);

@@ -12,6 +12,7 @@
 
 #include "iw_buff.h"
 #include "iw_cmds_int.h"
+#include "iw_common.h"
 #include "iw_ip.h"
 #include "iw_log.h"
 #include "iw_thread_int.h"
@@ -133,6 +134,8 @@ done:
 /// @param param The parameter passed by the thread creator.
 /// @return Nothing.
 static void *iw_cmd_srv_thread(void *param) {
+    UNUSED(param);
+
     int retval;
 
     // Entering command server loop.

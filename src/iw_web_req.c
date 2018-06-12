@@ -469,7 +469,6 @@ iw_web_req_parameter *iw_web_req_get_parameter(
 // --------------------------------------------------------------------------
 
 iw_web_req_parameter *iw_web_req_get_next_parameter(
-    iw_web_req *req,
     const char *name,
     const iw_web_req_parameter *param)
 {

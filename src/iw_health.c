@@ -11,6 +11,7 @@
 #include "iw_health_int.h"
 
 #include "iw_cfg.h"
+#include "iw_common.h"
 #include "iw_log.h"
 #include "iw_thread_int.h"
 #include "iw_thread.h"
@@ -36,7 +37,9 @@ static bool s_health_go = true;
 //
 // --------------------------------------------------------------------------
 
-static void *iw_health_thread(void *param) {
+static void *iw_health_thread(__attribute__((unused)) void *param) {
+    UNUSED(param);
+
     while(s_health_go) {
         if(iw_thread_deadlock_check(false)) {
             LOG(IW_LOG_IW, "Deadlock detected!");

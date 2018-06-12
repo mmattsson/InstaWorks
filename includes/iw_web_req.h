@@ -301,12 +301,10 @@ extern iw_web_req_parameter *iw_web_req_get_parameter(
 /// @brief Get the next parameter with the given name.
 /// Returns the next parameter with the given name or NULL if no more matches
 /// were found.
-/// @param req The request to find the parameter in.
 /// @param name The name of the parameter to return or NULL for all parameters.
 /// @param param The previously found parameter.
 /// @return The next matching parameter or NULL for no more matches.
 extern iw_web_req_parameter *iw_web_req_get_next_parameter(
-    iw_web_req *req,
     const char *name,
     const iw_web_req_parameter *param);
 

@@ -163,7 +163,6 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx, const char *path) 
     double num;
     int boolean;
     char buff[256];
-    IW_VAL_RET ret = IW_VAL_RET_NO_SUCH_VALUE;
 
     // Get the value
     const char *name = json_object_get_name(obj, idx);
@@ -198,22 +197,22 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx, const char *path) 
     case JSONString :
         str = json_value_get_string(val);
         if(str != NULL) {
-            ret = iw_val_store_set_string(&iw_cfg,
-                                          full_name, str,
-                                          buff, sizeof(buff));
+            iw_val_store_set_string(&iw_cfg,
+                                    full_name, str,
+                                    buff, sizeof(buff));
         }
         break;
     case JSONNumber :
         num = json_value_get_number(val);
-        ret = iw_val_store_set_number(&iw_cfg,
-                                      full_name, num,
-                                      buff, sizeof(buff));
+        iw_val_store_set_number(&iw_cfg,
+                                full_name, num,
+                                buff, sizeof(buff));
         break;
     case JSONBoolean :
         boolean = json_value_get_boolean(val);
-        ret = iw_val_store_set_number(&iw_cfg,
-                                      full_name, boolean,
-                                      buff, sizeof(buff));
+        iw_val_store_set_number(&iw_cfg,
+                                full_name, boolean,
+                                buff, sizeof(buff));
         break;
     case JSONObject : {
         JSON_Object *sub_obj = json_value_get_object(val);
@@ -230,8 +229,7 @@ static void iw_cfg_get_json_obj(JSON_Object *obj, size_t idx, const char *path) 
 // --------------------------------------------------------------------------
 
 bool iw_cfg_load(const char *file) {
-    JSON_Value *root_value, *val;
-    JSON_Array *array;
+    JSON_Value *root_value;
     JSON_Object *obj, *cfg;
     size_t idx;
 

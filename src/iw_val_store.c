@@ -452,7 +452,7 @@ void *iw_val_store_get_next(iw_val_store *store, unsigned long *token) {
 // Add a pre-defined value to the value store.
 //
 // --------------------------------------------------------------------------
-
+#include "iw_common.h"
 static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_TYPE type,
     bool persist,
@@ -460,6 +460,7 @@ static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_CRITERIA_FN fn,
     const char *regexp)
 {
+UNUSED(regexp);
     iw_val_criteria *crit = calloc(1, sizeof(iw_val_criteria));
     if(crit == NULL) {
         return NULL;

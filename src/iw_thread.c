@@ -12,6 +12,7 @@
 #include "iw_thread_int.h"
 
 #include "iw_cfg.h"
+#include "iw_common.h"
 #include "iw_log.h"
 #include "iw_main.h"
 #include "iw_memory.h"
@@ -142,6 +143,8 @@ static iw_thread_info *iw_thread_info_create(
 /// @brief The thread signal handler.
 /// @param sig The signal being sent to the thread.
 static void iw_thread_signal(int sig, siginfo_t *si, void *param) {
+    UNUSED(param);
+
     switch(sig) {
     case SIGUSR1 : {
         iw_thread_info *tinfo = pthread_getspecific(s_thread_key);

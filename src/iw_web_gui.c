@@ -46,10 +46,9 @@ typedef enum {
 // --------------------------------------------------------------------------
 
 /// @brief Create a menu and display it.
-/// @param req The request that was made.
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully written.
-static bool iw_web_gui_construct_menu(iw_web_req *req, FILE *out) {
+static bool iw_web_gui_construct_menu(FILE *out) {
     unsigned int cnt = 0;
 
     fprintf(out, "<ul id='menu'>\n");
@@ -65,10 +64,9 @@ static bool iw_web_gui_construct_menu(iw_web_req *req, FILE *out) {
 // --------------------------------------------------------------------------
 
 /// @brief Create a style-sheet and send it.
-/// @param req The request that was made.
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully written.
-static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
+static bool iw_web_gui_construct_style_sheet(FILE *out) {
     char *file = iw_val_store_get_string(&iw_cfg, IW_CFG_WEBGUI_CSS_FILE);
     FILE *fptr = NULL;
     if(file != NULL && strlen(file) > 0) {
@@ -138,10 +136,9 @@ static bool iw_web_gui_construct_style_sheet(iw_web_req *req, FILE *out) {
 // --------------------------------------------------------------------------
 
 /// @brief Create the about page.
-/// @param req The request that was made.
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully created.
-static bool iw_web_gui_construct_about_page(iw_web_req *req, FILE *out) {
+static bool iw_web_gui_construct_about_page(FILE *out) {
     char *prg = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_NAME);
     char *about = iw_val_store_get_string(&iw_cfg, IW_CFG_PRG_ABOUT);
 
@@ -207,7 +204,7 @@ static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
             }
             fprintf(out, "</p>\n");
         }
-        param = iw_web_req_get_next_parameter(req, NULL, param);
+        param = iw_web_req_get_next_parameter(NULL, param);
     }
     iw_cfg_save(NULL);
     return true;
@@ -216,10 +213,9 @@ static bool iw_web_gui_assign_config_values(iw_web_req *req, FILE *out) {
 // --------------------------------------------------------------------------
 
 /// @brief Create the run-time page.
-/// @param req The request that was made.
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully created.
-static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
+static bool iw_web_gui_construct_config_page(FILE *out) {
     fprintf(out, "<h1>Configuration Settings</h1>\n");
 
     unsigned long token;
@@ -250,10 +246,9 @@ static bool iw_web_gui_construct_config_page(iw_web_req *req, FILE *out) {
 // --------------------------------------------------------------------------
 
 /// @brief Create the configuration page.
-/// @param req The request that was made.
 /// @param out The file stream to write the response to.
 /// @return True if the response was successfully created.
-static bool iw_web_gui_construct_runtime_page(iw_web_req *req, FILE *out) {
+static bool iw_web_gui_construct_runtime_page(FILE *out) {
     fprintf(out, "<h1>Run-time Statistics</h1>\n");
 
     if(iw_cb.runtime != NULL) {
@@ -310,14 +305,14 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
         "<h1 style='text-align:center'>%s</h1>\n",
         prg);
 
-    iw_web_gui_construct_menu(req, out);
+    iw_web_gui_construct_menu(out);
 
     switch(pg) {
     case PG_ABOUT :
-        iw_web_gui_construct_about_page(req, out);
+        iw_web_gui_construct_about_page(out);
         break;
     case PG_RUNTIME :
-        iw_web_gui_construct_runtime_page(req, out);
+        iw_web_gui_construct_runtime_page(out);
         break;
     case PG_CONFIG :
         if(req->method == IW_WEB_METHOD_POST) {
@@ -325,7 +320,7 @@ static bool iw_web_gui_construct_web_page(iw_web_req *req, FILE *out) {
             // values.
             iw_web_gui_assign_config_values(req, out);
         }
-        iw_web_gui_construct_config_page(req, out);
+        iw_web_gui_construct_config_page(out);
         break;
     default :
         return false;
@@ -353,7 +348,7 @@ static bool iw_web_gui_construct_response(iw_web_req *req, FILE *out) {
         req->path.len, req->buff + req->path.start);
     if(iw_parse_cmp("/style.css", req->buff, &req->path)) {
         LOG(IW_LOG_GUI, "Sending style sheet");
-        return iw_web_gui_construct_style_sheet(req, out);
+        return iw_web_gui_construct_style_sheet(out);
     } else {
         LOG(IW_LOG_GUI, "Sending web page");
         return iw_web_gui_construct_web_page(req, out);
