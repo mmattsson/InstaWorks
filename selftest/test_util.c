@@ -33,7 +33,7 @@ static void test_bad_dec(test_result *result, const char *str) {
 
 // --------------------------------------------------------------------------
 
-static void test_good_hex(test_result *result, const char *str, int num) {
+static void test_good_hex(test_result *result, const char *str, long int num) {
     long long int tmp;
     test(result, iw_util_strtoll(str, &tmp, 16) && tmp == num, 
          "Converting '%s' successful?", str);
@@ -67,14 +67,14 @@ static void test_strtoll(test_result *result) {
 
     test_display("Converting hexadecimal strings to integers");
     test_good_hex(result, "1", 1);
-    test_good_hex(result, "12", 12);
-    test_good_hex(result, "123", 123);
-    test_good_hex(result, "123456", 123456);
-    test_good_hex(result, "99999999", 99999999);
+    test_good_hex(result, "12", 18);
+    test_good_hex(result, "123", 291);
+    test_good_hex(result, "123456", 1193046);
+    test_good_hex(result, "99999999", 2576980377);
     test_good_hex(result, "0", 0);
-    test_good_hex(result, "01234", 1234);
+    test_good_hex(result, "01234", 4660);
     test_good_hex(result, "-1", -1);
-    test_good_hex(result, "-99999999", -99999999);
+    test_good_hex(result, "-99999999", -2576980377);
     test_good_hex(result, "0xabcdef", 0xabcdef);
     test_good_hex(result, "0x0123", 0x0123);
     test_bad_hex(result, "0.123");
