@@ -452,15 +452,14 @@ void *iw_val_store_get_next(iw_val_store *store, unsigned long *token) {
 // Add a pre-defined value to the value store.
 //
 // --------------------------------------------------------------------------
-#include "iw_common.h"
+
 static iw_val_criteria *iw_val_store_create_criteria(
     IW_VAL_TYPE type,
     bool persist,
     const char *msg,
-    IW_VAL_CRITERIA_FN fn,
-    const char *regexp)
+    IW_VAL_CRITERIA_FN fn)
 {
-UNUSED(regexp);
+
     iw_val_criteria *crit = calloc(1, sizeof(iw_val_criteria));
     if(crit == NULL) {
         return NULL;
@@ -495,7 +494,7 @@ bool iw_val_store_add_name(
     bool persist)
 {
     iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
-                                                         msg, NULL, NULL);
+                                                         msg, NULL);
     if(crit == NULL) {
         return false;
     }
@@ -513,7 +512,7 @@ bool iw_val_store_add_name_callback(
     bool persist)
 {
     iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
-                                                         msg, fn, NULL);
+                                                         msg, fn);
     if(crit == NULL) {
         return false;
     }
@@ -531,12 +530,14 @@ bool iw_val_store_add_name_regexp(
     bool persist)
 {
     iw_val_criteria *crit = iw_val_store_create_criteria(type, persist,
-                                                         msg, NULL, regexp);
+                                                         msg, NULL);
     if(crit == NULL) {
         return false;
     }
+printf("regexp=\"%s\"\n", regexp);
     if(regcomp(&crit->regexp, regexp, REG_EXTENDED) != 0) {
         iw_val_store_destroy_criteria(crit);
+printf("failed to regcomp\n");
         return false;
     }
     crit->regset = true;
