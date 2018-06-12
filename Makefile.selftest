@@ -14,7 +14,7 @@
 #
 # ---
 
-CFLAGS=-g -O0 -Iincludes -Isrc -Wall -Wextra -Wno-unused -Werror
+CFLAGS=-g -O0 -Iincludes -Isrc -Wall -Wextra -Werror
 LDFLAGS=-L./lib -linstaworks -lpthread
 
 # ---

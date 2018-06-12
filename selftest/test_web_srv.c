@@ -376,7 +376,7 @@ static void test_req(
         test_param(result, req, param,
                    rtest->values[cnt2],
                    rtest->values[cnt2+1]);
-        param = iw_web_req_get_next_parameter(req, NULL, param);
+        param = iw_web_req_get_next_parameter(NULL, param);
     }
 }
 

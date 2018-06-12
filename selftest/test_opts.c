@@ -88,7 +88,7 @@ static char *s_arg[3];
 
 // --------------------------------------------------------------------------
 
-static bool proc_opt(int *cnt, int argc, char **argv, iw_opt *opt) {
+static bool proc_opt(int *cnt, int argc, char **argv, iw_opt *opt __attribute__((unused))) {
     s_num = argc;
     for(*cnt=0;*cnt < s_num && *cnt < 3;(*cnt)++) {
         s_arg[*cnt] = argv[*cnt];

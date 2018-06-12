@@ -20,7 +20,8 @@
 
 static void test_good_dec(test_result *result, const char *str, int num) {
     long long int tmp;
-    test(result, iw_util_strtoll(str, &tmp, 10), "Converting '%s' successful?", str);
+    test(result, iw_util_strtoll(str, &tmp, 10) && tmp == num, 
+         "Converting '%s' successful?", str);
 }
 
 // --------------------------------------------------------------------------
@@ -34,7 +35,8 @@ static void test_bad_dec(test_result *result, const char *str) {
 
 static void test_good_hex(test_result *result, const char *str, int num) {
     long long int tmp;
-    test(result, iw_util_strtoll(str, &tmp, 16), "Converting '%s' successful?", str);
+    test(result, iw_util_strtoll(str, &tmp, 16) && tmp == num, 
+         "Converting '%s' successful?", str);
 }
 
 // --------------------------------------------------------------------------
@@ -47,13 +49,6 @@ static void test_bad_hex(test_result *result, const char *str) {
 // --------------------------------------------------------------------------
 
 static void test_strtoll(test_result *result) {
-    long long int num;
-
-    bool retval = iw_util_strtoll("01234", &num, 10);
-    if(num == 01234) {
-        test_display("true\n");
-    }
-
     test_display("Converting decimal strings to integers");
     test_good_dec(result, "1", 1);
     test_good_dec(result, "12", 12);
