@@ -534,10 +534,8 @@ bool iw_val_store_add_name_regexp(
     if(crit == NULL) {
         return false;
     }
-printf("regexp=\"%s\"\n", regexp);
     if(regcomp(&crit->regexp, regexp, REG_EXTENDED) != 0) {
         iw_val_store_destroy_criteria(crit);
-printf("failed to regcomp\n");
         return false;
     }
     crit->regset = true;

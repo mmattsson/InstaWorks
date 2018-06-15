@@ -1,0 +1,13 @@
+FROM centos:latest AS build
+RUN yum install -y gcc make
+RUN mkdir /app
+WORKDIR /app
+COPY . /app
+RUN make clean
+RUN make
+
+FROM centos:latest
+COPY --from=build /app/examples/simple/simple /app/simple
+EXPOSE 1234
+ENTRYPOINT ["/app/simple"]
+
