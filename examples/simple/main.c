@@ -354,6 +354,8 @@ static void *serve_data(void *param) {
     if(retval == -1) {
         LOG(SIMPLE_LOG, "Select failed, exiting (%d:%s)", errno, strerror(errno));
     }
+
+    return NULL;
 }
 
 // --------------------------------------------------------------------------

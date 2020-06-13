@@ -98,6 +98,7 @@ static bool iw_web_srv_respond(iw_web_srv *srv, iw_web_req *req, FILE *out) {
 /// @param srv The web server object.
 /// @param fd The client's socket file descriptor.
 static void iw_web_srv_process_request(iw_web_srv *srv, int fd) {
+    FILE *out = NULL;
     iw_web_req req;
     iw_buff buff;
     memset(&req, 0, sizeof(req));
@@ -105,7 +106,7 @@ static void iw_web_srv_process_request(iw_web_srv *srv, int fd) {
         LOG(IW_LOG_WEB, "Failed to create command server request buffer");
         goto done;
     }
-    FILE *out = fdopen(fd, "r+w+");
+    out = fdopen(fd, "r+w+");
     int bytes;
     iw_web_req_init(&req);
     do {
@@ -143,7 +144,9 @@ done:
     // Give the client time to close the connection to avoid having the server
     // socket go into a TIME_WAIT state after program termination.
     usleep(100000);
-    fclose(out);
+    if(out == NULL) {
+        fclose(out);
+    }
     iw_buff_destroy(&buff);
     LOG(IW_LOG_WEB, "Closed a client connection, fd=%d", fd);
 }

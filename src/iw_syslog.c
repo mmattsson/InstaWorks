@@ -288,7 +288,7 @@ void iw_syslog_display(FILE *out) {
             nowtime = tv.tv_sec;
             now_tm = localtime(&nowtime);
             offset = strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", now_tm);
-            snprintf(buff + offset, sizeof(buff) - offset, "%06ld", tv.tv_usec);
+            snprintf(buff + offset, sizeof(buff) - offset, "%06ld", (long int)tv.tv_usec);
 
             fprintf(out, "LOG: [%s] %s\n", buff, ptr);
             buff_empty = false;
