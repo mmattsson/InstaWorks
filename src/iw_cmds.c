@@ -307,7 +307,7 @@ static bool cmd_callstack(FILE *out, const char *cmd, iw_cmd_parse_info *info) {
         return false;
     }
     errno = 0;
-    pthread_t threadid = strtoul(threadidstr, NULL, 16);
+    pthread_t threadid = (pthread_t)strtoul(threadidstr, NULL, 16);
     if(errno != 0) {
         fprintf(out, "Invalid thread id\n");
         return false;
@@ -428,7 +428,7 @@ static bool cmd_log_thread(FILE *out, const char *cmd, iw_cmd_parse_info *info) 
         iw_thread_set_log_all(log_on);
     } else {
         // Set just the given thread to on or off
-        if(!iw_thread_set_log(threadid, log_on)) {
+        if(!iw_thread_set_log((pthread_t)threadid, log_on)) {
             fprintf(out, "\nInvalid thread ID\n");
             cmd_log_thread_help(out);
             return false;
