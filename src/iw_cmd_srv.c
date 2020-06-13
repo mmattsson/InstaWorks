@@ -82,12 +82,13 @@ static bool iw_cmd_srv_parse_request(iw_buff *buff, FILE *out) {
 /// @brief Process a client request.
 /// @param fd The client's socket file descriptor.
 static void iw_cmd_srv_process_request(int fd) {
+    FILE *out = NULL;
     iw_buff buff;
     if(!iw_buff_create(&buff, BUFF_SIZE, BUFF_SIZE)) {
         LOG(IW_LOG_IW, "Failed to create command server request buffer");
         goto done;
     }
-    FILE *out = fdopen(fd, "r+w+");
+    out = fdopen(fd, "r+w+");
     int bytes;
     do {
         int remainder = iw_buff_remainder(&buff);
@@ -123,7 +124,9 @@ done:
     // Give the client time to close the connection to avoid having the server
     // socket go into a TIME_WAIT state after program termination.
     usleep(100000);
-    fclose(out);
+    if(out != NULL) {
+        fclose(out);
+    }
     iw_buff_destroy(&buff);
     LOG(IW_LOG_IW, "Closed a client connection, fd=%d", fd);
 }
