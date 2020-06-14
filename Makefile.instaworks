@@ -21,7 +21,7 @@ CFLAGS=-g -O0 -Iincludes -Iexternal/parson $(USER_CFLAGS)
 # Adding all error flags on a separate line to make it easier to disable.
 # This should be on by default but may be useful to disable when compiling
 # in a new environment to see all errors at once.
-CFLAGS+=-Wall -Wextra -Werror
+CFLAGS+=-Wall -Wextra -Werror -Wno-deprecated-declarations
 
 # Comment out the following line if you want to disable all memory tracking.
 #CFLAGS+= -DIW_NO_MEMORY_TRACKING
