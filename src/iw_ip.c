@@ -136,7 +136,7 @@ bool iw_ip_ipv4_to_addr(
     unsigned int ip,
     iw_ip *address)
 {
-    memset(address, 0, sizeof(*address));
+    memset(address, 0, sizeof(struct sockaddr_storage));
     struct sockaddr_in *ss = (struct sockaddr_in *)address;
     ss->sin_family = AF_INET;
     ss->sin_addr.s_addr = htonl(ip);
@@ -149,7 +149,7 @@ bool iw_ip_ipv6_to_addr(
     struct in6_addr ip,
     iw_ip *address)
 {
-    memset(address, 0, sizeof(*address));
+    memset(address, 0, sizeof(struct sockaddr_storage));
     struct sockaddr_in6 *ss = (struct sockaddr_in6 *)address;
     ss->sin6_family = AF_INET6;
     ss->sin6_addr   = ip;
@@ -283,7 +283,18 @@ int iw_ip_open_server_socket(int type, iw_ip *address, bool set_reuse) {
         }
     }
 
-    if(bind(sock, (struct sockaddr *)address, sizeof(*address)) != 0) {
+    int size = 0;
+    switch(address->ss_family) {
+    case AF_INET  : size = sizeof(struct sockaddr_in);     break;
+    case AF_INET6 : size = sizeof(struct sockaddr_in6); break;
+    }
+    if(size == 0) {
+        LOG(IW_LOG_IW, "Unknown address family");
+        close(sock);
+        return -1;
+    }
+
+    if(bind(sock, (struct sockaddr *)address, size) != 0) {
         LOG(IW_LOG_IW, "Failed to bind server socket (%d:%s)",
             errno, strerror(errno));
         close(sock);
