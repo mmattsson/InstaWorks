@@ -144,7 +144,7 @@ done:
     // Give the client time to close the connection to avoid having the server
     // socket go into a TIME_WAIT state after program termination.
     usleep(100000);
-    if(out == NULL) {
+    if(out != NULL) {
         fclose(out);
     }
     iw_buff_destroy(&buff);
